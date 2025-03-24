@@ -8,6 +8,7 @@ const authRoutes = require('./routes/authRoutes');
 const authMiddleware = require('./middleware/auth');
 const erdkkRoutes = require("./routes/erdkkRoutes");
 const wcmRoutes = require("./routes/wcmRoutes");
+const outRouter = require("./routes/outRoutes");
 require('dotenv').config();
 
 const app = express();
@@ -85,6 +86,7 @@ app.use('/api/files', authMiddleware, fileRoutes);
 app.use('/api', authMiddleware, dataRoutes);
 app.use('/api/data', authMiddleware, erdkkRoutes);
 app.use('/api/data', authMiddleware, wcmRoutes);
+app.use('/api/', outRouter);
 
 app.use(express.json({ limit: '50mb' })); // Sesuaikan ukuran jika perlu
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -94,5 +96,5 @@ app.use(authRoutes);
 // 🚀 Run server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server berjalan di http://localhost:${PORT}`);
+    console.log(`Server berjalan port:${PORT}`);
 });
