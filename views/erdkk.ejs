@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <%- include('./partials/head'); %>
+  </head>
+  <body>
+    <div class="wrapper">
+      <%- include('./partials/header'); %>
+
+      <div class="container">
+        <div class="page-inner">
+          <div class="page-header">
+            <h3 class="fw-bold mb-3">Data E-RDDK</h3>
+            <ul class="breadcrumbs mb-3">
+              <li class="nav-home">
+                <a href="/">
+                  <i class="icon-home"></i>
+                </a>
+              </li>
+              <li class="separator">
+                <i class="icon-arrow-right"></i>
+              </li>
+              <li class="nav-item">
+                <a href="/erdkk">Data</a>
+              </li>
+              <li class="separator">
+                <i class="icon-arrow-right"></i>
+              </li>
+              <li class="nav-item">
+                <a href="/erdkk">Data E-RDKK</a>
+              </li>
+            </ul>
+          </div>
+
+          <div
+            class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4"
+          >
+            <div>
+              <p class="op-7 mb-2">
+                Untuk Menampilkan Data Sesuai, Harap Pilih
+              </p>
+            </div>
+            <div class="ms-md-auto py-2 py-md-0">
+              <button id="download-excel" class="btn btn-primary btn-round">
+                Download
+              </button>
+              <div
+                id="loading-spinner"
+                class="hidden fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center"
+              >
+                <div
+                  class="bg-white p-5 rounded-lg flex items-center space-x-3"
+                >
+                  <div
+                    class="animate-spin h-8 w-8 border-t-4 border-blue-600 border-solid rounded-full"
+                  ></div>
+                  <span class="text-lg font-semibold"
+                    >Mengunduh data, harap tunggu...</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5"
+          >
+            <!-- Kabupaten -->
+            <div class="grid grid-cols-2 items-center gap-2">
+              <label
+                for="filter-kabupaten"
+                class="text-sm font-medium text-gray-700"
+                >Kabupaten</label
+              >
+              <select
+                id="filter-kabupaten"
+                class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
+              >
+                <option value="">Semua Kabupaten</option>
+              </select>
+            </div>
+
+            <!-- Kecamatan -->
+            <div class="grid grid-cols-2 items-center gap-2">
+              <label
+                for="filter-kecamatan"
+                class="text-sm font-medium text-gray-700"
+                >Kecamatan</label
+              >
+              <select
+                id="filter-kecamatan"
+                class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
+              >
+                <option value="">Semua Kecamatan</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 items-center gap-2">
+              <label
+                for="filter-tahun"
+                class="text-sm font-medium text-gray-700"
+                >Tahun</label
+              >
+              <select
+                id="filter-tahun"
+                class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
+              >
+                <option value="">Semua Tahun</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+              </select>
+            </div>
+
+            <br />
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header">
+                  <h4 class="card-title">Data E-RDKK</h4>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table id="multi-filter-select" class="table">
+                      <thead>
+                        <tr>
+                          <th>Tahun</th>
+                          <th>Kabupaten</th>
+                          <th>Kecamatan</th>
+                          <th>Desa</th>
+                          <th>Kode Kios</th>
+                          <th>Nama Kios</th>
+                          <th>NIK</th>
+                          <th>Nama Petani</th>
+                          <th>Urea</th>
+                          <th>NPK</th>
+                          <th>NPK Formula</th>
+                          <th>Organik</th>
+                        </tr>
+                      </thead>
+                      <tfoot>
+                        <tr>
+                          <th>
+                            <!-- <span class="selected-text" data-id="kabupaten">Pilih Kabupaten</span> -->
+                            <select
+                              id="kabupaten"
+                              multiple
+                              class="filter-dropdown hidden"
+                            ></select>
+                          </th>
+                          <th>
+                            <!-- <span class="selected-text" data-id="kecamatan">Pilih Kecamatan</span> -->
+                            <select
+                              id="kecamatan"
+                              multiple
+                              class="filter-dropdown hidden"
+                            ></select>
+                          </th>
+                          <th>-</th>
+                          <th>-</th>
+                          <th>-</th>
+                          <th>-</th>
+                          <th>-</th>
+                          <th>-</th>
+                          <th id="sum-urea">0</th>
+                          <th id="sum-npk">0</th>
+                          <th id="sum-npk-formula">0</th>
+                          <th id="sum-organik">0</th>
+                        </tr>
+                      </tfoot>
+
+                      <tbody id="dataTable">
+                        <!-- Data akan dimasukkan melalui JavaScript -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <%- include('./partials/footer'); %>
+    </div>
+    <!--   Core JS Files   -->
+    <script src="./assets/js/core/jquery-3.7.1.min.js"></script>
+    <script src="./assets/js/core/popper.min.js"></script>
+    <script src="./assets/js/core/bootstrap.min.js"></script>
+
+    <!-- jQuery Scrollbar -->
+    <script src="./assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
+    <!-- Datatables -->
+    <script src="./assets/js/plugin/datatables/datatables.min.js"></script>
+    <!-- Kaiadmin JS -->
+    <script src="./assets/js/kaiadmin.min.js"></script>
+    <!-- Kaiadmin DEMO methods, don't include it in your project! -->
+    <script src="./assets/js/setting-demo2.js"></script>
+
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <script>
+      $(document).ready(function () {
+        let dataTable;
+
+        // Fungsi untuk menginisialisasi DataTable
+        function initializeDataTable() {
+          dataTable = $("#multi-filter-select").DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+              url: "/api/erdkk",
+              type: "GET",
+              data: function (d) {
+                d.kabupaten = $("#filter-kabupaten").val() || "";
+                d.kecamatan = $("#filter-kecamatan").val() || "";
+                d.tahun = $("filter-tahun").val() || "";
+              },
+            },
+            columns: [
+              { data: "tahun" },
+              { data: "kabupaten" },
+              { data: "kecamatan" },
+              { data: "desa" },
+              { data: "kode_kios" },
+              { data: "nama_kios" },
+              { data: "nik" },
+              { data: "nama_petani" },
+              {
+                data: "urea",
+                render: $.fn.dataTable.render.number(",", ".", 0, ""),
+              },
+              {
+                data: "npk",
+                render: $.fn.dataTable.render.number(",", ".", 0, ""),
+              },
+              {
+                data: "npk_formula",
+                render: $.fn.dataTable.render.number(",", ".", 0, ""),
+              },
+              {
+                data: "organik",
+                render: $.fn.dataTable.render.number(",", ".", 0, ""),
+              },
+            ],
+            drawCallback: function () {
+              updateSum();
+            },
+          });
+        }
+
+        // Fungsi untuk memperbarui SUM di footer tabel dan di atas
+        function updateSum() {
+          $.ajax({
+            url: "/api/erdkk/summary",
+            type: "GET",
+            data: {
+              kabupaten: $("#filter-kabupaten").val() || "",
+              kecamatan: $("#filter-kecamatan").val() || "",
+              tahun: $("#filter-tahun").val() || "",
+            },
+            success: function (response) {
+              // Update Footer Tabel
+
+              $("#sum-urea").text(response.total_urea.toLocaleString() || 0);
+              $("#sum-npk").text(response.total_npk.toLocaleString() || 0);
+              $("#sum-npk-formula").text(
+                response.total_npk_formula.toLocaleString() || 0
+              );
+              $("#sum-organik").text(
+                response.total_organik.toLocaleString() || 0
+              );
+            },
+            error: function (xhr, status, error) {
+              console.error("Error fetching sum:", error);
+            },
+          });
+        }
+
+        // Event listener untuk filter kabupaten
+        $("#filter-kabupaten").on("change", function () {
+          if ($(this).val()) {
+            // Tampilkan spinner
+            $("#spinner").show();
+
+            // Inisialisasi DataTable
+            if (!$.fn.DataTable.isDataTable("#multi-filter-select")) {
+              initializeDataTable();
+            } else {
+              dataTable.ajax.reload();
+            }
+
+            // Sembunyikan spinner setelah data dimuat
+            dataTable.on("draw", function () {
+              $("#spinner").hide();
+            });
+
+            updateSum();
+          }
+        });
+
+        // Reload DataTables saat filter berubah
+        $(".filter-dropdown").on("change", function () {
+          if (dataTable) {
+            dataTable.ajax.reload();
+            updateSum();
+          }
+        });
+
+        // Download data dalam format Excel dengan filter yang diterapkan
+        $("#download-excel").click(function () {
+          let params = {
+            kabupaten: $("#filter-kabupaten").val() || "",
+            kecamatan: $("#filter-kecamatan").val() || "",
+            tahun: $("#filter-tahun").val() || "", // 🔥 Tambahkan filter tahun
+          };
+          window.location.href = `/api/download/erdkk?` + $.param(params);
+        });
+
+        // Ambil daftar filter dari API dan isi dropdown
+        $.get("/api/filters", function (data) {
+          data.kabupaten.forEach((item) =>
+            $("#filter-kabupaten").append(
+              `<option value="${item}">${item}</option>`
+            )
+          );
+          data.kecamatan.forEach((item) =>
+            $("#filter-kecamatan").append(
+              `<option value="${item}">${item}</option>`
+            )
+          );
+          data.tanggal_tebus.forEach((item) =>
+            $("#filter-tanggal-tebus").append(
+              `<option value="${item}">${item}</option>`
+            )
+          );
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,200 @@
+<div class="sidebar" data-background-color="dark">
+    <div class="sidebar-logo">
+      <!-- Logo Header -->
+      <div class="logo-header" data-background-color="dark">
+        <a href="index.html" class="logo">
+          <img
+            src="./assets/img/logopi.png"
+            alt="navbar brand"
+            class="navbar-brand"
+            height="20"
+          />
+        </a>
+        <div class="nav-toggle">
+          <button class="btn btn-toggle toggle-sidebar">
+            <i class="gg-menu-right"></i>
+          </button>
+          <button class="btn btn-toggle sidenav-toggler">
+            <i class="gg-menu-left"></i>
+          </button>
+        </div>
+        <button class="topbar-toggler more">
+          <i class="gg-more-vertical-alt"></i>
+        </button>
+      </div>
+      <!-- End Logo Header -->
+    </div>
+    <div class="sidebar-wrapper scrollbar scrollbar-inner">
+      <div class="sidebar-content">
+        <ul class="nav nav-secondary">
+          <li class="nav-item active">
+            <a
+              data-bs-toggle="collapse"
+              href="#dashboard"
+              class="collapsed"
+              aria-expanded="false"
+            >
+              <i class="fas fa-home"></i>
+              <p>Dashboard</p>
+              <span class="caret"></span>
+            </a>
+            <div class="collapse" id="dashboard">
+              <ul class="nav nav-collapse">
+                <li>
+                  <a href="/">
+                    <span class="sub-item">Dashboard 1</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </li>
+          <li class="nav-section">
+            <span class="sidebar-mini-icon">
+              <i class="fa fa-ellipsis-h"></i>
+            </span>
+            <h4 class="text-section">Components</h4>
+          </li>
+          <li class="nav-item">
+            <a data-bs-toggle="collapse" href="#forms">
+              <i class="fas fa-pen-square"></i>
+              <p>Upload</p>
+              <span class="caret"></span>
+            </a>
+            <div class="collapse" id="forms">
+              <ul class="nav nav-collapse">
+                <li>
+                  <a href="/upload">
+                    <span class="sub-item">Upload Data Verval</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="/upload-erdkk">
+                    <span class="sub-item">Upload Data e-RDKK </span>
+                  </a>
+                </li>
+                <li>
+                  <a href="/upload-wcm">
+                    <span class="sub-item">Upload Data WCM </span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </li>
+          <li class="nav-item">
+            <a data-bs-toggle="collapse" href="#tables">
+              <i class="fas fa-table"></i>
+              <p>Data</p>
+              <span class="caret"></span>
+            </a>
+            <div class="collapse" id="tables">
+              <ul class="nav nav-collapse">
+                <li>
+                  <a href="/esummary">
+                    <span class="sub-item">Data Summary Petani</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="/salurkios">
+                    <span class="sub-item">Data Salur Kios per Bulan</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="/wcm">
+                    <span class="sub-item">Data WCM</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="/dataverval">
+                    <span class="sub-item">Data Verval</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="/erdkk">
+                    <span class="sub-item">Data e-RDKK</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <!-- End Sidebar -->
+
+  <div class="main-panel">
+    <div class="main-header">
+      <div class="main-header-logo">
+        <!-- Logo Header -->
+        <div class="logo-header" data-background-color="dark">
+          <div class="nav-toggle">
+            <button class="btn btn-toggle toggle-sidebar">
+              <i class="gg-menu-right"></i>
+            </button>
+            <button class="btn btn-toggle sidenav-toggler">
+              <i class="gg-menu-left"></i>
+            </button>
+          </div>
+          <button class="topbar-toggler more">
+            <i class="gg-more-vertical-alt"></i>
+          </button>
+        </div>
+        <!-- End Logo Header -->
+      </div>
+      <!-- Navbar Header -->
+      <nav
+        class="navbar navbar-header navbar-header-transparent navbar-expand-lg border-bottom"
+      >
+        <div class="container-fluid">
+
+          <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
+
+            <li class="nav-item topbar-user dropdown hidden-caret">
+              <a
+                class="dropdown-toggle profile-pic"
+                data-bs-toggle="dropdown"
+                href="#"
+                aria-expanded="false"
+              >
+                <div class="avatar-sm">
+                  <img
+                    src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+                    alt="..."
+                    class="avatar-img rounded-circle"
+                  />
+                </div>
+                <span class="profile-username">
+                  <span class="op-7">Hi,</span>
+                  <% if (username) { %>
+                  <span class="fw-bold"><%= username %></span>
+                  <% } %>
+                </span>
+              </a>
+              <ul class="dropdown-menu dropdown-user animated fadeIn">
+                <div class="dropdown-user-scroll scrollbar-outer">
+                  <li>
+                    <div class="user-box">
+                      <div class="avatar-lg">
+                        <img
+                          src="./assets/img/profile.jpg"
+                          alt="image profile"
+                          class="avatar-img rounded"
+                        />
+                      </div>
+                      <div class="u-text">
+                        <% if (username) { %>
+                            <h4><%= username %></h4>
+                            <p class="text-muted">Admin</p>
+                            <a href="/logout" class="btn btn-xs btn-danger btn-sm">Logout</a>
+                        <% } %>
+                    </div>
+                    </div>
+                  </li>
+                </div>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </nav>
+      <!-- End Navbar -->
+    </div>

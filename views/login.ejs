@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-900 to-gray-900 flex items-center justify-center min-h-screen">
+    <div class="bg-white shadow-xl rounded-xl p-6 w-full max-w-sm transform transition-all hover:scale-105">
+        
+        <!-- Logo Admin -->
+        <div class="flex justify-center">
+            <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Admin Logo" class="w-20 h-20 mb-4">
+        </div>
+
+        <h2 class="text-xl font-bold text-center mb-4 text-gray-800">Admin Login</h2>
+
+        <form action="/login" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-gray-700 font-semibold text-sm">Username</label>
+                <div class="relative">
+                    <input type="text" name="username" class="w-full p-2 pl-9 border rounded-lg focus:ring-2 focus:ring-blue-400 text-sm" required>
+                    <i class="fas fa-user absolute left-3 top-3 text-gray-500"></i>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-gray-700 font-semibold text-sm">Password</label>
+                <div class="relative">
+                    <input type="password" name="password" class="w-full p-2 pl-9 border rounded-lg focus:ring-2 focus:ring-blue-400 text-sm" required>
+                    <i class="fas fa-lock absolute left-3 top-3 text-gray-500"></i>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition text-sm">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+        </form>
+
+        <p class="text-center text-gray-500 text-xs mt-3">&copy; 2025 Pupuk Indonesia - Yogyakarta</p>
+    </div>
+</body>
+</html>

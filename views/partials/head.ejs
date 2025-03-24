@@ -1,0 +1,113 @@
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<title>Pupuk Indonesia - DIY & JATENG Dashboard</title>
+<meta
+  content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
+  name="viewport"
+/>
+<script src="assets/js/plugin/webfont/webfont.min.js"></script>
+<script>
+  WebFont.load({
+    google: { families: ["Public Sans:300,400,500,600,700"] },
+    custom: {
+      families: [
+        "Font Awesome 5 Solid",
+        "Font Awesome 5 Regular",
+        "Font Awesome 5 Brands",
+        "simple-line-icons",
+      ],
+      urls: ["assets/css/fonts.min.css"],
+    },
+    active: function () {
+      sessionStorage.fonts = true;
+    },
+  });
+</script>
+
+<style>
+  /* Memindahkan tfoot ke atas setelah thead */
+  tfoot {
+    display: table-header-group;
+  }
+
+  /* Memastikan tbody tetap di posisi default */
+  tbody {
+    display: table-row-group;
+  }
+
+  .select2-container--bootstrap-5 .select2-dropdown {
+    max-height: 300px !important; /* Scroll muncul hanya di dropdown */
+    overflow-y: auto !important;
+    border: 1px solid blue;
+  }
+  .card-title {
+    font-size: 13px !important;
+  }
+
+  .hidden {
+    display: none;
+  }
+  .selected-text {
+    cursor: pointer;
+    color: blue;
+    text-decoration: underline;
+  }
+
+  .loader {
+    border: 4px solid #e0e0e0;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .select2-container--default .select2-selection--multiple {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 4px;
+    min-height: 38px;
+    background-color: white;
+  }
+
+  .select2-container--default .select2-results__option {
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  .select2-checkbox {
+    margin-right: 8px;
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<link
+  href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css"
+  rel="stylesheet"
+/>
+
+<!-- Select2 CSS -->
+<link
+  href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css"
+  rel="stylesheet"
+/>
+
+<!-- jQuery & Select2 JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+<!-- CSS Files -->
+<link rel="stylesheet" href="assets/css/bootstrap.min.css" />
+<link rel="stylesheet" href="assets/css/plugins.min.css" />
+<link rel="stylesheet" href="assets/css/kaiadmin.min.css" />
+
+<!-- CSS Just for demo purpose, don't include it in your project -->
+<link rel="stylesheet" href="assets/css/demo.css" />

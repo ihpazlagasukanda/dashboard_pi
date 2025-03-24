@@ -1,0 +1,215 @@
+const ExcelJS = require('exceljs');
+const fs = require('fs');
+const csv = require('csv-parser'); // Library untuk membaca file CSV
+const db = require('../config/db');  // Pastikan path database benar
+
+// Fungsi untuk konversi nilai menjadi angka
+const convertToNumber = (value) => {
+    if (typeof value === 'string') {
+        value = value.replace(',', '.'); 
+    }
+    const numberValue = parseFloat(value);
+    return isNaN(numberValue) ? 0 : numberValue;
+};
+
+// Fungsi untuk memproses data dari Excel atau CSV
+const processData = (rows, metodePenebusan) => {
+    return rows.map((row) => {
+        let tanggalTebus;
+        let tanggalExcel;
+
+        if (metodePenebusan === 'ipubers') {
+            tanggalExcel = row[16] || row['Tanggal Tebus']; // Sesuaikan dengan kolom di Excel atau CSV
+            if (tanggalExcel && /^\d{1,2}-\d{1,2}-\d{4}$/.test(tanggalExcel)) {
+                const parts = tanggalExcel.split('-');
+                if (parts.length === 3) {
+                    parts[0] = parts[0].padStart(2, '0'); // Format DD
+                    parts[1] = parts[1].padStart(2, '0'); // Format MM
+                    tanggalExcel = parts.join('-');
+                }
+            }
+            const parts = tanggalExcel.split('-');
+            if (parts.length === 3) {
+                tanggalTebus = `${parts[2]}/${parts[1]}/${parts[0]}`; // YYYY/MM/DD
+            } else {
+                tanggalTebus = null;
+            }
+        } else if (metodePenebusan === 'kartan') {
+            // Mengambil tanggal dari kolom 15 (misalnya kolom ini untuk kartan)
+            tanggalExcel = row.getCell(15).text;
+        
+            console.log('Raw Tanggal Excel:', tanggalExcel);
+        
+            // Menangani kasus jika tanggal adalah objek Date atau string yang dapat diparsing
+            if (tanggalExcel instanceof Date || !isNaN(Date.parse(tanggalExcel))) {
+                const dateObj = new Date(tanggalExcel);
+                tanggalTebus = `${dateObj.getFullYear()}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getDate().toString().padStart(2, '0')}`;
+            } 
+            // Menangani kasus jika tanggal dalam format 'DD/MM/YYYY' sebagai string
+            else if (typeof tanggalExcel === 'string' && tanggalExcel.includes('/')) {
+                const parts = tanggalExcel.split('/');
+                if (parts.length === 3) {
+                    // Memastikan formatnya diubah menjadi 'YYYY/MM/DD'
+                    tanggalTebus = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                }
+            } else {
+                tanggalTebus = null;
+                console.log('Tanggal tidak valid:', tanggalExcel);
+            }
+        }
+        
+        console.log('Formatted Tanggal Tebus:', tanggalTebus);
+        
+
+        const kodeTransaksi = metodePenebusan === 'ipubers' ? row[3] || row['Kode Transaksi'] || '' : row[4] || row['Kode Transaksi'] || '';
+
+        if (metodePenebusan === 'ipubers') {
+            return {
+                kabupaten: row[1] || row['Kabupaten'] || '',
+                kecamatan: row[2] || row['Kecamatan'] || '',
+                kodeTransaksi: kodeTransaksi,
+                kodeKios: row[5] || row['Kode Kios'] || '',
+                nik: row[7] || row['NIK'] || '',
+                namaPetani: row[8] || row['Nama Petani'] || '',
+                metodePenebusan: 'ipubers',
+                tanggalTebus: tanggalTebus,
+                urea: convertToNumber(row[9] || row['Urea'] || '0'),
+                npk: convertToNumber(row[10] || row['NPK'] || '0'),
+                sp36: convertToNumber(row[11] || row['SP36'] || '0'),
+                za: convertToNumber(row[12] || row['ZA'] || '0'),
+                npkFormula: convertToNumber(row[13] || row['NPK Formula'] || '0'),
+                organik: convertToNumber(row[14] || row['Organik'] || '0'),
+                organikCair: convertToNumber(row[15] || row['Organik Cair'] || '0'),
+                kakao: convertToNumber(row[22] || row['Kakao'] || '0')
+            };
+        } else if (metodePenebusan === 'kartan') {
+            const mid = row[16] || row['MID'];
+            return {
+                kabupaten: row[2] || row['Kabupaten'] || '',
+                kecamatan: row[3] || row['Kecamatan'] || '',
+                kodeTransaksi: kodeTransaksi,
+                kodeKios: '',
+                nik: row[5] || row['NIK'] || '',
+                namaPetani: row[6] || row['Nama Petani'] || '',
+                metodePenebusan: 'kartan',
+                tanggalTebus: tanggalTebus,
+                urea: convertToNumber(row[7] || row['Urea'] || '0'),
+                npk: convertToNumber(row[8] || row['NPK'] || '0'),
+                sp36: convertToNumber(row[9] || row['SP36'] || '0'),
+                za: convertToNumber(row[10] || row['ZA'] || '0'),
+                npkFormula: convertToNumber(row[11] || row['NPK Formula'] || '0'),
+                organik: convertToNumber(row[12] || row['Organik'] || '0'),
+                organikCair: convertToNumber(row[13] || row['Organik Cair'] || '0'),
+                kakao: convertToNumber(row[14] || row['Kakao'] || '0'),
+                mid: mid
+            };
+        }
+    });
+};
+
+exports.uploadFile = async (req, res) => {
+    try {
+        const file = req.file;
+        const metodePenebusan = req.body.metodePenebusan;
+
+        console.log('Metode Penebusan:', metodePenebusan);
+        if (!file) {
+            return res.status(400).send({ message: 'No file uploaded' });
+        }
+
+        let rows = [];
+
+        // Proses file Excel (XLSX)
+        if (file.originalname.endsWith('.xlsx')) {
+            const workbook = new ExcelJS.Workbook();
+            await workbook.xlsx.readFile(file.path);
+            const worksheet = workbook.worksheets[0];
+
+            const startRow = metodePenebusan === 'ipubers' ? 3 : 4;
+            rows = worksheet._rows.slice(startRow - 1).filter(row => row && row.hasValues);
+            rows = rows.filter(row => row.getCell(1).text.trim() !== '' && row.getCell(2).text.trim() !== '');
+
+            // Filter data hanya untuk ipubers dan tidak termasuk "Ditolak Tim Verval Kecamatan"
+            if (metodePenebusan === 'ipubers') {
+                rows = rows.filter(row => !row.getCell(21)?.text.trim().includes('Ditolak'));
+            }
+
+            // Konversi baris Excel ke format yang sama dengan CSV
+            // rows = rows.map(row => {
+            //     const obj = {};
+            //     row.eachCell((cell, colNumber) => {
+            //         obj[colNumber] = cell.text;
+            //     });
+            //     return obj;
+            // });
+        }
+        // Proses file CSV
+        else if (file.originalname.endsWith('.csv')) {
+            await new Promise((resolve, reject) => {
+                fs.createReadStream(file.path)
+                    .pipe(csv())
+                    .on('data', (row) => rows.push(row))
+                    .on('end', () => resolve())
+                    .on('error', (error) => reject(error));
+            });
+        } else {
+            return res.status(400).send({ message: 'Unsupported file format' });
+        }
+
+        // Proses data dari kedua jenis file
+        const data = processData(rows, metodePenebusan);
+
+        for (let rowData of data) {
+            let kodeKios = rowData.kodeKios;
+            if (metodePenebusan === 'kartan') {
+                const cleanMid = rowData.mid.trim();
+                const [masterMID] = await db.query('SELECT kode_kios FROM master_mid WHERE BINARY mid = ?', [cleanMid]);
+                if (masterMID.length > 0) {
+                    kodeKios = masterMID[0].kode_kios;
+                }
+            }
+
+            console.log('Mulai proses upload...');
+
+            const [exists] = await db.query(
+                'SELECT 1 FROM verval WHERE nik = ? AND kode_kios = ? AND tanggal_tebus = ? AND kode_transaksi = ?',
+                [rowData.nik, kodeKios, rowData.tanggalTebus, rowData.kodeTransaksi]
+            );
+
+            console.log('Cek duplikasi:', exists);
+
+            if (exists.length === 0) {
+                console.log('Data belum ada, akan diinsert:', rowData.kodeTransaksi);
+                await db.query(
+                    'INSERT INTO verval (kabupaten, kecamatan, kode_transaksi, kode_kios, nik, nama_petani, metode_penebusan, tanggal_tebus, urea, npk, sp36, za, npk_formula, organik, organik_cair, kakao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    [
+                        rowData.kabupaten,
+                        rowData.kecamatan,
+                        rowData.kodeTransaksi,
+                        kodeKios,
+                        rowData.nik,
+                        rowData.namaPetani,
+                        rowData.metodePenebusan,
+                        rowData.tanggalTebus,
+                        rowData.urea,
+                        rowData.npk,
+                        rowData.sp36,
+                        rowData.za,
+                        rowData.npkFormula,
+                        rowData.organik,
+                        rowData.organikCair,
+                        rowData.kakao
+                    ]
+                );
+            } else {
+                console.log('Data sudah ada, tidak diinsert:', rowData.kodeTransaksi);
+            }
+        }
+
+        fs.unlinkSync(file.path);
+        res.status(200).send({ message: 'File uploaded and data processed successfully' });
+    } catch (error) {
+        console.error('Error uploading file: ', error);
+        res.status(500).send({ message: 'Error uploading file' });
+    }
+};

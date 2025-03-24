@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <%- include('./partials/head'); %>
+  </head>
+  <body>
+    <div class="wrapper">
+      <%- include('./partials/header'); %>
+
+      <div class="container">
+        <div class="page-inner">
+          <div class="page-header">
+            <h3 class="fw-bold mb-3">Upload Data Verval</h3>
+            <ul class="breadcrumbs mb-3">
+              <li class="nav-home">
+                <a href="/">
+                  <i class="icon-home"></i>
+                </a>
+              </li>
+              <li class="separator">
+                <i class="icon-arrow-right"></i>
+              </li>
+              <li class="nav-item">
+                <a href="/upload">Upload</a>
+              </li>
+              <li class="separator">
+                <i class="icon-arrow-right"></i>
+              </li>
+              <li class="nav-item">
+                <a href="/upload">Upload Data Verval</a>
+              </li>
+            </ul>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">Upload Data Verval</div>
+                </div>
+                <div class="card-body">
+                  <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="row">
+                      <div class="col-md-6 col-lg-4">
+                        <div class="form-group">
+                          <label for="metodePenebusan" class="font-weight-bold">Metode Penebusan</label><br />
+                          <div class="d-flex">
+                            <div class="form-check mr-3">
+                              <input class="form-check-input" type="radio" name="metodePenebusan" id="ipubers" value="ipubers" />
+                              <label class="form-check-label" for="ipubers">Ipubers</label>
+                            </div>
+                            <div class="form-check">
+                              <input class="form-check-input" type="radio" name="metodePenebusan" id="kartan" value="kartan" checked />
+                              <label class="form-check-label" for="kartan">Kartan</label>
+                            </div>
+                          </div>
+                        </div>
+                      
+                        <div class="form-group">
+                          <label for="fileInput" class="font-weight-bold">Upload file (.xlsx)</label>
+                          <input type="file" class="form-control-file" id="fileInput" name="files" multiple required />
+                        </div>
+                      
+                        <div class="d-flex mt-3">
+                          <button type="submit" class="btn btn-success me-3">Upload</button>
+                          <button id="openModal" class="btn btn-outline-primary">Petunjuk</button>
+                        </div>
+
+                        <div
+                          id="modalPetunjuk"
+                          class="modal fade"
+                          tabindex="-1"
+                          aria-hidden="true"
+                        >
+                          <div class="modal-dialog">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h5 class="modal-title">Petunjuk</h5>
+                                <button
+                                  type="button"
+                                  class="btn-close"
+                                  data-bs-dismiss="modal"
+                                  aria-label="Close"
+                                ></button>
+                              </div>
+                              <div class="modal-body">
+                                <!-- Menu Navigasi dalam Modal -->
+                                <ul class="nav nav-tabs mb-3">
+                                  <li class="nav-item">
+                                    <a
+                                      class="nav-link active"
+                                      id="btnHelp"
+                                      href="#"
+                                      >Help</a
+                                    >
+                                  </li>
+                                  <li class="nav-item">
+                                    <a class="nav-link" id="btnKartan" href="#"
+                                      >Template Kartan</a
+                                    >
+                                  </li>
+                                  <li class="nav-item">
+                                    <a class="nav-link" id="btnIPubers" href="#"
+                                      >Template iPubers</a
+                                    >
+                                  </li>
+                                </ul>
+
+                                <!-- Konten Modal -->
+                                <div
+                                  id="contentHelp"
+                                  class="modal-content-section"
+                                >
+                                  <p>
+                                    <ol>
+                                      <li>
+                                        Pastikan file yang diupload dalam format excel (.xlsx)
+                                      </li>
+                                      <li>
+                                        Secara default system sudah bisa menangani upload file verval yang didownload langsung dari web verval
+                                        tetapi untuk file kartan, anda harus mengubahnya ke .xlsx terlebih dahulu sebelum upload ke dashboard ini.
+                                      </li>
+                                      <li>
+                                        Pastikan kembali file excel sesuai format dan template, untuk lihat template anda bisa klik template kartan atau ipubers.
+                                      </li>
+                                    </ol>
+                                  </p>
+                                </div>
+                                <div
+                                  id="contentKartan"
+                                  class="modal-content-section d-none"
+                                >
+                                  <img
+                                    src="./assets/img/template_kartan.png"
+                                    alt="Template Kartan"
+                                    class="img-fluid"
+                                  />
+                                </div>
+                                <div
+                                  id="contentIPubers"
+                                  class="modal-content-section d-none"
+                                >
+                                  <img
+                                    src="./assets/img/template_ipubers.png"
+                                    alt="Template iPubers"
+                                    class="img-fluid"
+                                  />
+                                </div>
+                              </div>
+                              <div class="modal-footer">
+                                <button
+                                  type="button"
+                                  class="btn btn-danger"
+                                  data-bs-dismiss="modal"
+                                >
+                                  Tutup
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <%- include('./partials/footer'); %>
+
+      <!-- End Custom template -->
+    </div>
+    <!--   Core JS Files   -->
+    <!--   Core JS Files   -->
+    <script src="../assets/js/core/jquery-3.7.1.min.js"></script>
+    <script src="../assets/js/core/popper.min.js"></script>
+    <script src="../assets/js/core/bootstrap.min.js"></script>
+
+    <!-- jQuery Scrollbar -->
+    <script src="../assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
+
+    <!-- Chart JS -->
+    <script src="../assets/js/plugin/chart.js/chart.min.js"></script>
+
+    <!-- jQuery Sparkline -->
+    <script src="../assets/js/plugin/jquery.sparkline/jquery.sparkline.min.js"></script>
+
+    <!-- Chart Circle -->
+    <script src="../assets/js/plugin/chart-circle/circles.min.js"></script>
+
+    <!-- Datatables -->
+    <script src="../assets/js/plugin/datatables/datatables.min.js"></script>
+
+    <!-- Bootstrap Notify -->
+    <script src="../assets/js/plugin/bootstrap-notify/bootstrap-notify.min.js"></script>
+
+    <!-- jQuery Vector Maps -->
+    <script src="../assets/js/plugin/jsvectormap/jsvectormap.min.js"></script>
+    <script src="../assets/js/plugin/jsvectormap/world.js"></script>
+
+    <!-- Google Maps Plugin -->
+    <script src="../assets/js/plugin/gmaps/gmaps.js"></script>
+
+    <!-- Sweet Alert -->
+    <script src="../assets/js/plugin/sweetalert/sweetalert.min.js"></script>
+
+    <!-- Kaiadmin JS -->
+    <script src="../assets/js/kaiadmin.min.js"></script>
+
+    <!-- Kaiadmin DEMO methods, don't include it in your project! -->
+    <script src="../assets/js/setting-demo2.js"></script>
+    <script src="./script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Script untuk mengontrol modal dan kontennya -->
+    <script>
+      document
+        .getElementById("openModal")
+        .addEventListener("click", function () {
+          var modal = new bootstrap.Modal(
+            document.getElementById("modalPetunjuk")
+          );
+          modal.show();
+          showContent("contentHelp"); // Default ke Help
+        });
+
+      document.getElementById("btnHelp").addEventListener("click", function () {
+        showContent("contentHelp");
+      });
+      document
+        .getElementById("btnKartan")
+        .addEventListener("click", function () {
+          showContent("contentKartan");
+        });
+      document
+        .getElementById("btnIPubers")
+        .addEventListener("click", function () {
+          showContent("contentIPubers");
+        });
+
+      function showContent(contentId) {
+        document
+          .querySelectorAll(".modal-content-section")
+          .forEach((el) => el.classList.add("d-none"));
+        document.getElementById(contentId).classList.remove("d-none");
+      }
+    </script>
+  </body>
+</html>

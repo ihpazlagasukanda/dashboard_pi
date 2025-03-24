@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <%- include('./partials/head'); %>
+  </head>
+  <body>
+    <div class="wrapper">
+      <%- include('./partials/header'); %>
+
+      <div class="container">
+        <div class="page-inner">
+          <div class="page-header">
+            <h3 class="fw-bold mb-3">Data Verval</h3>
+            <ul class="breadcrumbs mb-3">
+              <li class="nav-home">
+                <a href="/">
+                  <i class="icon-home"></i>
+                </a>
+              </li>
+              <li class="separator">
+                <i class="icon-arrow-right"></i>
+              </li>
+              <li class="nav-item">
+                <a href="/dataverval">Data</a>
+              </li>
+              <li class="separator">
+                <i class="icon-arrow-right"></i>
+              </li>
+              <li class="nav-item">
+                <a href="/dataverval">Data Verval</a>
+              </li>
+            </ul>
+          </div>
+
+          <div
+            class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4"
+          >
+            <div>
+              <p class="op-7 mb-2">
+                Untuk Menampilkan Data Sesuai, Harap Pilih
+              </p>
+            </div>
+            <div class="ms-md-auto py-2 py-md-0">
+              <button id="download-excel" class="btn btn-primary btn-round">
+                Download
+              </button>
+              <div
+                id="loading-spinner"
+                class="hidden fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center"
+              >
+                <div
+                  class="bg-white p-5 rounded-lg flex items-center space-x-3"
+                >
+                  <div
+                    class="animate-spin h-8 w-8 border-t-4 border-blue-600 border-solid rounded-full"
+                  ></div>
+                  <span class="text-lg font-semibold"
+                    >Mengunduh data, harap tunggu...</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5"
+          >
+            <!-- Kabupaten -->
+            <div class="grid grid-cols-2 items-center gap-2">
+              <label
+                for="filter-kabupaten"
+                class="text-sm font-medium text-gray-700"
+                >Kabupaten</label
+              >
+              <select
+                id="filter-kabupaten"
+                class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
+              >
+                <option value="">Semua Kabupaten</option>
+                
+              </select>
+            </div>
+
+            <!-- Kecamatan -->
+            <div class="grid grid-cols-2 items-center gap-2">
+              <label
+                for="filter-kecamatan"
+                class="text-sm font-medium text-gray-700"
+                >Kecamatan</label
+              >
+              <select
+                id="filter-kecamatan"
+                class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
+              >
+                <option value="">Semua Kecamatan</option>
+              </select>
+            </div>
+
+            <!-- Metode Penebusan -->
+            <div class="grid grid-cols-2 items-center gap-2">
+              <label
+                for="filter-metode-penebusan"
+                class="text-sm font-medium text-gray-700"
+                >Metode Penebusan</label
+              >
+              <select
+                id="filter-metode-penebusan"
+                class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
+              >
+                <option value="">Semua Metode</option>
+                <!-- <option value="ipubers">iPubers</option>
+                            <option value="kartan">Kartan</option> -->
+              </select>
+            </div>
+
+            <!-- Tanggal Tebus -->
+            <div class="grid grid-cols-2 items-center gap-2">
+              <label
+                for="filter-tanggal-tebus"
+                class="text-sm font-medium text-gray-700"
+                >Bulan</label
+              >
+              <input
+                type="month"
+                id="filter-tanggal-tebus"
+                class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
+              />
+            </div>
+            <br />
+            <div class="grid grid-cols-3 items-center gap-2">
+              <label class="text-sm font-medium text-gray-700"
+                >Periode Bulan:</label
+              >
+              <input
+                type="month"
+                id="filter-bulan-awal"
+                class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
+              />
+              <span class="text-gray-500 text-sm text-center"> - </span>
+              <input
+                type="month"
+                id="filter-bulan-akhir"
+                class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
+              />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header">
+                  <h4 class="card-title">Verval</h4>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table id="multi-filter-select" class="table">
+                      <thead>
+                        <tr>
+                          <th>Kabupaten</th>
+                          <th>Kecamatan</th>
+                          <th>Kode Kios</th>
+                          <th>Nama Kios</th>
+                          <th>NIK</th>
+                          <th>Nama Petani</th>
+                          <th>Metode Penebusan</th>
+                          <th>Tanggal Tebus</th>
+                          <th>Urea</th>
+                          <th>NPK</th>
+                          <th>SP36</th>
+                          <th>ZA</th>
+                          <th>NPK Formula</th>
+                          <th>Organik</th>
+                          <th>Organik Cair</th>
+                          <th>Kakao</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tfoot>
+                        <tr>
+                          <th>
+                            <!-- <span class="selected-text" data-id="kabupaten">Pilih Kabupaten</span> -->
+                            <select
+                              id="kabupaten"
+                              multiple
+                              class="filter-dropdown hidden"
+                            ></select>
+                          </th>
+                          <th>
+                            <!-- <span class="selected-text" data-id="kecamatan">Pilih Kecamatan</span> -->
+                            <select
+                              id="kecamatan"
+                              multiple
+                              class="filter-dropdown hidden"
+                            ></select>
+                          </th>
+                          <th>-</th>
+                          <th>-</th>
+                          <th>-</th>
+                          <th>-</th>
+                          <th>
+                            <!-- <span class="selected-text" data-id="metode_penebusan">Pilih Metode Penebusan</span> -->
+                            <select
+                              id="metode_penebusan"
+                              multiple
+                              class="filter-dropdown hidden"
+                            ></select>
+                          </th>
+                          <th>
+                            <select
+                              id="tanggal_tebus"
+                              multiple
+                              class="filter-dropdown hidden"
+                            ></select>
+                          </th>
+                          <th id="sum-urea-text">0</th>
+                          <th id="sum-npk-text">0</th>
+                          <th id="sum-sp36-text">0</th>
+                          <th id="sum-za-text">0</th>
+                          <th id="sum-npk-formula-text">0</th>
+                          <th id="sum-organik-text">0</th>
+                          <th id="sum-organik-cair-text">0</th>
+                          <th id="sum-kakao-text">0</th>
+                          <th>-</th>
+                        </tr>
+                      </tfoot>
+
+                      <tbody id="dataTable">
+                        <!-- Data akan dimasukkan melalui JavaScript -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <%- include('./partials/footer'); %>
+    </div>
+    <!--   Core JS Files   -->
+    <script src="./assets/js/core/jquery-3.7.1.min.js"></script>
+    <script src="./assets/js/core/popper.min.js"></script>
+    <script src="./assets/js/core/bootstrap.min.js"></script>
+
+    <!-- jQuery Scrollbar -->
+    <script src="./assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
+    <!-- Datatables -->
+    <script src="./assets/js/plugin/datatables/datatables.min.js"></script>
+    <!-- Kaiadmin JS -->
+    <script src="./assets/js/kaiadmin.min.js"></script>
+    <!-- Kaiadmin DEMO methods, don't include it in your project! -->
+    <script src="./assets/js/setting-demo2.js"></script>
+
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <script>
+      $(document).ready(function () {
+        let dataTable;
+
+        // Fungsi untuk menginisialisasi DataTable
+        function initializeDataTable() {
+          dataTable = $("#multi-filter-select").DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+              url: "/api/data",
+              type: "GET",
+              data: function (d) {
+                d.kabupaten = $("#filter-kabupaten").val() || "";
+                d.kecamatan = $("#filter-kecamatan").val() || "";
+                d.metode_penebusan = $("#filter-metode-penebusan").val() || "";
+                d.tanggal_tebus = $("#filter-tanggal-tebus").val() || "";
+                d.bulan_awal = $("#filter-bulan-awal").val() || "";
+                d.bulan_akhir = $("#filter-bulan-akhir").val() || "";
+              },
+            },
+            columns: [
+              { data: "kabupaten" },
+              { data: "kecamatan" },
+              { data: "kode_kios" },
+              { data: "nama_kios"},
+              { data: "nik" },
+              { data: "nama_petani" },
+              { data: "metode_penebusan" },
+              { data: "tanggal_tebus" },
+              {
+                data: "urea",
+                render: $.fn.dataTable.render.number(",", ".", 0, ""),
+              },
+              {
+                data: "npk",
+                render: $.fn.dataTable.render.number(",", ".", 0, ""),
+              },
+              {
+                data: "sp36",
+                render: $.fn.dataTable.render.number(",", ".", 0, ""),
+              },
+              {
+                data: "za",
+                render: $.fn.dataTable.render.number(",", ".", 0, ""),
+              },
+              {
+                data: "npk_formula",
+                render: $.fn.dataTable.render.number(",", ".", 0, ""),
+              },
+              {
+                data: "organik",
+                render: $.fn.dataTable.render.number(",", ".", 0, ""),
+              },
+              {
+                data: "organik_cair",
+                render: $.fn.dataTable.render.number(",", ".", 0, ""),
+              },
+              {
+                data: "kakao",
+                render: $.fn.dataTable.render.number(",", ".", 0, ""),
+              },
+              { data: "status" },
+            ],
+            drawCallback: function () {
+              updateSum();
+            },
+          });
+        }
+
+        // Fungsi untuk memperbarui SUM di footer tabel dan di atas
+        function updateSum() {
+          $.ajax({
+            url: "/api/data/sum",
+            type: "GET",
+            data: {
+              kabupaten: $("#filter-kabupaten").val() || "",
+              kecamatan: $("#filter-kecamatan").val() || "",
+              metode_penebusan: $("#filter-metode-penebusan").val() || "",
+              tanggal_tebus: $("#filter-tanggal-tebus").val() || "",
+              bulan_awal: $("#filter-bulan-awal").val() || "",
+              bulan_akhir: $("#filter-bulan-akhir").val() || "",
+            },
+            success: function (response) {
+              // Update Footer Tabel
+              $("#sum-urea-text").text(response.urea.toLocaleString() || 0);
+              $("#sum-npk-text").text(response.npk.toLocaleString() || 0);
+              $("#sum-sp36-text").text(response.sp36.toLocaleString() || 0);
+              $("#sum-za-text").text(response.za.toLocaleString() || 0);
+              $("#sum-npk-formula-text").text(
+                response.npk_formula.toLocaleString() || 0
+              );
+              $("#sum-organik-text").text(
+                response.organik.toLocaleString() || 0
+              );
+              $("#sum-organik-cair-text").text(
+                response.organik_cair.toLocaleString() || 0
+              );
+              $("#sum-kakao-text").text(response.kakao.toLocaleString() || 0);
+
+              // Update Total di Kartu Atas
+              $("#sum-urea").text(response.urea.toLocaleString() || 0);
+              $("#sum-npk").text(response.npk.toLocaleString() || 0);
+              $("#sum-sp36").text(response.sp36.toLocaleString() || 0);
+              $("#sum-za").text(response.za.toLocaleString() || 0);
+              $("#sum-npk-formula").text(
+                response.npk_formula.toLocaleString() || 0
+              );
+              $("#sum-organik").text(response.organik.toLocaleString() || 0);
+              $("#sum-organik-cair").text(
+                response.organik_cair.toLocaleString() || 0
+              );
+              $("#sum-kakao").text(response.kakao.toLocaleString() || 0);
+            },
+            error: function (xhr, status, error) {
+              console.error("Error fetching sum:", error);
+            },
+          });
+
+          // Ambil Jumlah Petani Unik
+          $.ajax({
+            url: "/api/data/jumlah-petani",
+            type: "GET",
+            data: {
+              kabupaten: $("#filter-kabupaten").val() || "",
+              kecamatan: $("#filter-kecamatan").val() || "",
+              metode_penebusan: $("#filter-metode-penebusan").val() || "",
+              tanggal_tebus: $("#filter-tanggal-tebus").val() || "",
+              bulan_awal: $("#filter-bulan-awal").val() || "",
+              bulan_akhir: $("#filter-bulan-akhir").val() || "",
+            },
+            success: function (response) {
+              $("#jumlah-petani").text(
+                response.jumlah_petani.toLocaleString() || 0
+              );
+            },
+            error: function (xhr, status, error) {
+              console.error("Error fetching jumlah petani:", error);
+            },
+          });
+        }
+
+        // Event listener untuk filter kabupaten
+        $("#filter-kabupaten").on("change", function () {
+          if ($(this).val()) {
+            // Tampilkan spinner
+            $("#spinner").show();
+
+            // Inisialisasi DataTable
+            if (!$.fn.DataTable.isDataTable("#multi-filter-select")) {
+              initializeDataTable();
+            } else {
+              dataTable.ajax.reload();
+            }
+
+            // Sembunyikan spinner setelah data dimuat
+            dataTable.on("draw", function () {
+              $("#spinner").hide();
+            });
+
+            updateSum();
+          }
+        });
+
+        // Reload DataTables saat filter berubah
+        $(".filter-dropdown").on("change", function () {
+          if (dataTable) {
+            dataTable.ajax.reload();
+            updateSum();
+          }
+        });
+
+        // Download data dalam format Excel dengan filter yang diterapkan
+        $("#download-excel").click(function () {
+          let params = {
+            kabupaten: $("#filter-kabupaten").val() || "",
+            kecamatan: $("#filter-kecamatan").val() || "",
+            metode_penebusan: $("#filter-metode-penebusan").val() || "",
+            tanggal_tebus: $("#filter-tanggal-tebus").val() || "",
+            bulan_awal: $("#filter-bulan-awal").val() || "",
+            bulan_akhir: $("#filter-bulan-akhir").val() || "",
+          };
+          window.location.href = `/api/data/download?` + $.param(params);
+        });
+
+        // Ambil daftar filter dari API dan isi dropdown
+        $.get("/api/filters", function (data) {
+          data.kabupaten.forEach((item) =>
+            $("#filter-kabupaten").append(
+              `<option value="${item}">${item}</option>`
+            )
+          );
+          data.kecamatan.forEach((item) =>
+            $("#filter-kecamatan").append(
+              `<option value="${item}">${item}</option>`
+            )
+          );
+          data.metode_penebusan.forEach((item) =>
+            $("#filter-metode-penebusan").append(
+              `<option value="${item}">${item}</option>`
+            )
+          );
+          data.tanggal_tebus.forEach((item) =>
+            $("#filter-tanggal-tebus").append(
+              `<option value="${item}">${item}</option>`
+            )
+          );
+        });
+      });
+    </script>
+  </body>
+</html>

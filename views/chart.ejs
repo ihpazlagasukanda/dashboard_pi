@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <%- include('./partials/head'); %> 
+    </head>
+    <body>
+        <div class="wrapper">
+            <%- include('./partials/header'); %> 
+            
+            <div class="container">
+                <div class="page-inner">
+                  <div
+                    class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4"
+                  >
+                    <div>
+                      <h3 class="fw-bold mb-3">Selamat Datang di Dashboard Pupuk Indonesia DIY & JATENG 3</h3>
+                      <h6 class="op-7 mb-2">Persebaran Pupuk</h6>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-sm-6 col-md-3">
+                      <div class="card card-stats card-round">
+                        <div class="card-body">
+                          <div class="row align-items-center">
+                            <div class="col-icon">
+                              <div
+                                class="icon-big text-center icon-primary bubble-shadow-small"
+                              >
+                                <i class="fas fa-box"></i>
+                              </div>
+                            </div>
+                            <div class="col col-stats ms-3 ms-sm-0">
+                              <div class="numbers">
+                                <p class="card-category">Urea</p>
+                                <h4 class="card-title" id="sum-urea">0</h4>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                      <div class="card card-stats card-round">
+                        <div class="card-body">
+                          <div class="row align-items-center">
+                            <div class="col-icon">
+                              <div
+                                class="icon-big text-center icon-info bubble-shadow-small"
+                              >
+                                <i class="fas fa-boxes"></i>
+                              </div>
+                            </div>
+                            <div class="col col-stats ms-3 ms-sm-0">
+                              <div class="numbers">
+                                <p class="card-category">NPK</p>
+                                <h4 class="card-title" id="sum-npk">0</h4>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                      <div class="card card-stats card-round">
+                        <div class="card-body">
+                          <div class="row align-items-center">
+                            <div class="col-icon">
+                              <div
+                                class="icon-big text-center icon-success bubble-shadow-small"
+                              >
+                                <i class="fas fa-box"></i>
+                              </div>
+                            </div>
+                            <div class="col col-stats ms-3 ms-sm-0">
+                              <div class="numbers">
+                                <p class="card-category">SP36</p>
+                                <h4 class="card-title" id="sum-sp36">0</h4>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                      <div class="card card-stats card-round">
+                        <div class="card-body">
+                          <div class="row align-items-center">
+                            <div class="col-icon">
+                              <div
+                                class="icon-big text-center icon-success bubble-shadow-small"
+                              >
+                                <i class="fas fa-boxes"></i>
+                              </div>
+                            </div>
+                            <div class="col col-stats ms-3 ms-sm-0">
+                              <div class="numbers">
+                                <p class="card-category">ZA</p>
+                                <h4 class="card-title" id="sum-za">0</h4>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                      <div class="card card-stats card-round">
+                        <div class="card-body">
+                          <div class="row align-items-center">
+                            <div class="col-icon">
+                              <div
+                                class="icon-big text-center icon-secondary bubble-shadow-small"
+                              >
+                                <i class="fas fa-box"></i>
+                              </div>
+                            </div>
+                            <div class="col col-stats ms-3 ms-sm-0">
+                              <div class="numbers">
+                                <p class="card-category">NPK Formula</p>
+                                <h4 class="card-title" id="sum-npk-formula">0</h4>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                      <div class="card card-stats card-round">
+                        <div class="card-body">
+                          <div class="row align-items-center">
+                            <div class="col-icon">
+                              <div
+                                class="icon-big text-center icon-secondary bubble-shadow-small"
+                              >
+                                <i class="fas fa-leaf"></i>
+                              </div>
+                            </div>
+                            <div class="col col-stats ms-3 ms-sm-0">
+                              <div class="numbers">
+                                <p class="card-category">Organik</p>
+                                <h4 class="card-title" id="sum-organik">0</h4>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                      <div class="card card-stats card-round">
+                        <div class="card-body">
+                          <div class="row align-items-center">
+                            <div class="col-icon">
+                              <div
+                                class="icon-big text-center icon-secondary bubble-shadow-small"
+                              >
+                                <i class="fas fa-tint"></i>
+                              </div>
+                            </div>
+                            <div class="col col-stats ms-3 ms-sm-0">
+                              <div class="numbers">
+                                <p class="card-category">Organik Cair</p>
+                                <h4 class="card-title" id="sum-organik-cair">0</h4>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                      <div class="card card-stats card-round">
+                        <div class="card-body">
+                          <div class="row align-items-center">
+                            <div class="col-icon">
+                              <div
+                                class="icon-big text-center icon-secondary bubble-shadow-small"
+                              >
+                                <i class="fas fa-seedling"></i>
+                              </div>
+                            </div>
+                            <div class="col col-stats ms-3 ms-sm-0">
+                              <div class="numbers">
+                                <p class="card-category">Kakao</p>
+                                <h4 class="card-title" id="sum-kakao">0</h4>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-md-12">
+                      <div class="card card-round">
+                        <div class="card-header">
+                          <div class="card-head-row">
+                            <div class="card-title">Tren Penebusan DIY & Jateng 3</div>
+                            <!-- <div class="card-tools">
+                              <a
+                                href="#"
+                                class="btn btn-label-success btn-round btn-sm me-2"
+                              >
+                                <span class="btn-label">
+                                  <i class="fa fa-pencil"></i>
+                                </span>
+                                Export
+                              </a>
+                              <a href="#" class="btn btn-label-info btn-round btn-sm">
+                                <span class="btn-label">
+                                  <i class="fa fa-print"></i>
+                                </span>
+                                Print
+                              </a>
+                            </div> -->
+                          </div>
+                        </div>
+                        <div class="card-body">
+                          <h4 class="text-center">Statistik Penebusan DIY</h4>
+                          <div class="chart-container" style="min-height: 375px">
+                              <canvas id="statisticsChartDIY"></canvas>
+                          </div>
+                          <div id="myChartLegendDIY"></div>
+                      </div>
+                      
+                      <div class="card-body">
+                          <h4 class="text-center">Statistik Penebusan Jateng 3</h4>
+                          <div class="chart-container" style="min-height: 375px">
+                              <canvas id="statisticsChartJateng"></canvas>
+                          </div>
+                          <div id="myChartLegendJateng"></div>
+                      </div>
+                      
+                      </div>
+                    </div>
+      
+                  </div>
+                </div>
+              </div>
+              <%- include('./partials/footer'); %> 
+
+        <!-- End Custom template -->
+    </div>
+    <!--   Core JS Files   -->
+    <script src="./assets/js/core/jquery-3.7.1.min.js"></script>
+    <script src="./assets/js/core/popper.min.js"></script>
+    <script src="./assets/js/core/bootstrap.min.js"></script>
+
+    <!-- jQuery Scrollbar -->
+    <script src="./assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
+
+    <!-- Chart JS -->
+    <script src="./assets/js/plugin/chart.js/chart.min.js"></script>
+
+    <!-- jQuery Sparkline -->
+    <script src="./assets/js/plugin/jquery.sparkline/jquery.sparkline.min.js"></script>
+
+    <!-- Chart Circle -->
+    <script src="./assets/js/plugin/chart-circle/circles.min.js"></script>
+
+    <!-- Datatables -->
+    <script src="./assets/js/plugin/datatables/datatables.min.js"></script>
+
+    <!-- Bootstrap Notify -->
+    <script src="./assets/js/plugin/bootstrap-notify/bootstrap-notify.min.js"></script>
+
+    <!-- jQuery Vector Maps -->
+    <script src="./assets/js/plugin/jsvectormap/jsvectormap.min.js"></script>
+    <script src="./assets/js/plugin/jsvectormap/world.js"></script>
+
+    <!-- Sweet Alert -->
+    <script src="./assets/js/plugin/sweetalert/sweetalert.min.js"></script>
+
+    <!-- Kaiadmin JS -->
+    <script src="./assets/js/kaiadmin.min.js"></script>
+
+    <!-- Kaiadmin DEMO methods, don't include it in your project! -->
+    <script src="./assets/js/setting-demo.js"></script>
+    <script src="./assets/js/demo.js"></script>
+    
+    <script>
+      fetch('/api/data/all')
+    .then(response => response.json())
+    .then(responseData => {
+        console.log("Data dari API:", responseData); // Cek apakah data benar
+
+        // Pastikan responseData.data adalah array
+        let data = responseData.data; 
+        if (!Array.isArray(data)) {
+            console.error("Data bukan array!", data);
+            return;
+        }
+
+        let totals = {
+            urea: 0,
+            npk: 0,
+            sp36: 0,
+            za: 0,
+            npk_formula: 0,
+            organik: 0,
+            organik_cair: 0,
+            kakao: 0
+        };
+
+        data.forEach(row => {
+            totals.urea += Number(row.urea) || 0;
+            totals.npk += Number(row.npk) || 0;
+            totals.sp36 += Number(row.sp36) || 0;
+            totals.za += Number(row.za) || 0;
+            totals.npk_formula += Number(row.npk_formula) || 0;
+            totals.organik += Number(row.organik) || 0;
+            totals.organik_cair += Number(row.organik_cair) || 0;
+            totals.kakao += Number(row.kakao) || 0;
+        });
+
+        console.log("Total yang dihitung:", totals); // Debug hasil total
+
+        // Update UI
+        document.getElementById("sum-urea").textContent = totals.urea.toLocaleString();
+        document.getElementById("sum-npk").textContent = totals.npk.toLocaleString();
+        document.getElementById("sum-sp36").textContent = totals.sp36.toLocaleString();
+        document.getElementById("sum-za").textContent = totals.za.toLocaleString();
+        document.getElementById("sum-npk-formula").textContent = totals.npk_formula.toLocaleString();
+        document.getElementById("sum-organik").textContent = totals.organik.toLocaleString();
+        document.getElementById("sum-organik-cair").textContent = totals.organik_cair.toLocaleString();
+        document.getElementById("sum-kakao").textContent = totals.kakao.toLocaleString();
+    })
+    .catch(error => console.error('Error fetching data:', error));
+
+      $("#lineChart").sparkline([102, 109, 120, 99, 110, 105, 115], {
+        type: "line",
+        height: "70",
+        width: "100%",
+        lineWidth: "2",
+        lineColor: "#177dff",
+        fillColor: "rgba(23, 125, 255, 0.14)",
+      });
+
+      $("#lineChart2").sparkline([99, 125, 122, 105, 110, 124, 115], {
+        type: "line",
+        height: "70",
+        width: "100%",
+        lineWidth: "2",
+        lineColor: "#f3545d",
+        fillColor: "rgba(243, 84, 93, .14)",
+      });
+
+      $("#lineChart3").sparkline([105, 103, 123, 100, 95, 105, 115], {
+        type: "line",
+        height: "70",
+        width: "100%",
+        lineWidth: "2",
+        lineColor: "#ffa534",
+        fillColor: "rgba(255, 165, 52, .14)",
+      });
+    </script>
+
+    </body>
+</html>

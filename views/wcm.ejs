@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <%- include('./partials/head'); %>
+  </head>
+  <body>
+    <div class="wrapper">
+      <%- include('./partials/header'); %>
+
+      <div class="container">
+        <div class="page-inner">
+          <div class="page-header">
+            <h3 class="fw-bold mb-3">Data WCM</h3>
+            <ul class="breadcrumbs mb-3">
+              <li class="nav-home">
+                <a href="/">
+                  <i class="icon-home"></i>
+                </a>
+              </li>
+              <li class="separator">
+                <i class="icon-arrow-right"></i>
+              </li>
+              <li class="nav-item">
+                <a href="/salurkios">Data</a>
+              </li>
+              <li class="separator">
+                <i class="icon-arrow-right"></i>
+              </li>
+              <li class="nav-item">
+                <a href="/salurkios">Data WCM</a>
+              </li>
+            </ul>
+          </div>
+
+          <div
+            class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4"
+          >
+            <div>
+              <p class="op-7 mb-2">
+                Untuk Menampilkan Data Sesuai, Harap Pilih
+              </p>
+            </div>
+            <div class="ms-md-auto py-2 py-md-0">
+              <button id="download-excel" class="btn btn-primary btn-round">
+                Download
+              </button>
+              <div
+                id="loading-spinner"
+                class="hidden fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center"
+              >
+                <div
+                  class="bg-white p-5 rounded-lg flex items-center space-x-3"
+                >
+                  <div
+                    class="animate-spin h-8 w-8 border-t-4 border-blue-600 border-solid rounded-full"
+                  ></div>
+                  <span class="text-lg font-semibold"
+                    >Mengunduh data, harap tunggu...</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5"
+          >
+            <div class="grid grid-cols-2 items-center gap-2">
+              <label for="tahunSelect" class="text-sm font-medium text-gray-700"
+                >Tahun</label
+              >
+              <select
+                id="tahunSelect"
+                class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
+              >
+                <option value="">Semua Tahun</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+              </select>
+            </div>
+            <!-- Kabupaten -->
+            <div class="grid grid-cols-2 items-center gap-2">
+              <label
+                for="provinsiSelect"
+                class="text-sm font-medium text-gray-700"
+                >Produk</label
+              >
+              <select
+                id="produkSelect"
+                class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
+              >
+              <option value="">Semua Produk</option>
+              <option value="UREA">UREA</option>
+              <option value="NPK">NPK</option>
+              <option value="ORGANIK">ORGANIK</option>
+              <option value="NPK KAKAO">NPK KAKAO</option>
+              </select>
+            </div>
+
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-head-row">
+                    <div class="card-title">Data WCM</div>
+                      <div class="card-tools">
+                      </div>
+                    </div>
+                  </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table id="multi-filter-select" class="table">
+                      <thead>
+                        <tr>
+                          <th rowspan="2">Kabupaten</th>
+                          <th rowspan="2">Id Distributor</th>
+                          <th rowspan="2">Distributor</th>
+                          <th rowspan="2">Kecamatan</th>
+                          <th rowspan="2">Kode Pengecer</th>
+                          <th rowspan="2">Pengecer</th>
+                          <th
+                            colspan="4"
+                            class="text-center bg-success text-white"
+                          >
+                            Januari
+                          </th>
+                          <th
+                            colspan="4"
+                            class="text-center bg-success text-white"
+                          >
+                            Februari
+                          </th>
+                          <th
+                            colspan="4"
+                            class="text-center bg-success text-white"
+                          >
+                            Maret
+                          </th>
+                          <th
+                            colspan="4"
+                            class="text-center bg-success text-white"
+                          >
+                            April
+                          </th>
+                          <th
+                            colspan="4"
+                            class="text-center bg-success text-white"
+                          >
+                            Mei
+                          </th>
+                          <th
+                            colspan="4"
+                            class="text-center bg-success text-white"
+                          >
+                            Juni
+                          </th>
+                          <th
+                            colspan="4"
+                            class="text-center bg-success text-white"
+                          >
+                            Juli
+                          </th>
+                          <th
+                            colspan="4"
+                            class="text-center bg-success text-white"
+                          >
+                            Agustus
+                          </th>
+                          <th
+                            colspan="4"
+                            class="text-center bg-success text-white"
+                          >
+                            September
+                          </th>
+                          <th
+                            colspan="4"
+                            class="text-center bg-success text-white"
+                          >
+                            Oktober
+                          </th>
+                          <th
+                            colspan="4"
+                            class="text-center bg-success text-white"
+                          >
+                            November
+                          </th>
+                          <th
+                            colspan="4"
+                            class="text-center bg-success text-white"
+                          >
+                            Desember
+                          </th>
+                        </tr>
+                        <tr>
+                          <!-- Stok -->
+
+                          <th>Stok Awal</th>
+                          <th>Tebus</th>
+                          <th>Salur</th>
+                          <th>Stok Akhir</th>
+                          
+                          <th>Stok Awal</th>
+                          <th>Tebus</th>
+                          <th>Salur</th>
+                          <th>Stok Akhir</th>
+
+                          <th>Stok Awal</th>
+                          <th>Tebus</th>
+                          <th>Salur</th>
+                          <th>Stok Akhir</th>
+
+                          <th>Stok Awal</th>
+                          <th>Tebus</th>
+                          <th>Salur</th>
+                          <th>Stok Akhir</th>
+
+                          <th>Stok Awal</th>
+                          <th>Tebus</th>
+                          <th>Salur</th>
+                          <th>Stok Akhir</th>
+
+                          <th>Stok Awal</th>
+                          <th>Tebus</th>
+                          <th>Salur</th>
+                          <th>Stok Akhir</th>
+
+                          <th>Stok Awal</th>
+                          <th>Tebus</th>
+                          <th>Salur</th>
+                          <th>Stok Akhir</th>
+
+                          <th>Stok Awal</th>
+                          <th>Tebus</th>
+                          <th>Salur</th>
+                          <th>Stok Akhir</th>
+
+                          <th>Stok Awal</th>
+                          <th>Tebus</th>
+                          <th>Salur</th>
+                          <th>Stok Akhir</th>
+                          
+                          <th>Stok Awal</th>
+                          <th>Tebus</th>
+                          <th>Salur</th>
+                          <th>Stok Akhir</th>
+
+                          <th>Stok Awal</th>
+                          <th>Tebus</th>
+                          <th>Salur</th>
+                          <th>Stok Akhir</th>
+
+                          <th>Stok Awal</th>
+                          <th>Tebus</th>
+                          <th>Salur</th>
+                          <th>Stok Akhir</th>
+
+                        </tr>
+                      </thead>
+                      <tfoot>
+                        <!-- <tr>
+                          <th colspan="6" class="text-center bg-danger text-white">TOTAL ==></th>
+                        
+                          <th id="sum-urea-text">0</th>
+                          <th id="sum-npk-text">0</th>
+                          <th id="sum-npk-formula-text">0</th>
+                          <th id="sum-organik-text">0</th>
+
+                          <th id="sum-jan-urea">0</th>
+                          <th id="sum-jan-npk">0</th>
+                          <th id="sum-jan-npk-formula">0</th>
+                          <th id="sum-jan-organik">0</th>
+
+                          <th id="sum-feb-urea">0</th>
+                          <th id="sum-feb-npk">0</th>
+                          <th id="sum-feb-npk-formula">0</th>
+                          <th id="sum-feb-organik">0</th>
+
+                          <th id="sum-mar-urea">0</th>
+                          <th id="sum-mar-npk">0</th>
+                          <th id="sum-mar-npk-formula">0</th>
+                          <th id="sum-mar-organik">0</th>
+
+                          <th id="sum-apr-urea">0</th>
+                          <th id="sum-apr-npk">0</th>
+                          <th id="sum-apr-npk-formula">0</th>
+                          <th id="sum-apr-organik">0</th>
+
+                          <th id="sum-mei-urea">0</th>
+                          <th id="sum-mei-npk">0</th>
+                          <th id="sum-mei-npk-formula">0</th>
+                          <th id="sum-mei-organik">0</th>
+
+                          <th id="sum-jun-urea">0</th>
+                          <th id="sum-jun-npk">0</th>
+                          <th id="sum-jun-npk-formula">0</th>
+                          <th id="sum-jun-organik">0</th>
+
+                          <th id="sum-jul-urea">0</th>
+                          <th id="sum-jul-npk">0</th>
+                          <th id="sum-jul-npk-formula">0</th>
+                          <th id="sum-jul-organik">0</th>
+
+                          <th id="sum-agu-urea">0</th>
+                          <th id="sum-agu-npk">0</th>
+                          <th id="sum-agu-npk-formula">0</th>
+                          <th id="sum-agu-organik">0</th>
+
+                          <th id="sum-sep-urea">0</th>
+                          <th id="sum-sep-npk">0</th>
+                          <th id="sum-sep-npk-formula">0</th>
+                          <th id="sum-sep-organik">0</th>
+
+                          <th id="sum-okt-urea">0</th>
+                          <th id="sum-okt-npk">0</th>
+                          <th id="sum-okt-npk-formula">0</th>
+                          <th id="sum-okt-organik">0</th>
+
+                          <th id="sum-nov-urea">0</th>
+                          <th id="sum-nov-npk">0</th>
+                          <th id="sum-nov-npk-formula">0</th>
+                          <th id="sum-nov-organik">0</th>
+
+                          <th id="sum-des-urea">0</th>
+                          <th id="sum-des-npk">0</th>
+                          <th id="sum-des-npk-formula">0</th>
+                          <th id="sum-des-organik">0</th>
+                        </tr> -->
+                      </tfoot>
+
+                      <tbody id="dataTable">
+                        <!-- Data akan dimasukkan melalui JavaScript -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <%- include('./partials/footer'); %>
+    </div>
+    <!--   Core JS Files   -->
+    <script src="./assets/js/core/jquery-3.7.1.min.js"></script>
+    <script src="./assets/js/core/popper.min.js"></script>
+    <script src="./assets/js/core/bootstrap.min.js"></script>
+
+    <!-- jQuery Scrollbar -->
+    <script src="./assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
+    <!-- Datatables -->
+    <script src="./assets/js/plugin/datatables/datatables.min.js"></script>
+    <!-- Kaiadmin JS -->
+    <script src="./assets/js/kaiadmin.min.js"></script>
+    <!-- Kaiadmin DEMO methods, don't include it in your project! -->
+    <script src="./assets/js/setting-demo2.js"></script>
+
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <script>
+      $(document).ready(function () {
+        let table = $("#multi-filter-select").DataTable({
+          processing: true,
+          serverSide: true,
+          deferLoading: 0, // Jangan langsung load data
+          ajax: {
+            url: "/api/data/wcm",
+            type: "GET",
+            data: function (d) {
+              d.produk = $("#produkSelect").val();
+              d.tahun = $("#tahunSelect").val();
+            },
+            complete: function () {
+              fetchSummaryData();
+            },
+          },
+          columns: [
+            { data: "kabupaten" },
+            { data: "kode_distributor" },
+            { data: "distributor" },
+            { data: "kecamatan" },
+            { data: "kode_kios" },
+            { data: "nama_kios" },
+            {
+              data: "jan_awal",
+              render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+              data: "jan_tebus",
+              render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+              data: "jan_salur",
+              render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+              data: "jan_akhir",
+              render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+
+            {
+            data: "feb_awal",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "feb_tebus",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "feb_salur",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "feb_akhir",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+
+            {
+            data: "mar_awal",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "mar_tebus",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "mar_salur",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "mar_akhir",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+
+            {
+            data: "apr_awal",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "apr_tebus",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "apr_salur",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "apr_akhir",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+
+            {
+            data: "mei_awal",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "mei_tebus",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "mei_salur",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "mei_akhir",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+
+            {
+            data: "jun_awal",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "jun_tebus",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "jun_salur",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "jun_akhir",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+
+            {
+            data: "jul_awal",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "jul_tebus",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "jul_salur",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "jul_akhir",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+
+            {
+            data: "agu_awal",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "agu_tebus",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "agu_salur",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "agu_akhir",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+
+            {
+            data: "sep_awal",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "sep_tebus",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "sep_salur",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "sep_akhir",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+
+            {
+            data: "okt_awal",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "okt_tebus",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "okt_salur",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "okt_akhir",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+
+            {
+            data: "nov_awal",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "nov_tebus",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "nov_salur",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "nov_akhir",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+
+            {
+            data: "des_awal",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "des_tebus",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "des_salur",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+            {
+            data: "des_akhir",
+            render: $.fn.dataTable.render.number(",", ".", 0, ""),
+            },
+
+          ],
+        });
+
+        // function fetchSummaryData() {
+        //   let produk = $("#produkSelect").val();
+        //   let tahun = $("#tahunSelect").val();
+
+        //   $.ajax({
+        //     url: "/api/data/salurkios/sum",
+        //     type: "GET",
+        //     data: { kabupaten: kabupaten, tahun: tahun, kecamatan: kecamatan },
+        //     success: function (response) {
+        //       if (response) {
+        //         $("#sum-urea-text").text(
+        //           parseFloat(response.urea || 0).toLocaleString("id-ID")
+        //         );
+        //         $("#sum-npk-text").text(
+        //           parseFloat(response.npk || 0).toLocaleString("id-ID")
+        //         );
+        //         $("#sum-npk-formula-text").text(
+        //           parseFloat(response.npk_formula || 0).toLocaleString("id-ID")
+        //         );
+        //         $("#sum-organik-text").text(
+        //           parseFloat(response.organik || 0).toLocaleString("id-ID")
+        //         );
+
+        //         $("#sum-jan-urea").text(
+        //           parseFloat(response.jan_tebus_urea || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-jan-npk").text(
+        //           parseFloat(response.jan_tebus_npk || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-jan-npk-formula").text(
+        //           parseFloat(
+        //             response.jan_tebus_npk_formula || 0
+        //           ).toLocaleString("id-ID")
+        //         );
+        //         $("#sum-jan-organik").text(
+        //           parseFloat(response.jan_tebus_organik || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+
+        //         $("#sum-feb-urea").text(
+        //           parseFloat(response.feb_tebus_urea || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-feb-npk").text(
+        //           parseFloat(response.feb_tebus_npk || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-feb-npk-formula").text(
+        //           parseFloat(
+        //             response.feb_tebus_npk_formula || 0
+        //           ).toLocaleString("id-ID")
+        //         );
+        //         $("#sum-feb-organik").text(
+        //           parseFloat(response.feb_tebus_organik || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+
+        //         $("#sum-mar-urea").text(
+        //           parseFloat(response.mar_tebus_urea || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-mar-npk").text(
+        //           parseFloat(response.mar_tebus_npk || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-mar-npk-formula").text(
+        //           parseFloat(
+        //             response.mar_tebus_npk_formula || 0
+        //           ).toLocaleString("id-ID")
+        //         );
+        //         $("#sum-mar-organik").text(
+        //           parseFloat(response.mar_tebus_organik || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+
+        //         $("#sum-apr-urea").text(
+        //           parseFloat(response.apr_tebus_urea || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-apr-npk").text(
+        //           parseFloat(response.apr_tebus_npk || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-apr-npk-formula").text(
+        //           parseFloat(
+        //             response.apr_tebus_npk_formula || 0
+        //           ).toLocaleString("id-ID")
+        //         );
+        //         $("#sum-apr-organik").text(
+        //           parseFloat(response.apr_tebus_organik || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+
+        //         $("#sum-mei-urea").text(
+        //           parseFloat(response.mei_tebus_urea || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-mei-npk").text(
+        //           parseFloat(response.mei_tebus_npk || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-mei-npk-formula").text(
+        //           parseFloat(
+        //             response.mei_tebus_npk_formula || 0
+        //           ).toLocaleString("id-ID")
+        //         );
+        //         $("#sum-mei-organik").text(
+        //           parseFloat(response.mei_tebus_organik || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+
+        //         $("#sum-jun-urea").text(
+        //           parseFloat(response.jun_tebus_urea || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-jun-npk").text(
+        //           parseFloat(response.jun_tebus_npk || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-jun-npk-formula").text(
+        //           parseFloat(
+        //             response.jun_tebus_npk_formula || 0
+        //           ).toLocaleString("id-ID")
+        //         );
+        //         $("#sum-jun-organik").text(
+        //           parseFloat(response.jun_tebus_organik || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+
+        //         $("#sum-jul-urea").text(
+        //           parseFloat(response.jul_tebus_urea || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-jul-npk").text(
+        //           parseFloat(response.jul_tebus_npk || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-jul-npk-formula").text(
+        //           parseFloat(
+        //             response.jul_tebus_npk_formula || 0
+        //           ).toLocaleString("id-ID")
+        //         );
+        //         $("#sum-jul-organik").text(
+        //           parseFloat(response.jul_tebus_organik || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+
+        //         $("#sum-agu-urea").text(
+        //           parseFloat(response.agu_tebus_urea || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-agu-npk").text(
+        //           parseFloat(response.agu_tebus_npk || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-agu-npk-formula").text(
+        //           parseFloat(
+        //             response.agu_tebus_npk_formula || 0
+        //           ).toLocaleString("id-ID")
+        //         );
+        //         $("#sum-agu-organik").text(
+        //           parseFloat(response.agu_tebus_organik || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+
+        //         $("#sum-sep-urea").text(
+        //           parseFloat(response.sep_tebus_urea || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-sep-npk").text(
+        //           parseFloat(response.sep_tebus_npk || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-sep-npk-formula").text(
+        //           parseFloat(
+        //             response.sep_tebus_npk_formula || 0
+        //           ).toLocaleString("id-ID")
+        //         );
+        //         $("#sum-sep-organik").text(
+        //           parseFloat(response.sep_tebus_organik || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+
+        //         $("#sum-okt-urea").text(
+        //           parseFloat(response.okt_tebus_urea || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-okt-npk").text(
+        //           parseFloat(response.okt_tebus_npk || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-okt-npk-formula").text(
+        //           parseFloat(
+        //             response.okt_tebus_npk_formula || 0
+        //           ).toLocaleString("id-ID")
+        //         );
+        //         $("#sum-okt-organik").text(
+        //           parseFloat(response.okt_tebus_organik || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+
+        //         $("#sum-nov-urea").text(
+        //           parseFloat(response.nov_tebus_urea || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-nov-npk").text(
+        //           parseFloat(response.nov_tebus_npk || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-nov-npk-formula").text(
+        //           parseFloat(
+        //             response.nov_tebus_npk_formula || 0
+        //           ).toLocaleString("id-ID")
+        //         );
+        //         $("#sum-nov-organik").text(
+        //           parseFloat(response.nov_tebus_organik || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+
+        //         $("#sum-des-urea").text(
+        //           parseFloat(response.des_tebus_urea || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-des-npk").text(
+        //           parseFloat(response.des_tebus_npk || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //         $("#sum-des-npk-formula").text(
+        //           parseFloat(
+        //             response.des_tebus_npk_formula || 0
+        //           ).toLocaleString("id-ID")
+        //         );
+        //         $("#sum-des-organik").text(
+        //           parseFloat(response.des_tebus_organik || 0).toLocaleString(
+        //             "id-ID"
+        //           )
+        //         );
+        //       }
+        //     },
+        //     error: function (xhr, status, error) {
+        //       console.error("Gagal mengambil data summary:", error);
+        //       $(".summary-value").text("0");
+        //     },
+        //   });
+        // }
+
+        $("#produkSelect, #tahunSelect").on("change", function () {
+          if ($("#produkSelect").val() && $("#tahunSelect").val()) {
+            table.draw(); // Load data hanya jika filter dipilih
+          }
+        //   fetchSummaryData();
+        });
+
+        // fetchSummaryData();
+
+        // Download data dalam format Excel dengan filter yang diterapkan
+        $("#download-excel").click(function () {
+          let params = {
+            produk: $("#produkSelect").val() || "",
+            tahun: $("#tahunSelect").val() || "", // 🔥 Tambahkan filter tahun
+          };
+          window.location.href = `/api/download/wcm?` + $.param(params);
+        });
+        // Download data dalam format Excel dengan filter yang diterapkan
+      });
+    </script>
+  </body>
+</html>
