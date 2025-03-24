@@ -30,7 +30,7 @@ form.addEventListener("submit", (e) => {
   }
   formData.append("metodePenebusan", metodePenebusan.value);
 
-  fetch("http://localhost:3000/api/files/upload", {
+  fetch("/api/files/upload", {
     method: "POST",
     body: formData,
   })
@@ -53,7 +53,7 @@ let currentPage = 1;
 const limit = 50;
 
 function fetchData(page) {
-  fetch(`http://localhost:3000/api/data?page=${page}&limit=${limit}`)
+  fetch(`/api/data?page=${page}&limit=${limit}`)
     .then(response => response.json())
     .then(data => {
       renderTable(data.data);
