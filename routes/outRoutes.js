@@ -1,40 +1,59 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const path = require('path');
+
 const midController = require('../controllers/midController');
 const desaController = require("../controllers/desaController");
 const mainMidController = require("../controllers/mainMidController");
 
-// Setup multer dengan memoryStorage + limit size + file filter
+// Konfigurasi multer
 const storage = multer.memoryStorage();
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // Maksimum 5MB
     fileFilter: (req, file, cb) => {
-        if (!file.originalname.match(/\.(xlsx)$/)) {
-            return cb(new Error('Hanya file Excel (.xlsx) yang diperbolehkan!'), false);
+        console.log("📂 File diterima:", file); // Debugging
+
+        // Ekstensi yang diperbolehkan
+        const allowedExt = ['.xlsx', '.xls'];
+        const fileExt = path.extname(file.originalname).toLowerCase();
+
+        // MIME type yang valid (bisa dicek dengan console.log)
+        const allowedMime = [
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-excel"
+        ];
+
+        // Cek apakah format sesuai
+        if (allowedExt.includes(fileExt) && allowedMime.includes(file.mimetype)) {
+            return cb(null, true);
+        } else {
+            console.log("❌ Format tidak valid!", fileExt, file.mimetype);
+            return cb(new Error('Only .xlsx and .xls files are allowed!'));
         }
-        cb(null, true);
-    }
+    },
+    limits: { fileSize: 5 * 1024 * 1024 } // Maksimum 5MB
 });
 
-// Middleware untuk menangani error saat upload file
-const uploadErrorHandler = (err, req, res, next) => {
-    if (err instanceof multer.MulterError) {
-        return res.status(400).json({ message: `Error upload file: ${err.message}` });
-    } else if (err) {
-        return res.status(400).json({ message: err.message });
-    }
-    next();
+// Middleware untuk menangani error multer
+const uploadMiddleware = (req, res, next) => {
+    upload.single('file')(req, res, (err) => {
+        if (err instanceof multer.MulterError) {
+            return res.status(400).json({ message: `Multer error: ${err.message}` });
+        } else if (err) {
+            return res.status(400).json({ message: err.message });
+        }
+        next();
+    });
 };
 
-// 🟢 Rute untuk upload file Master MID
-router.post('/upload-master-mid', upload.single('file'), uploadErrorHandler, midController.uploadMasterMID);
+// Endpoint untuk upload Master MID
+router.post('/upload-master-mid', uploadMiddleware, midController.uploadMasterMID);
 
-// 🟢 Rute untuk upload file MID
-router.post('/upload-mid', upload.single('file'), uploadErrorHandler, mainMidController.uploadMid);
+// Endpoint untuk upload MID
+router.post('/upload-mid', uploadMiddleware, mainMidController.uploadMid);
 
-// 🟢 Rute untuk upload file Desa
-router.post('/upload-desa', upload.single('file'), uploadErrorHandler, desaController.uploadDesa);
+// Endpoint untuk upload Desa
+router.post("/upload-desa", uploadMiddleware, desaController.uploadDesa);
 
 module.exports = router;

@@ -1,59 +1,56 @@
 const ExcelJS = require('exceljs');
-const fs = require('fs');
-const db = require('../config/db'); // Pastikan path benar
-const util = require('util');
-
-const query = util.promisify(db.query).bind(db); // Konversi ke async/await
+const db = require('../config/db'); // Pastikan path ke koneksi database benar
 
 exports.uploadMid = async (req, res) => {
     try {
         const file = req.file;
         if (!file) {
-            return res.status(400).send({ message: 'No file uploaded' });
+            return res.status(400).json({ message: 'No file uploaded' });
         }
 
+        // 📌 Gunakan buffer untuk membaca file dari memori
         const workbook = new ExcelJS.Workbook();
-
-        // 🔥 Cek apakah pakai memoryStorage atau diskStorage
-        if (file.buffer) {
-            await workbook.xlsx.load(file.buffer); // Pakai buffer jika pakai memoryStorage
-        } else {
-            await workbook.xlsx.readFile(file.path); // Pakai file path jika pakai diskStorage
-        }
-
+        await workbook.xlsx.load(file.buffer);
         const worksheet = workbook.worksheets[0];
 
-        let data = [];
+        if (!worksheet) {
+            return res.status(400).json({ message: "Sheet tidak ditemukan dalam file" });
+        }
+
+        const data = [];
+
+        // 🔹 Loop mulai dari baris ke-2 (skip header)
         worksheet.eachRow((row, rowNumber) => {
-            if (rowNumber > 1) { // Skip header
-                const kodeKios = row.getCell(2).text.trim(); // Kode Kios dari kolom ke-2
-                let mid = row.getCell(1).text.trim(); // MID dari kolom ke-1
+            if (rowNumber === 1) return; // Skip header
 
-                if (!mid) mid = null;
+            const kodeKios = row.getCell(2).text.trim(); // Ambil kode_kios dari kolom kedua
+            let mid = row.getCell(1).text.trim(); // Ambil MID dari kolom pertama
 
-                if (kodeKios) {
-                    data.push([mid, kodeKios]);
-                } else {
-                    console.log(`❌ Data tidak valid: ${kodeKios}, ${mid}`);
-                }
+            // Jika MID kosong, set NULL
+            if (!mid) mid = null;
+
+            // Pastikan kode_kios tidak kosong
+            if (kodeKios) {
+                data.push([kodeKios, mid]);
+            } else {
+                console.log(`❌ Data tidak valid: ${kodeKios}, ${mid}`);
             }
         });
 
         if (data.length > 0) {
-            const queryText = `INSERT INTO master_mid (mid, kode_kios) VALUES ?`;
-
-            await query(queryText, [data]); // Pakai `await` agar query dieksekusi
+            const query = `
+                INSERT INTO master_mid (mid, kode_kios) 
+                VALUES ?
+            `;
+            await db.query(query, [data]);
             console.log(`✅ ${data.length} baris data berhasil dimasukkan ke database.`);
         } else {
             console.log('⚠ Tidak ada data yang valid untuk dimasukkan.');
         }
 
-        // Hapus file jika pakai diskStorage
-        if (file.path) fs.unlinkSync(file.path);
-
-        res.status(200).send({ message: 'Master MID data uploaded successfully' });
+        res.status(200).json({ message: 'Master MID data uploaded successfully' });
     } catch (error) {
-        console.error('❌ Error uploading file: ', error);
-        res.status(500).send({ message: 'Error uploading file', error });
+        console.error('❌ Error uploading file:', error);
+        res.status(500).json({ message: 'Error uploading file' });
     }
 };
