@@ -1,6 +1,9 @@
 const ExcelJS = require('exceljs');
 const fs = require('fs');
-const db = require('../config/db'); // Pastikan path ke koneksi database benar
+const db = require('../config/db'); // Pastikan path benar
+const util = require('util');
+
+const query = util.promisify(db.query).bind(db); // Konversi ke async/await
 
 exports.uploadMasterMID = async (req, res) => {
     try {
@@ -10,33 +13,37 @@ exports.uploadMasterMID = async (req, res) => {
         }
 
         const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile(file.path);
-        const worksheet = workbook.worksheets[0];
 
-        // Loop mulai dari baris ke-2 untuk menghindari header
-        const rows = worksheet.getRows(2, worksheet.rowCount);
-        const data = [];
-
-        for (let row of rows) {
-            const kabupaten = row.getCell(1).text.trim();
-            const kecamatan = row.getCell(2).text.trim();
-            const kodeKios = row.getCell(3).text.trim();
-            const namaKios = row.getCell(4).text.trim();
-            let mid = row.getCell(5).text.trim();
-
-            // Jika MID kosong, set NULL
-            if (!mid) mid = null;
-
-            // Pastikan kabupaten, kode_kios, dan nama_kios tidak kosong
-            if (kabupaten && kecamatan && kodeKios && namaKios) {
-                data.push([kabupaten, kecamatan, kodeKios, namaKios, mid]);
-            } else {
-                console.log(`Data tidak valid: ${kabupaten}, ${kecamatan}, ${kodeKios}, ${namaKios}, ${mid}`);
-            }
+        // 🔥 Cek apakah pakai memoryStorage atau diskStorage
+        if (file.buffer) {
+            await workbook.xlsx.load(file.buffer); // Pakai buffer jika pakai memoryStorage
+        } else {
+            await workbook.xlsx.readFile(file.path); // Pakai file path jika pakai diskStorage
         }
 
+        const worksheet = workbook.worksheets[0];
+
+        let data = [];
+        worksheet.eachRow((row, rowNumber) => {
+            if (rowNumber > 1) { // Skip header
+                const kabupaten = row.getCell(1).text.trim();
+                const kecamatan = row.getCell(2).text.trim();
+                const kodeKios = row.getCell(3).text.trim();
+                const namaKios = row.getCell(4).text.trim();
+                let mid = row.getCell(5).text.trim();
+
+                if (!mid) mid = null;
+
+                if (kabupaten && kecamatan && kodeKios && namaKios) {
+                    data.push([kabupaten, kecamatan, kodeKios, namaKios, mid]);
+                } else {
+                    console.log(`❌ Data tidak valid: ${kabupaten}, ${kecamatan}, ${kodeKios}, ${namaKios}, ${mid}`);
+                }
+            }
+        });
+
         if (data.length > 0) {
-            const query = `
+            const queryText = `
                 INSERT INTO main_mid (kabupaten, kecamatan, kode_kios, nama_kios, mid) 
                 VALUES ? 
                 ON DUPLICATE KEY UPDATE 
@@ -46,16 +53,19 @@ exports.uploadMasterMID = async (req, res) => {
                 kecamatan = VALUES(kecamatan),
                 mid = VALUES(mid)
             `;
-            await db.query(query, [data]);
-            console.log(`${data.length} baris data berhasil dimasukkan ke database.`);
+
+            await query(queryText, [data]); // Pakai `await` agar query dieksekusi
+            console.log(`✅ ${data.length} baris data berhasil dimasukkan ke database.`);
         } else {
-            console.log('Tidak ada data yang valid untuk dimasukkan.');
+            console.log('⚠ Tidak ada data yang valid untuk dimasukkan.');
         }
 
-        fs.unlinkSync(file.path);
+        // Hapus file jika pakai diskStorage
+        if (file.path) fs.unlinkSync(file.path);
+
         res.status(200).send({ message: 'Main MID data uploaded successfully' });
     } catch (error) {
-        console.error('Error uploading file: ', error);
-        res.status(500).send({ message: 'Error uploading file' });
+        console.error('❌ Error uploading file: ', error);
+        res.status(500).send({ message: 'Error uploading file', error });
     }
 };
