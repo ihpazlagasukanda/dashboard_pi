@@ -11,7 +11,7 @@ const upload = multer({ storage: storage });
 
 router.post('/upload-master-mid', upload.single('file'), midController.uploadMasterMID);
 
-router.post('/upload-mid', upload.single('file'), mainMidController.uploadMid)
+router.post('/upload-mid', upload.single('file'), mainMidController.uploadMid);
 
 router.post("/upload-desa", upload.single("file"), desaController.uploadDesa);
 

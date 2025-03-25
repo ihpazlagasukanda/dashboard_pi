@@ -2,7 +2,7 @@ const ExcelJS = require('exceljs');
 const fs = require('fs');
 const db = require('../config/db'); // Pastikan path ke koneksi database benar
 
-exports.uploadMID = async (req, res) => {
+exports.uploadMid = async (req, res) => {
     try {
         const file = req.file;
         if (!file) {
