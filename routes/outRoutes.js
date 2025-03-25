@@ -15,3 +15,4 @@ router.post('/upload-mid', upload.single('file'), mainMidController.uploadMid);
 
 router.post("/upload-desa", upload.single("file"), desaController.uploadDesa);
 
+module.exports = router;
