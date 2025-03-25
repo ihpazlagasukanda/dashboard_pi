@@ -23,17 +23,17 @@ exports.uploadMid = async (req, res) => {
         worksheet.eachRow((row, rowNumber) => {
             if (rowNumber === 1) return; // Skip header
 
-            const kodeKios = row.getCell(2).text.trim(); // Ambil kode_kios dari kolom kedua
             let mid = row.getCell(1).text.trim(); // Ambil MID dari kolom pertama
+            const kodeKios = row.getCell(2).text.trim(); // Ambil kode_kios dari kolom kedua
 
             // Jika MID kosong, set NULL
             if (!mid) mid = null;
 
             // Pastikan kode_kios tidak kosong
             if (kodeKios) {
-                data.push([kodeKios, mid]);
+                data.push([mid, kodeKios]);
             } else {
-                console.log(`❌ Data tidak valid: ${kodeKios}, ${mid}`);
+                console.log(`❌ Data tidak valid: ${mid}, ${kodeKios}`);
             }
         });
 
