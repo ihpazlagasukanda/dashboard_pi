@@ -86,7 +86,7 @@ app.use('/api/files', authMiddleware, fileRoutes);
 app.use('/api', authMiddleware, dataRoutes);
 app.use('/api/data', authMiddleware, erdkkRoutes);
 app.use('/api/data', authMiddleware, wcmRoutes);
-app.use('/api/', outRouter);
+app.use('/api', outRouter);
 
 app.use(express.json({ limit: '50mb' })); // Sesuaikan ukuran jika perlu
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
