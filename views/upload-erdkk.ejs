@@ -117,7 +117,12 @@
                                           </li>
                                           <li class="nav-item">
                                             <a class="nav-link" id="btnKartan" href="#"
-                                              >Template e-ERDKK</a
+                                              >Template e-ERDKK JATENG</a
+                                            >
+                                          </li>
+                                          <li class="nav-item">
+                                            <a class="nav-link" id="btnKartanDiy" href="#"
+                                              >Template e-ERDKK Khusus DIY</a
                                             >
                                           </li>
                                         </ul>
@@ -223,8 +228,86 @@
                                             </tbody>
                                           </table>
                                         </div>
-                                        
-                                        
+                                        </div>
+
+                                        <div
+                                          id="contentKartanDiy"
+                                          class="modal-content-section d-none"
+                                        >
+                                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                          <table class="table table-striped table-bordered">
+                                            <thead class="thead-dark">
+                                              <tr>
+                                                <th>Nama Penyuluh</th>
+                                                <th>Kode Kecamatan</th>
+                                                <th>Kecamatan</th>
+                                                <th>Kode Desa</th>
+                                                <th>Kode Kios Pengecer</th>
+                                                <th>Nama Kios Pengecer</th>
+                                                <th>Gapoktan</th>
+                                                <th>Nama Poktan</th>
+                                                <th>Nama Petani</th>
+                                                <th>KTP</th>
+                                                <th>Tempat Lahir</th>
+                                                <th>Alamat</th>
+                                                <th>Subsektor</th>
+                                                <th>Komoditas MT1</th>
+                                                <th>Luas Lahan (Ha) MT1</th>
+                                                <th>Pupuk Urea (Kg) MT1</th>
+                                                <th>Pupuk NPK (Kg) MT1</th>
+                                                <th>Pupuk NPK Formula (Kg) MT1</th>
+                                                <th>Pupuk Organik (Kg) MT1</th>
+                                                <th>Komoditas MT2</th>
+                                                <th>Luas Lahan (Ha) MT2</th>
+                                                <th>Pupuk Urea (Kg) MT2</th>
+                                                <th>Pupuk NPK (Kg) MT2</th>
+                                                <th>Pupuk NPK Formula (Kg) MT2</th>
+                                                <th>Pupuk Organik (Kg) MT2</th>
+                                                <th>Komoditas MT3</th>
+                                                <th>Luas Lahan (Ha) MT3</th>
+                                                <th>Pupuk Urea (Kg) MT3</th>
+                                                <th>Pupuk NPK (Kg) MT3</th>
+                                                <th>Pupuk NPK Formula (Kg) MT3</th>
+                                                <th>Pupuk Organik (Kg) MT3</th>
+                                              </tr>
+                                            </thead>
+                                            <tbody>
+                                              <tr>
+                                                <td>John Doe</td>
+                                                <td>1101</td>
+                                                <td>Kecamatan A</td>
+                                                <td>2201</td>
+                                                <td>K001</td>
+                                                <td>Kios Sejahtera</td>
+                                                <td>Gapoktan A</td>
+                                                <td>Poktan B</td>
+                                                <td>Petani C</td>
+                                                <td>1234567890123456</td>
+                                                <td>Jakarta</td>
+                                                <td>Jl. Contoh No. 123</td>
+                                                <td>Padi</td>
+                                                <td>Padi</td>
+                                                <td>2</td>
+                                                <td>50</td>
+                                                <td>20</td>
+                                                <td>10</td>
+                                                <td>5</td>
+                                                <td>Jagung</td>
+                                                <td>3</td>
+                                                <td>60</td>
+                                                <td>25</td>
+                                                <td>12</td>
+                                                <td>6</td>
+                                                <td>Kedelai</td>
+                                                <td>1.5</td>
+                                                <td>40</td>
+                                                <td>15</td>
+                                                <td>8</td>
+                                                <td>4</td>
+                                              </tr>
+                                            </tbody>
+                                          </table>
+                                        </div>
                                         </div>
                                         
                                       </div>
@@ -307,6 +390,7 @@
       
           let btnHelp = document.getElementById("btnHelp");
           let btnKartan = document.getElementById("btnKartan");
+          let btnKartanDiy = document.getElementById("btnKartanDiy");
       
           if (btnHelp) {
               btnHelp.addEventListener("click", function () {
@@ -317,6 +401,12 @@
           if (btnKartan) {
               btnKartan.addEventListener("click", function () {
                   showContent("contentKartan");
+              });
+          }
+
+          if (btnKartanDiy) {
+              btnKartanDiy.addEventListener("click", function () {
+                  showContent("contentKartanDiy");
               });
           }
       
