@@ -121,6 +121,9 @@ app.use('/api/data', authMiddleware, skRoutes);
 app.use(authRoutes);  // Pastikan authRoutes ada
 app.use('/upload', outRouter);  // Route untuk upload
 
+app.use(express.json({ limit: '50mb' })); // Sesuaikan ukuran jika perlu
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
 // Jalankan server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
