@@ -57,10 +57,10 @@ exports.uploadFile = async (req, res) => {
             console.log(`📜 Sheet: ${worksheet.name}`);
 
             // Validasi kolom sesuai metode penebusan
-            const expectedColumnsKartan = ['NO', 'Kabupaten', 'Kecamatan', 'Kodetrx', 'Nik', 'Nama petani', 'Urea', 'NPK', 'SP36', 'ZA', 'NPK Formula', 'Organik', 'Organik Cair', 'Alasan Tolak', 'Tanggal Tebus', 'MID', 'Nama Kios'];
-            const expectedColumnsIpubers = ['Kabupaten', 'Kecamatan', 'No Transaksi', 'Poktan', 'Kode Kios', 'Nama Kios', 'NIK', 'Nama Petani', 'Urea', 'NPK', 'SP36', 'ZA', 'NPK Formula', 'Organik', 'Organik Cair', 'Tanggal Tebus (tanggal-bulan-tahun)', 'tanggal Input', 'Tipe Tebus', 'Nik Perwakilan', 'Bukti trx', 'Status'];
+            const expectedColumnsKartan = ['NO', 'KABUPATEN', 'KECAMATAN', 'KODE KIOS', 'NAMA KIOS', 'NIK', 'NAMA PETANI', 'UREA', 'NPK', 'SP36', 'ZA', 'NPK FORMULA', 'ORGANIK', 'ORGANIK CAIR', 'TGL TEBUS', 'TGL INPUT', 'STATUS'];
+            const expectedColumnsIpubers = ['No', 'Kabupaten', 'Kecamatan', 'Kode Kios', 'Nama Kios', 'Kode TRX', 'No Transaksi', 'NIK', 'Nama Petani', 'Urea', 'NPK', 'SP36', 'ZA', 'NPK Formula', 'Organik', 'Organik Cair', 'Keterangan', 'Tanggal Tebus', 'Tanggal Entri', 'Tanggal Update', 'Tipe Tebus', 'NIK Perwakilan', 'Url Bukti', 'Status'];
 
-            const headerRow = metodePenebusan === 'ipubers' ? 1 : 3; // Baris header
+            const headerRow = metodePenebusan === 'ipubers' ? 1 : 1; // Baris header
             const rowValues = worksheet.getRow(headerRow).values;
 
             // **Hapus elemen pertama jika undefined (karena values[0] sering kosong)**
@@ -82,7 +82,7 @@ exports.uploadFile = async (req, res) => {
             }
 
             // **Tentukan dari baris mana data harus dibaca**
-            const startRow = metodePenebusan === 'ipubers' ? 2 : 4;
+            const startRow = metodePenebusan === 'ipubers' ? 2 : 2;
             let rows = worksheet.getRows(startRow, worksheet.rowCount - startRow);
 
             // **Hapus baris kosong**
@@ -93,21 +93,38 @@ exports.uploadFile = async (req, res) => {
 
             const data = rows.map((row) => {
                 let tanggalTebus, tanggalExcel;
-                const kodeTransaksi = metodePenebusan === 'ipubers' ? row.getCell(3).text : row.getCell(4).text;
+                const kodeTransaksi = metodePenebusan === 'ipubers' ? row.getCell(7).text : row.getCell(4).text;
 
                 if (metodePenebusan === 'ipubers') {
-                    tanggalExcel = row.getCell(16).text;
+                    tanggalExcel = row.getCell(18).text;
 
-                    if (tanggalExcel && typeof tanggalExcel === 'string') {
-                        if (/^\d{1,2}-\d{1,2}-\d{4}$/.test(tanggalExcel)) {
-                            const parts = tanggalExcel.split('-');
-                            if (parts.length === 3) {
-                                parts[0] = parts[0].padStart(2, '0');
-                                parts[1] = parts[1].padStart(2, '0');
-                                tanggalExcel = parts.join('-');
-                            }
-                            const [dd, mm, yyyy] = tanggalExcel.split('-');
-                            tanggalTebus = `${yyyy}/${mm}/${dd}`;
+                    // if (tanggalExcel && typeof tanggalExcel === 'string') {
+                    //     if (/^\d{1,2}-\d{1,2}-\d{4}$/.test(tanggalExcel)) {
+                    //         const parts = tanggalExcel.split('-');
+                    //         if (parts.length === 3) {
+                    //             parts[0] = parts[0].padStart(2, '0');
+                    //             parts[1] = parts[1].padStart(2, '0');
+                    //             tanggalExcel = parts.join('-');
+                    //         }
+                    //         const [dd, mm, yyyy] = tanggalExcel.split('-');
+                    //         tanggalTebus = `${yyyy}/${mm}/${dd}`;
+                    //     } else {
+                    //         tanggalTebus = null;
+                    //     }
+                    // } else {
+                    //     tanggalTebus = null;
+                    // }
+
+                    if (tanggalExcel && (tanggalExcel instanceof Date || !isNaN(Date.parse(tanggalExcel)))) {
+                        const dateObj = new Date(tanggalExcel);
+                        const year = dateObj.getFullYear();
+                        const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+                        const day = dateObj.getDate().toString().padStart(2, '0');
+                        tanggalTebus = `${year}/${month}/${day}`;
+                    } else if (typeof tanggalExcel === 'string' && tanggalExcel.includes('/')) {
+                        const parts = tanggalExcel.split('/');
+                        if (parts.length === 3) {
+                            tanggalTebus = `${parts[2]}/${parts[1]}/${parts[0]}`;
                         } else {
                             tanggalTebus = null;
                         }
@@ -138,31 +155,36 @@ exports.uploadFile = async (req, res) => {
 
                 console.log('Formatted Tanggal Tebus:', tanggalTebus);
 
+                function generateKodeTransaksi() {
+                    return 'TX-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+                }
+
                 if (metodePenebusan === 'ipubers') {
                     return {
-                        kabupaten: row.getCell(1).text || '',
-                        kecamatan: row.getCell(2).text || '',
+                        kabupaten: (row.getCell(2).text || '').replace(/^KAB\.\s*/i, '').trim(),
+                        kecamatan: row.getCell(3).text || '',
                         kodeTransaksi: kodeTransaksi,
-                        poktan: row.getCell(4).text || '',
-                        kodeKios: row.getCell(5).text || '',
-                        namaKios: row.getCell(6).text || '',
-                        nik: row.getCell(7).text || '',
-                        namaPetani: row.getCell(8).text || '',
+                        poktan: row.getCell(25).text || '',
+                        kodeKios: row.getCell(4).text || '',
+                        namaKios: row.getCell(5).text || '',
+                        nik: row.getCell(8).text || '',
+                        namaPetani: row.getCell(9).text || '',
                         metodePenebusan: 'ipubers',
                         tanggalTebus: tanggalTebus,
-                        urea: convertToNumber(row.getCell(9).text || '0'),
-                        npk: convertToNumber(row.getCell(10).text || '0'),
-                        sp36: convertToNumber(row.getCell(11).text || '0'),
-                        za: convertToNumber(row.getCell(12).text || '0'),
-                        npkFormula: convertToNumber(row.getCell(13).text || '0'),
-                        organik: convertToNumber(row.getCell(14).text || '0'),
-                        organikCair: convertToNumber(row.getCell(15).text || '0'),
-                        kakao: convertToNumber(row.getCell(22).text || '0'),
-                        status: row.getCell(21).text || 'Tidak Diketahui'
+                        urea: convertToNumber(row.getCell(10).text || '0'),
+                        npk: convertToNumber(row.getCell(11).text || '0'),
+                        sp36: convertToNumber(row.getCell(12).text || '0'),
+                        za: convertToNumber(row.getCell(13).text || '0'),
+                        npkFormula: convertToNumber(row.getCell(14).text || '0'),
+                        organik: convertToNumber(row.getCell(15).text || '0'),
+                        organikCair: convertToNumber(row.getCell(16).text || '0'),
+                        kakao: convertToNumber(row.getCell(26).text || '0'),
+                        status: row.getCell(24).text || 'Tidak Diketahui'
                     };
                 } else if (metodePenebusan === 'kartan') {
-                    const mid = row.getCell(16).text;
-                    const namaKios = row.getCell(17).text || '';
+                    const mid = `'${row.getCell(4).text || ''}`;
+                    const namaKios = row.getCell(5).text || '';
+                    const kodeTransaksi = generateKodeTransaksi(); // otomatis buat kode unik
 
                     return {
                         kabupaten: row.getCell(2).text || '',
@@ -170,21 +192,21 @@ exports.uploadFile = async (req, res) => {
                         kodeTransaksi: kodeTransaksi,
                         poktan: '',
                         kodeKios: '-',
-                        nik: row.getCell(5).text || '',
-                        namaPetani: row.getCell(6).text || '',
+                        nik: row.getCell(6).text || '',
+                        namaPetani: row.getCell(7).text || '',
                         metodePenebusan: 'kartan',
                         tanggalTebus: tanggalTebus,
-                        urea: convertToNumber(row.getCell(7).text || '0'),
-                        npk: convertToNumber(row.getCell(8).text || '0'),
-                        sp36: convertToNumber(row.getCell(9).text || '0'),
-                        za: convertToNumber(row.getCell(10).text || '0'),
-                        npkFormula: convertToNumber(row.getCell(11).text || '0'),
-                        organik: convertToNumber(row.getCell(12).text || '0'),
-                        organikCair: convertToNumber(row.getCell(13).text || '0'),
-                        kakao: convertToNumber(row.getCell(14).text || '0'),
+                        urea: convertToNumber(row.getCell(8).text || '0'),
+                        npk: convertToNumber(row.getCell(9).text || '0'),
+                        sp36: convertToNumber(row.getCell(10).text || '0'),
+                        za: convertToNumber(row.getCell(11).text || '0'),
+                        npkFormula: convertToNumber(row.getCell(12).text || '0'),
+                        organik: convertToNumber(row.getCell(13).text || '0'),
+                        organikCair: convertToNumber(row.getCell(14).text || '0'),
+                        kakao: convertToNumber(row.getCell(19).text || '0'),
                         mid: mid,
                         namaKios: namaKios,
-                        status: 'kartan'
+                        status: row.getCell(17).text || 'kartan'
                     };
                 }
             });
