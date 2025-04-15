@@ -49,22 +49,9 @@ exports.uploadErdkk = async (req, res) => {
             return res.status(400).json({ success: false, message: "Sheet tidak ditemukan dalam file" });
         }
 
-        // Daftar kolom yang diharapkan untuk DIY dan non-DIY
-        const expectedColumnsDIY = [
-            'Nama Penyuluh', 'Kode Kecamatan', 'Kecamatan', 'Kode Desa', 'Kode Kios Pengecer',
-            'Nama Kios Pengecer', 'Gapoktan', 'Nama Poktan', 'Nama Petani', 'KTP',
-            'Tempat Lahir', 'Alamat', 'Subsektor', 'Komoditas MT1', 'Luas Lahan (Ha) MT1',
-            'Pupuk Urea (Kg) MT1', 'Pupuk NPK (Kg) MT1', 'Pupuk NPK Formula (Kg) MT1',
-            'Pupuk Organik (Kg) MT1', 'Komoditas MT2', 'Luas Lahan (Ha) MT2', 'Pupuk Urea (Kg) MT2',
-            'Pupuk NPK (Kg) MT2', 'Pupuk NPK Formula (Kg) MT2', 'Pupuk Organik (Kg) MT2',
-            'Komoditas MT3', 'Luas Lahan (Ha) MT3', 'Pupuk Urea (Kg) MT3', 'Pupuk NPK (Kg) MT3',
-            'Pupuk NPK Formula (Kg) MT3', 'Pupuk Organik (Kg) MT3'
-        ];
-
         const expectedColumnsNonDIY = [
-            'Nama Penyuluh', 'Kode Kecamatan', 'Kecamatan', 'Kode Desa', 'Kode Kios Pengecer',
-            'Nama Kios Pengecer', 'Gapoktan', 'Nama Poktan', 'Nama Petani', 'KTP',
-            'Tempat Lahir', 'Tanggal Lahir', 'Nama Ibu Kandung', 'Alamat', 'Subsektor',
+            'Nama Penyuluh', 'Kode Desa', 'Kode Kios Pengecer', 'Nama Kios Pengecer', 'Gapoktan', 'Nama Poktan', 'Nama Petani',
+            'KTP', 'Tempat Lahir', 'Tanggal Lahir', 'Nama Ibu Kandung', 'Alamat', 'Subsektor',
             'Komoditas MT1', 'Luas Lahan (Ha) MT1', 'Pupuk Urea (Kg) MT1', 'Pupuk NPK (Kg) MT1',
             'Pupuk NPK Formula (Kg) MT1', 'Pupuk Organik (Kg) MT1', 'Komoditas MT2',
             'Luas Lahan (Ha) MT2', 'Pupuk Urea (Kg) MT2', 'Pupuk NPK (Kg) MT2',
@@ -72,6 +59,30 @@ exports.uploadErdkk = async (req, res) => {
             'Luas Lahan (Ha) MT3', 'Pupuk Urea (Kg) MT3', 'Pupuk NPK (Kg) MT3',
             'Pupuk NPK Formula (Kg) MT3', 'Pupuk Organik (Kg) MT3'
         ];
+
+        // Daftar kolom yang diharapkan untuk DIY dan non-DIY
+        const expectedColumnsDIY = [
+            'Nama Penyuluh', 'Kode Desa', 'Kode Kios Pengecer', 'Nama Kios Pengecer', 'Nama Desa', 'Nama Poktan', 'Nama Petani',
+            'KTP', 'Tempat Lahir', 'Tanggal Lahir', 'Nama Ibu Kandung', 'Alamat', 'Subsektor',
+            'Komoditas MT1', 'Luas Lahan (Ha) MT1', 'Pupuk Urea (Kg) MT1', 'Pupuk NPK (Kg) MT1',
+            'Pupuk NPK Formula (Kg) MT1', 'Pupuk Organik (Kg) MT1', 'Komoditas MT2',
+            'Luas Lahan (Ha) MT2', 'Pupuk Urea (Kg) MT2', 'Pupuk NPK (Kg) MT2',
+            'Pupuk NPK Formula (Kg) MT2', 'Pupuk Organik (Kg) MT2', 'Komoditas MT3',
+            'Luas Lahan (Ha) MT3', 'Pupuk Urea (Kg) MT3', 'Pupuk NPK (Kg) MT3',
+            'Pupuk NPK Formula (Kg) MT3', 'Pupuk Organik (Kg) MT3'
+        ];
+
+        // const expectedColumnsNonDIY = [
+        //     'Nama Penyuluh', 'Kode Kecamatan', 'Kecamatan', 'Kode Desa', 'Kode Kios Pengecer',
+        //     'Nama Kios Pengecer', 'Gapoktan', 'Nama Poktan', 'Nama Petani', 'KTP',
+        //     'Tempat Lahir', 'Tanggal Lahir', 'Nama Ibu Kandung', 'Alamat', 'Subsektor',
+        //     'Komoditas MT1', 'Luas Lahan (Ha) MT1', 'Pupuk Urea (Kg) MT1', 'Pupuk NPK (Kg) MT1',
+        //     'Pupuk NPK Formula (Kg) MT1', 'Pupuk Organik (Kg) MT1', 'Komoditas MT2',
+        //     'Luas Lahan (Ha) MT2', 'Pupuk Urea (Kg) MT2', 'Pupuk NPK (Kg) MT2',
+        //     'Pupuk NPK Formula (Kg) MT2', 'Pupuk Organik (Kg) MT2', 'Komoditas MT3',
+        //     'Luas Lahan (Ha) MT3', 'Pupuk Urea (Kg) MT3', 'Pupuk NPK (Kg) MT3',
+        //     'Pupuk NPK Formula (Kg) MT3', 'Pupuk Organik (Kg) MT3'
+        // ];
 
         // Tentukan apakah kabupaten termasuk DIY atau bukan
         const isDIY = ["SLEMAN", "BANTUL", "GUNUNG KIDUL", "KULON PROGO", "KOTA YOGYAKARTA"].includes(kabupaten.toUpperCase());
@@ -93,22 +104,26 @@ exports.uploadErdkk = async (req, res) => {
             }
         }
 
+        const [kecRows] = await db.execute("SELECT kode_desa, kecamatan FROM desa");
+        const kecMap = Object.fromEntries(kecRows.map(row => [row.kode_desa, row.kecamatan]));
+
         const [desaRows] = await db.execute("SELECT kode_desa, kelurahan FROM desa");
         const desaMap = Object.fromEntries(desaRows.map(row => [row.kode_desa, row.kelurahan]));
 
         // Proses data Excel
         let erdkkDataMap = new Map(); // Untuk menggabungkan baris duplikat
-        const shift = isDIY ? 0 : 2; // Shift kolom untuk DIY dan non-DIY
+        const shift = 0; // Shift kolom untuk DIY dan non-DIY
 
         for (let rowNumber = 2; rowNumber <= sheet.rowCount; rowNumber++) {
             const row = sheet.getRow(rowNumber);
-            const kodeDesa = row.getCell(4).value || "";
+            const kodeDesa = row.getCell(2).value || "";
             const namaDesa = desaMap[kodeDesa] || "Desa Tidak Ditemukan";
-            const kecamatan = row.getCell(3).value?.toString().trim() || "";
-            const kodeKios = row.getCell(5).value?.toString().trim() || "";
-            const namaKios = row.getCell(6).value?.toString().trim() || "";
-            const nik = row.getCell(10).value?.toString().trim() || "";
-            const namaPetani = row.getCell(9).value?.toString().trim() || "";
+            // const kecamatan = row.getCell(3).value?.toString().trim() || "";
+            const kecamatan = kecMap[kodeDesa] || "Kecamatan Tidak Ditemukan";
+            const kodeKios = row.getCell(3).value?.toString().trim() || "";
+            const namaKios = row.getCell(4).value?.toString().trim() || "";
+            const nik = row.getCell(8).value?.toString().trim() || "";
+            const namaPetani = row.getCell(7).value?.toString().trim() || "";
 
             // Skip baris jika data penting tidak ada
             if (!kecamatan || !nik || !namaPetani) {
