@@ -2,7 +2,7 @@
     <div class="sidebar-logo">
       <!-- Logo Header -->
       <div class="logo-header" data-background-color="dark">
-        <a href="index.html" class="logo">
+        <a href="/" class="logo">
           <img
             src="./assets/img/logopi.png"
             alt="navbar brand"
@@ -42,7 +42,17 @@
               <ul class="nav nav-collapse">
                 <li>
                   <a href="/">
-                    <span class="sub-item">Dashboard 1</span>
+                    <span class="sub-item">Dashboard</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="/sum">
+                    <span class="sub-item">Rekap Wilayah</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="/visualisasi">
+                    <span class="sub-item">Visualisasi</span>
                   </a>
                 </li>
               </ul>
@@ -54,32 +64,39 @@
             </span>
             <h4 class="text-section">Components</h4>
           </li>
-          <li class="nav-item">
-            <a data-bs-toggle="collapse" href="#forms">
-              <i class="fas fa-pen-square"></i>
-              <p>Upload</p>
-              <span class="caret"></span>
-            </a>
-            <div class="collapse" id="forms">
-              <ul class="nav nav-collapse">
-                <li>
-                  <a href="/upload">
-                    <span class="sub-item">Upload Data Verval</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="/upload-erdkk">
-                    <span class="sub-item">Upload Data e-RDKK </span>
-                  </a>
-                </li>
-                <li>
-                  <a href="/upload-wcm">
-                    <span class="sub-item">Upload Data WCM </span>
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </li>
+          <% if (user.level == 2) { %>
+            <li class="nav-item">
+              <a data-bs-toggle="collapse" href="#forms">
+                <i class="fas fa-pen-square"></i>
+                <p>Upload</p>
+                <span class="caret"></span>
+              </a>
+              <div class="collapse" id="forms">
+                <ul class="nav nav-collapse">
+                  <li>
+                    <a href="/upload">
+                      <span class="sub-item">Upload Data Verval</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/upload-erdkk">
+                      <span class="sub-item">Upload Data e-RDKK</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/upload-wcm">
+                      <span class="sub-item">Upload Data WCM</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/upload-skbupati">
+                      <span class="sub-item">Upload SK Bupati</span>
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </li>
+            <% } %>
           <li class="nav-item">
             <a data-bs-toggle="collapse" href="#tables">
               <i class="fas fa-table"></i>
@@ -99,11 +116,6 @@
                   </a>
                 </li>
                 <li>
-                  <a href="/wcm">
-                    <span class="sub-item">Data WCM</span>
-                  </a>
-                </li>
-                <li>
                   <a href="/dataverval">
                     <span class="sub-item">Data Verval</span>
                   </a>
@@ -111,6 +123,32 @@
                 <li>
                   <a href="/erdkk">
                     <span class="sub-item">Data e-RDKK</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </li>
+          <li class="nav-item">
+            <a data-bs-toggle="collapse" href="#wcm">
+              <i class="fas fa-table"></i>
+              <p>WCM</p>
+              <span class="caret"></span>
+            </a>
+            <div class="collapse" id="wcm">
+              <ul class="nav nav-collapse">
+                <li>
+                  <a href="/wcmf5">
+                    <span class="sub-item">Data F5</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="/wcm">
+                    <span class="sub-item">Data F6</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="/wcmvsverval">
+                    <span class="sub-item">Realisasi F5 & F6</span>
                   </a>
                 </li>
               </ul>

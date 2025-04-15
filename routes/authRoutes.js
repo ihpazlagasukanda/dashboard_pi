@@ -44,7 +44,11 @@ router.post('/login', async (req, res) => {
             return res.status(401).send("<script>alert('Password salah'); window.location='/login';</script>");
         }
 
-        const token = jwt.sign({ username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        // ✅ Tambahkan ID dan level ke token
+        const tokenPayload = { id: user.id, username: user.username, level: user.level };
+        const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        console.log("🔑 Token payload:", tokenPayload); // Debug log
 
         res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
         console.log("✅ Login berhasil, redirect ke dashboard.");

@@ -10,7 +10,7 @@
       <div class="container">
         <div class="page-inner">
           <div class="page-header">
-            <h3 class="fw-bold mb-3">Data WCM</h3>
+            <h3 class="fw-bold mb-3">Data WCM F5</h3>
             <ul class="breadcrumbs mb-3">
               <li class="nav-home">
                 <a href="/">
@@ -27,7 +27,7 @@
                 <i class="icon-arrow-right"></i>
               </li>
               <li class="nav-item">
-                <a href="/salurkios">Data WCM</a>
+                <a href="/salurkios">Data WCM F5</a>
               </li>
             </ul>
           </div>
@@ -154,14 +154,13 @@
                     <table id="multi-filter-select" class="table">
                       <thead>
                         <tr>
+                            <th rowspan="2">Produk</th>
+                            <th rowspan="2">ID Prov</th>
                           <th rowspan="2">Provinsi</th>
+                          <th rowspan="2">ID Kab</th>
                           <th rowspan="2">Kabupaten</th>
                           <th rowspan="2">Id Distributor</th>
                           <th rowspan="2">Distributor</th>
-                          <th rowspan="2">Kecamatan</th>
-                          <th rowspan="2">Kode Pengecer</th>
-                          <th rowspan="2">Pengecer</th>
-                          <th rowspan="2">Produk</th>
                           <th
                             colspan="4"
                             class="text-center bg-success text-white"
@@ -353,14 +352,13 @@
             },
           },
           columns: [
+          { data: "produk" },
+          { data: "kode_provinsi" },
           { data: "provinsi" },
+          { data: "kode_kabupaten" },
             { data: "kabupaten" },
-            { data: "kode_distributor" },
+
             { data: "distributor" },
-            { data: "kecamatan" },
-            { data: "kode_kios" },
-            { data: "nama_kios" },
-            { data: "produk" },
             {
               data: "jan_awal",
               render: $.fn.dataTable.render.number(",", ".", 0, ""),
@@ -585,7 +583,7 @@
             provinsi : $("provinsiSelect").val(),
 
           };
-          window.location.href = `/api/download/wcm?` + $.param(params);
+          window.location.href = `/api/download/wcmf5?` + $.param(params);
         });
         // Download data dalam format Excel dengan filter yang diterapkan
       });

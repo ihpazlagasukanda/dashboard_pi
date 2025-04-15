@@ -25,6 +25,8 @@ router.get('/data/jumlah-petani', dataController.getJumlahPetani);
 
 router.get('/alokasivstebus', dataController.alokasiVsTebusan);
 
+router.get('/summary/pupuk', dataController.summaryPupuk);
+
 router.get('/petani-summary', dataController.getVervalSummary);
 
 router.get('/tebusperbulan', dataController.tebusanPerBulan);
@@ -46,6 +48,9 @@ router.get('/data/download', dataController.exportExcel);
 
 router.get('/data/wcm', dataController.getWcm);
 router.get('/download/wcm', dataController.downloadWcm);
+router.get('/data/wcmvsverval', dataController.wcmVsVerval);
+router.get('/download/wcmf5', dataController.downloadWcmF5);
+router.get('/download/wcmvsverval', dataController.exportExcelWcmVsVerval);
 
 // routes/filterRoutes.js
 router.get("/filters", async (req, res) => {

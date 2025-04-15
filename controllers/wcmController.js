@@ -1,6 +1,14 @@
 const ExcelJS = require("exceljs");
 const db = require("../config/db");
 
+// Fungsi untuk mengecek apakah semua nilai stok 0
+const isAllStockZero = (data) => {
+    return data.stok_awal === 0 &&
+        data.penebusan === 0 &&
+        data.penyaluran === 0 &&
+        data.stok_akhir === 0;
+};
+
 // Fungsi untuk mengecek apakah data WCM sudah ada
 const cekDataWcm = async (tahun, bulan) => {
     try {
@@ -8,7 +16,7 @@ const cekDataWcm = async (tahun, bulan) => {
             "SELECT COUNT(*) AS count FROM wcm WHERE tahun = ? AND bulan = ?",
             [tahun, bulan]
         );
-        return (rows[0]?.count || 0) > 0; // Pastikan nilai aman
+        return (rows[0]?.count || 0) > 0;
     } catch (error) {
         console.error("❌ Error saat mengecek data WCM:", error);
         throw error;
@@ -40,17 +48,14 @@ exports.uploadWcm = async (req, res) => {
             });
         }
 
-        // Lanjutkan proses upload jika data belum ada atau client mengonfirmasi upload ulang
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(req.file.buffer);
         const sheet = workbook.worksheets[0];
 
-        // Cek apakah sheet ada
         if (!sheet) {
             return res.status(400).json({ success: false, message: "Sheet tidak ditemukan dalam file" });
         }
 
-        // Daftar kolom yang diharapkan untuk WCM
         const expectedColumnsWcm = [
             'Produsen', 'Nomor', 'Kode Distributor', 'Nama Distributor', 'Kode Provinsi',
             'Nama Provinsi', 'Kode Kota/Kabupaten', 'Nama Kota/Kab', 'Kode Kecamatan',
@@ -58,12 +63,10 @@ exports.uploadWcm = async (req, res) => {
             'Produk', 'Stok Awal', 'Penebusan', 'Penyaluran', 'Stok Akhir', 'Status'
         ];
 
-        // Ambil kolom dari baris pertama
         const rowValues = sheet.getRow(1).values;
-        if (rowValues[0] === undefined) rowValues.shift(); // Hapus elemen pertama jika kosong
+        if (rowValues[0] === undefined) rowValues.shift();
         const actualColumns = rowValues.map(cell => (cell ? cell.toString().trim() : ""));
 
-        // Cek apakah struktur file sesuai
         if (actualColumns.length !== expectedColumnsWcm.length) {
             return res.status(400).json({ success: false, message: "Jumlah kolom tidak sesuai dengan struktur yang diharapkan" });
         }
@@ -75,16 +78,16 @@ exports.uploadWcm = async (req, res) => {
         }
 
         const WcmDataMap = new Map();
+        const produkDiizinkan = ["UREA", "NPK", "ORGANIK", "NPK KAKAO"];
 
         // Iterasi melalui setiap baris data
         sheet.eachRow((row, rowNumber) => {
             if (rowNumber === 1) return; // Lewati baris pertama (header)
 
-            const rawKabupaten = row.getCell(8).value || ""; // Ambil nilai dari kolom "Nama Kota/Kab"
+            const rawKabupaten = row.getCell(8).value || "";
             const processedKabupaten = rawKabupaten
-                .replace(/^Kab\.\s*/i, "") // Hilangkan "Kab. "
-                .toUpperCase(); // Ubah ke huruf besar
-
+                .replace(/^Kab\.\s*/i, "")
+                .toUpperCase();
 
             const data = {
                 produsen: row.getCell(1).value || "",
@@ -109,26 +112,29 @@ exports.uploadWcm = async (req, res) => {
                 status: row.getCell(20).value || "",
             };
 
-            // Filter produk yang diinginkan
-            const produkDiizinkan = ["UREA", "NPK", "ORGANIK", "NPK KAKAO"];
+            // Skip jika produk tidak diizinkan
             if (!produkDiizinkan.includes(data.produk.toUpperCase())) {
                 skippedCount++;
-                return; // Skip produk yang tidak diinginkan
+                return;
+            }
+
+            // Skip jika semua stok 0
+            if (isAllStockZero(data)) {
+                skippedCount++;
+                return;
             }
 
             const key = `${data.produsen}-${data.nomor}-${data.kode_distributor}-${data.kode_provinsi}-${data.kode_kabupaten}-${data.kode_kecamatan}-${data.produk}-${data.kode_kios}-${data.tahun}-${data.bulan}`;
-
             WcmDataMap.set(key, data);
         });
 
         // Konversi Map ke array
         let WcmData = Array.from(WcmDataMap.values());
 
-        // Ambil koneksi dari pool dan mulai transaksi
         connection = await db.getConnection();
         await connection.beginTransaction();
 
-        const batchSize = 2000; // Sesuaikan kapasitas server
+        const batchSize = 2000;
         let insertedCount = 0;
         let duplicateCount = 0;
 
@@ -139,7 +145,7 @@ exports.uploadWcm = async (req, res) => {
             duplicateCount += result.duplicateCount;
         }
 
-        await connection.commit(); // Simpan transaksi ke database
+        await connection.commit();
 
         res.status(200).json({
             success: true,
@@ -150,17 +156,16 @@ exports.uploadWcm = async (req, res) => {
         });
 
     } catch (error) {
-        if (connection) await connection.rollback(); // Rollback jika ada error
+        if (connection) await connection.rollback();
         res.status(500).json({ success: false, message: "Terjadi kesalahan saat upload WCM", error: error.message });
     } finally {
-        if (connection) connection.release(); // Lepaskan koneksi ke pool
+        if (connection) connection.release();
     }
 };
 
 // Fungsi untuk menyimpan data WCM dalam batch
 const simpanBatchWcm = async (connection, data) => {
     try {
-        // Siapkan nilai untuk query INSERT
         const values = data.map(row => [
             row.produsen, row.nomor, row.kode_distributor, row.distributor, row.kode_provinsi,
             row.provinsi, row.kode_kabupaten, row.kabupaten, row.kode_kecamatan, row.kecamatan,
@@ -168,7 +173,6 @@ const simpanBatchWcm = async (connection, data) => {
             row.penebusan, row.penyaluran, row.stok_akhir, row.status
         ]);
 
-        // Masukkan data baru dengan ON DUPLICATE KEY UPDATE
         const [result] = await connection.query(
             `INSERT INTO wcm (produsen, nomor, kode_distributor, distributor, kode_provinsi, provinsi, kode_kabupaten, kabupaten, kode_kecamatan, kecamatan, bulan, tahun, kode_kios, nama_kios, produk, stok_awal, penebusan, penyaluran, stok_akhir, status)
             VALUES ? 
@@ -198,7 +202,7 @@ const simpanBatchWcm = async (connection, data) => {
 
         return {
             affectedRows: result.affectedRows,
-            duplicateCount: 0 // Duplikat sudah ditangani ON DUPLICATE KEY UPDATE
+            duplicateCount: 0
         };
     } catch (error) {
         console.error("❌ Error saat menyimpan batch WCM:", error);

@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <%- include('./partials/head'); %>
+  <style>
+    .card-chart {
+      height: 100%;
+      min-height: 400px;
+    }
+    .chart-container {
+      position: relative;
+      height: 75%;
+      min-height: 300px;
+    }
+    .skeleton-loader {
+      height: 300px;
+      background: #f0f0f0;
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+    }
+    .skeleton-loader::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    .filter-section {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .pupuk-chart {
+      height: 300px;
+    }
+  </style>
+</head>
+<body>
+    <div class="wrapper">
+    <%- include('./partials/header'); %>
+  <div class="container-fluid py-4">
+    <h2 class="mb-4">Visualisasi Data Pupuk</h2>
+    
+    <!-- Filter Section -->
+    <div class="filter-section">
+      <div class="row">
+        <div class="col-md-3">
+          <label class="form-label">Tahun</label>
+          <select id="filterTahun" class="form-select">
+            <option value="2023">2023</option>
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Provinsi</label>
+          <select id="filterProvinsi" class="form-select select2">
+            <option value="">Semua Provinsi</option>
+            <option value="DIY">DIY</option>
+            <option value="JATENG">Jawa Tengah</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Kabupaten</label>
+          <select id="filterKabupaten" class="form-select select2" disabled>
+            <option value="">Semua Kabupaten</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Kecamatan</label>
+          <select id="filterKecamatan" class="form-select select2" disabled>
+            <option value="">Semua Kecamatan</option>
+          </select>
+        </div>
+  
+      </div>
+    </div>
+
+    <!-- Line Chart Section -->
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="card-title">Tren Penebusan Pupuk per Bulan</h5>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="toggleGrouping" checked>
+          <label class="form-check-label" for="toggleGrouping">Kelompokkan berdasarkan wilayah</label>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="chart-container">
+          <div id="lineChartSkeleton" class="skeleton-loader"></div>
+          <canvas id="lineChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bar Chart Section -->
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title">Perbandingan Alokasi vs Realisasi per Jenis Pupuk</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6 col-lg-3 mb-4">
+            <div class="pupuk-chart">
+              <div id="ureaChartSkeleton" class="skeleton-loader"></div>
+              <canvas id="ureaChart"></canvas>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3 mb-4">
+            <div class="pupuk-chart">
+              <div id="npkChartSkeleton" class="skeleton-loader"></div>
+              <canvas id="npkChart"></canvas>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3 mb-4">
+            <div class="pupuk-chart">
+              <div id="organikChartSkeleton" class="skeleton-loader"></div>
+              <canvas id="organikChart"></canvas>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3 mb-4">
+            <div class="pupuk-chart">
+              <div id="npkFormulaChartSkeleton" class="skeleton-loader"></div>
+              <canvas id="npkFormulaChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%- include('./partials/footer'); %>
+</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Kaiadmin JS -->
+  <script src="./assets/js/kaiadmin.min.js"></script>
+
+  <!-- Kaiadmin DEMO methods, don't include it in your project! -->
+  <script src="./assets/js/setting-demo.js"></script>
+  <script src="./assets/js/demo.js"></script>
+
+  <script src="./assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      // Inisialisasi Select2
+      $('.select2').select2({
+        width: '100%',
+        placeholder: 'Pilih...'
+      });
+
+      // Data wilayah
+      const wilayahData = {
+        DIY: ["BANTUL", "KOTA YOGYAKARTA", "SLEMAN", "KULON PROGO", "GUNUNG KIDUL"],
+        JATENG: ["KOTA MAGELANG", "MAGELANG", "SRAGEN", "BOYOLALI", "KLATEN", 
+                 "SUKOHARJO", "KARANGANYAR", "KOTA SURAKARTA", "WONOGIRI"]
+      };
+
+      // Inisialisasi chart utama
+      const lineChartCtx = document.getElementById('lineChart').getContext('2d');
+      const lineChart = new Chart(lineChartCtx, {
+        type: 'line',
+        data: { labels: [], datasets: [] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { beginAtZero: true }
+          },
+          animation: {
+            duration: 800 // Mengurangi durasi animasi untuk percepat loading
+          }
+        }
+      });
+
+      // Inisialisasi chart untuk pupuk (bar chart)
+      const pupukCharts = {};
+      const pupukColors = {
+        urea: { alokasi: 'rgba(54, 162, 235, 0.7)', realisasi: 'rgba(75, 192, 192, 0.7)' },
+        npk: { alokasi: 'rgba(255, 99, 132, 0.7)', realisasi: 'rgba(255, 159, 64, 0.7)' },
+        organik: { alokasi: 'rgba(153, 102, 255, 0.7)', realisasi: 'rgba(201, 203, 207, 0.7)' },
+        npkFormula: { alokasi: 'rgba(255, 205, 86, 0.7)', realisasi: 'rgba(54, 162, 235, 0.7)' }
+      };
+
+      ['urea', 'npk', 'organik', 'npkFormula'].forEach(pupuk => {
+        const ctx = document.getElementById(`${pupuk}Chart`).getContext('2d');
+        pupukCharts[pupuk] = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Alokasi', 'Realisasi'],
+            datasets: [{
+              label: 'Jumlah',
+              data: [0, 0],
+              backgroundColor: [
+                pupukColors[pupuk].alokasi,
+                pupukColors[pupuk].realisasi
+              ],
+              borderColor: [
+                pupukColors[pupuk].alokasi.replace('0.7', '1'),
+                pupukColors[pupuk].realisasi.replace('0.7', '1')
+              ],
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: { beginAtZero: true }
+            },
+            animation: {
+              duration: 800 // Mengurangi durasi animasi
+            },
+            plugins: {
+              legend: {
+                display: false
+              },
+              title: {
+                display: true,
+                text: pupuk.toUpperCase().replace('FORMULA', ' FORMULA'),
+                font: {
+                  size: 14
+                }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return `${context.dataset.label}: ${context.raw.toLocaleString()} ton`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      });
+
+      // Event listener untuk filter
+      $('#filterProvinsi').on('change', function() {
+        const provinsi = $(this).val();
+        const kabupatenSelect = $('#filterKabupaten');
+        
+        kabupatenSelect.empty().append('<option value="">Semua Kabupaten</option>');
+        $('#filterKecamatan').val('').trigger('change').prop('disabled', true);
+        
+        if (provinsi) {
+          kabupatenSelect.prop('disabled', false);
+          wilayahData[provinsi].forEach(kab => {
+            kabupatenSelect.append(`<option value="${kab}">${kab}</option>`);
+          });
+        } else {
+          kabupatenSelect.prop('disabled', true);
+        }
+        
+        loadData();
+      });
+
+      $('#filterKabupaten, #filterKecamatan, #filterTahun, #toggleGrouping').on('change', loadData);
+
+      // Cache untuk data
+      const dataCache = {};
+      const CACHE_EXPIRY = 300000; // 5 menit dalam milidetik
+
+      // Fungsi untuk memuat data dengan optimasi
+      async function loadData() {
+        const filters = {
+          provinsi: $('#filterProvinsi').val(),
+          kabupaten: $('#filterKabupaten').val(),
+          kecamatan: $('#filterKecamatan').val(),
+          tahun: $('#filterTahun').val(),
+          grouping: $('#toggleGrouping').is(':checked')
+        };
+
+        const cacheKey = JSON.stringify(filters);
+        
+        // Tampilkan skeleton loader
+        $('.skeleton-loader').show();
+        $('canvas').hide();
+
+        try {
+          // Cek cache terlebih dahulu
+          if (dataCache[cacheKey] && (Date.now() - dataCache[cacheKey].timestamp) < CACHE_EXPIRY) {
+            const cachedData = dataCache[cacheKey].data;
+            updateLineChart(cachedData.penebusanData, filters.grouping);
+            updatePupukCharts(cachedData.alokasiData, cachedData.realisasiData);
+            return;
+          }
+
+          // Jika tidak ada di cache, load data baru
+          const [penebusanData, alokasiData, realisasiData] = await Promise.all([
+            fetchPenebusanData(filters),
+            fetchSummaryData('/api/erdkk/summary', filters),
+            fetchSummaryData('/api/verval/summary', filters)
+          ]);
+
+          // Simpan ke cache
+          dataCache[cacheKey] = {
+            data: { penebusanData, alokasiData, realisasiData },
+            timestamp: Date.now()
+          };
+
+          // Update charts
+          updateLineChart(penebusanData, filters.grouping);
+          updatePupukCharts(alokasiData, realisasiData);
+
+        } catch (error) {
+          console.error('Error loading data:', error);
+          // Tampilkan pesan error jika diperlukan
+        } finally {
+          // Sembunyikan skeleton loader
+          $('.skeleton-loader').hide();
+          $('canvas').show();
+        }
+      }
+
+      // Fungsi untuk mengambil data penebusan
+      async function fetchPenebusanData(filters) {
+        let url = '/api/data/summary';
+        const params = new URLSearchParams();
+        
+        if (filters.tahun) params.append('tahun', filters.tahun);
+        if (filters.provinsi) params.append('provinsi', filters.provinsi);
+        if (filters.kabupaten) params.append('kabupaten', filters.kabupaten);
+        if (filters.kecamatan) params.append('kecamatan', filters.kecamatan);
+        
+        if (params.toString()) url += `?${params.toString()}`;
+        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Gagal memuat data penebusan');
+        
+        const data = await response.json();
+        if (!data.data || !Array.isArray(data.data)) throw new Error('Format data tidak valid');
+        
+        return data.data;
+      }
+
+      // Fungsi untuk mengambil data summary (alokasi/realisasi)
+      async function fetchSummaryData(endpoint, filters) {
+        const params = new URLSearchParams();
+        
+        if (filters.tahun) params.append('tahun', filters.tahun);
+        if (filters.provinsi) params.append('provinsi', filters.provinsi);
+        if (filters.kabupaten) params.append('kabupaten', filters.kabupaten);
+        if (filters.kecamatan) params.append('kecamatan', filters.kecamatan);
+        
+        const url = params.toString() ? `${endpoint}?${params.toString()}` : endpoint;
+        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Gagal memuat data dari ${endpoint}`);
+        
+        const data = await response.json();
+        
+        // Handle both response formats
+        if (data.total_urea !== undefined) {
+          // Format lama: {"total_urea":..., "total_npk":...}
+          return {
+            data: [
+              { jenis_pupuk: 'UREA', total: data.total_urea || 0 },
+              { jenis_pupuk: 'NPK', total: data.total_npk || 0 },
+              { jenis_pupuk: 'ORGANIK', total: data.total_organik || 0 },
+              { jenis_pupuk: 'NPK_FORMULA', total: data.total_npk_formula || 0 }
+            ]
+          };
+        } else if (Array.isArray(data.data)) {
+          // Format baru yang sudah difilter
+          return data;
+        } else {
+          throw new Error('Format data tidak dikenali');
+        }
+      }
+
+      // Fungsi untuk update line chart utama
+      function updateLineChart(data, grouping) {
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const datasets = [];
+        
+        if (grouping) {
+          // Kelompokkan berdasarkan wilayah
+          const provinsiData = {
+            DIY: Array(12).fill(0),
+            JATENG: Array(12).fill(0)
+          };
+          
+          data.forEach(item => {
+            const monthIndex = months.indexOf(item.bulan);
+            if (monthIndex === -1) return;
+            
+            if (wilayahData.DIY.includes(item.kabupaten)) {
+              provinsiData.DIY[monthIndex] += item.total;
+            } else if (wilayahData.JATENG.includes(item.kabupaten)) {
+              provinsiData.JATENG[monthIndex] += item.total;
+            }
+          });
+          
+          datasets.push({
+            label: 'DIY',
+            data: provinsiData.DIY,
+            borderColor: 'rgba(255, 99, 132, 1)',
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            tension: 0.1,
+            fill: false
+          });
+          
+          datasets.push({
+            label: 'Jawa Tengah',
+            data: provinsiData.JATENG,
+            borderColor: 'rgba(54, 162, 235, 1)',
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            tension: 0.1,
+            fill: false
+          });
+        } else {
+          // Tampilkan per kabupaten (maksimal 10 kabupaten untuk performa)
+          const kabupatenList = [...new Set(data.map(item => item.kabupaten))].slice(0, 10);
+          const colors = generateColors(kabupatenList.length);
+          
+          kabupatenList.forEach((kab, index) => {
+            const kabData = Array(12).fill(0);
+            
+            data.filter(item => item.kabupaten === kab)
+                .forEach(item => {
+                  const monthIndex = months.indexOf(item.bulan);
+                  if (monthIndex !== -1) {
+                    kabData[monthIndex] += item.total;
+                  }
+                });
+            
+            datasets.push({
+              label: kab,
+              data: kabData,
+              borderColor: colors[index],
+              backgroundColor: colors[index].replace(')', ', 0.2)').replace('rgb', 'rgba'),
+              tension: 0.1,
+              fill: false
+            });
+          });
+        }
+        
+        lineChart.data.labels = months;
+        lineChart.data.datasets = datasets;
+        lineChart.update();
+      }
+
+      // Fungsi untuk update chart pupuk (bar chart)
+      function updatePupukCharts(alokasiData, realisasiData) {
+        const pupukTypes = {
+          urea: 'UREA',
+          npk: 'NPK',
+          organik: 'ORGANIK',
+          npkFormula: 'NPK_FORMULA'
+        };
+        
+        Object.entries(pupukTypes).forEach(([chartId, pupukType]) => {
+          // Cari data alokasi
+          const alokasiItem = alokasiData.data?.find(d => 
+            d.jenis_pupuk === pupukType || 
+            d.jenis_pupuk === pupukType.replace('_', ' ')
+          );
+          
+          // Cari data realisasi
+          const realisasiItem = realisasiData.data?.find(d => 
+            d.jenis_pupuk === pupukType || 
+            d.jenis_pupuk === pupukType.replace('_', ' ')
+          );
+          
+          const alokasi = alokasiItem?.total || 0;
+          const realisasi = realisasiItem?.total || 0;
+          
+          // Update data untuk bar chart
+          pupukCharts[chartId].data.datasets[0].data = [alokasi, realisasi];
+          pupukCharts[chartId].update();
+        });
+      }
+
+      // Fungsi pembantu untuk generate warna
+      function generateColors(count) {
+        const colors = [];
+        const hueStep = 360 / Math.max(count, 1);
+        
+        for (let i = 0; i < count; i++) {
+          const hue = i * hueStep;
+          colors.push(`hsl(${hue}, 70%, 50%)`);
+        }
+        
+        return colors;
+      }
+
+      // Load data pertama kali
+      loadData();
+    });
+  </script>
+</body>
+</html>

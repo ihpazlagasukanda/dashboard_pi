@@ -76,28 +76,66 @@ exports.getAllData = async (req, res) => {
 // Endpoint ini khusus untuk dashboard (SUM per kabupaten per bulan)
 exports.getSummaryData = async (req, res) => {
     try {
-        const query = `
+        const { tahun, provinsi, kabupaten, kecamatan } = req.query;
+
+        let query = `
             SELECT 
                 kabupaten, 
-                DATE_FORMAT(tanggal_tebus, '%b') AS bulan, -- Pastikan format bulan sudah benar
+                kecamatan,
+                DATE_FORMAT(tanggal_tebus, '%b') AS bulan,
                 SUM(urea + npk + sp36 + za + npk_formula + organik + organik_cair + kakao) AS total
             FROM verval
-            GROUP BY kabupaten, bulan
+            WHERE 1 = 1
+        `;
+
+        const params = [];
+
+        // Filter Tahun
+        if (tahun) {
+            query += " AND YEAR(tanggal_tebus) = ?";
+            params.push(tahun);
+        }
+
+        // Filter Kabupaten
+        if (kabupaten) {
+            query += " AND kabupaten = ?";
+            params.push(kabupaten);
+        }
+
+        // Filter Kecamatan
+        if (kecamatan) {
+            query += " AND kecamatan = ?";
+            params.push(kecamatan);
+        }
+
+        query += `
+            GROUP BY kabupaten, kecamatan, bulan
             ORDER BY FIELD(bulan, 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
         `;
 
         console.time("Query Execution Time");
-        const [rows] = await db.execute(query);
+        const [rows] = await db.execute(query, params);
         console.timeEnd("Query Execution Time");
 
-        console.log("Data summary yang dikirim ke frontend:", rows); // Debugging
+        // Mapping Provinsi DIY atau Jawa Tengah
+        const diyKabupaten = ["Kota Yogyakarta", "Bantul", "Sleman", "Gunung Kidul", "Kulon Progo"];
 
-        res.json({ data: rows });
+        const filteredRows = rows.filter(row => {
+            const isDIY = diyKabupaten.some(diy => row.kabupaten.includes(diy));
+            if (provinsi === 'DIY') return isDIY;
+            if (provinsi === 'JATENG') return !isDIY;
+            return true; // Jika tidak ada filter provinsi, tampilkan semua
+        });
+
+        console.log("Data summary yang dikirim ke frontend:", filteredRows);
+
+        res.json({ data: filteredRows });
     } catch (error) {
         console.error("Database Error:", error);
         res.status(500).json({ message: "Error mengambil data", error });
     }
 };
+
 
 exports.getErdkk = async (req, res) => {
     try {
@@ -170,7 +208,7 @@ exports.getErdkk = async (req, res) => {
 // untuk dashboard 1
 exports.getErdkkSummary = async (req, res) => {
     try {
-        const { kabupaten, kecamatan, tahun } = req.query; // Ambil filter dari frontend
+        const { kabupaten, kecamatan, tahun, provinsi } = req.query; // Tambah provinsi dari frontend
 
         let query = `
             SELECT 
@@ -184,6 +222,17 @@ exports.getErdkkSummary = async (req, res) => {
 
         let params = [];
 
+        // Mapping Provinsi ke Kabupaten
+        if (provinsi) {
+            if (provinsi === 'DIY') {
+                query += ` AND kabupaten IN (?, ?, ?, ?, ?)`;
+                params.push('SLEMAN', 'KOTA YOGYAKARTA', 'GUNUNG KIDUL', 'BANTUL', 'KULON PROGO');
+            } else if (provinsi === 'JAWA TENGAH') {
+                query += ` AND kabupaten NOT IN (?, ?, ?, ?, ?)`;
+                params.push('SLEMAN', 'KOTA YOGYAKARTA', 'GUNUNG KIDUL', 'BANTUL', 'KULON PROGO');
+            }
+        }
+
         if (kabupaten) {
             query += " AND kabupaten = ?";
             params.push(kabupaten);
@@ -207,9 +256,54 @@ exports.getErdkkSummary = async (req, res) => {
     }
 };
 
+exports.getSkBupatiAlokasi = async (req, res) => {
+    try {
+        const { kabupaten, kecamatan, tahun, provinsi } = req.query; // Tambah provinsi dari frontend
+
+        let query = `
+            SELECT 
+                alokasi_urea AS total_urea, 
+                alokasi_npk AS total_npk, 
+                alokasi_npk_formula AS total_npk_formula, 
+                alokasi_organik AS total_organik,
+                alokasi_npk_kakao AS total_npk_kakao
+            FROM sk_bupati
+            WHERE 1 = 1
+        `;
+
+        let params = [];
+
+        if (provinsi) {
+            query += " AND provinsi = ?";
+            params.push(provinsi);
+        }
+
+        if (kabupaten) {
+            query += " AND kabupaten = ?";
+            params.push(kabupaten);
+        }
+
+        if (kecamatan) {
+            query += " AND kecamatan = ?";
+            params.push(kecamatan);
+        }
+
+        if (tahun) {
+            query += " AND tahun = ?";
+            params.push(tahun);
+        }
+
+        const [rows] = await db.execute(query, params);
+        res.json(rows[0]); // Kirim hasil SUM ke frontend
+    } catch (error) {
+        console.error("Database Error:", error);
+        res.status(500).json({ message: "Error menghitung Alokasi", error });
+    }
+};
+
 exports.getErdkkCount = async (req, res) => {
     try {
-        const { kabupaten, kecamatan, tahun } = req.query; // Ambil filter dari frontend
+        const { provinsi, kabupaten, kecamatan, tahun } = req.query; // Tambah provinsi
 
         let query = `
             SELECT 
@@ -223,6 +317,17 @@ exports.getErdkkCount = async (req, res) => {
 
         let params = [];
 
+        // Filter Provinsi
+        if (provinsi) {
+            if (provinsi === 'DIY') {
+                query += ` AND kabupaten IN (?, ?, ?, ?, ?)`;
+                params.push('SLEMAN', 'KOTA YOGYAKARTA', 'GUNUNG KIDUL', 'BANTUL', 'KULON PROGO');
+            } else if (provinsi === 'JAWA TENGAH') {
+                query += ` AND kabupaten NOT IN (?, ?, ?, ?, ?)`;
+                params.push('SLEMAN', 'KOTA YOGYAKARTA', 'GUNUNG KIDUL', 'BANTUL', 'KULON PROGO');
+            }
+        }
+
         if (kabupaten) {
             query += " AND kabupaten = ?";
             params.push(kabupaten);
@@ -239,12 +344,14 @@ exports.getErdkkCount = async (req, res) => {
         }
 
         const [rows] = await db.execute(query, params);
-        res.json(rows[0]); // Kirim hasil SUM ke frontend
+        res.json(rows[0] || { count_urea: 0, count_npk: 0, count_npk_formula: 0, count_organik: 0 });
+
     } catch (error) {
         console.error("Database Error:", error);
         res.status(500).json({ message: "Error menghitung SUM ERDKK", error });
     }
 };
+
 
 exports.downloadErdkk = async (req, res) => {
     try {
@@ -345,7 +452,7 @@ exports.downloadErdkk = async (req, res) => {
 // API untuk SUM Penebusan berdasarkan filter tahun, kabupaten, dan kecamatan
 exports.getSummaryPenebusan = async (req, res) => {
     try {
-        const { kabupaten, kecamatan, tahun } = req.query;
+        const { provinsi, kabupaten, kecamatan, tahun } = req.query; // Tambah provinsi
 
         let query = `
             SELECT 
@@ -359,14 +466,27 @@ exports.getSummaryPenebusan = async (req, res) => {
 
         let params = [];
 
+        // Mapping Provinsi ke Kabupaten
+        if (provinsi) {
+            if (provinsi === 'DIY') {
+                query += ` AND kabupaten IN (?, ?, ?, ?, ?)`;
+                params.push('SLEMAN', 'KOTA YOGYAKARTA', 'GUNUNG KIDUL', 'BANTUL', 'KULON PROGO');
+            } else if (provinsi === 'JAWA TENGAH') {
+                query += ` AND kabupaten NOT IN (?, ?, ?, ?, ?)`;
+                params.push('SLEMAN', 'KOTA YOGYAKARTA', 'GUNUNG KIDUL', 'BANTUL', 'KULON PROGO');
+            }
+        }
+
         if (kabupaten) {
             query += " AND kabupaten = ?";
             params.push(kabupaten);
         }
+
         if (kecamatan) {
             query += " AND kecamatan = ?";
             params.push(kecamatan);
         }
+
         if (tahun) {
             query += " AND YEAR(tanggal_tebus) = ?";
             params.push(tahun);
@@ -383,7 +503,7 @@ exports.getSummaryPenebusan = async (req, res) => {
 
 exports.getPenebusanCount = async (req, res) => {
     try {
-        const { kabupaten, kecamatan, tahun } = req.query;
+        const { provinsi, kabupaten, kecamatan, tahun } = req.query;
 
         let query = `
             SELECT 
@@ -397,33 +517,60 @@ exports.getPenebusanCount = async (req, res) => {
 
         let params = [];
 
+        // Filter Provinsi (mapping kabupaten ke provinsi)
+        if (provinsi) {
+            if (provinsi === 'DIY') {
+                query += ` AND kabupaten IN (?, ?, ?, ?, ?)`;
+                params.push('SLEMAN', 'KOTA YOGYAKARTA', 'GUNUNG KIDUL', 'BANTUL', 'KULON PROGO');
+            } else if (provinsi === 'JAWA TENGAH') {
+                query += ` AND kabupaten NOT IN (?, ?, ?, ?, ?)`;
+                params.push('SLEMAN', 'KOTA YOGYAKARTA', 'GUNUNG KIDUL', 'BANTUL', 'KULON PROGO');
+            }
+        }
+
+        // Filter Kabupaten
         if (kabupaten) {
             query += " AND kabupaten = ?";
             params.push(kabupaten);
         }
+
+        // Filter Kecamatan
         if (kecamatan) {
             query += " AND kecamatan = ?";
             params.push(kecamatan);
         }
+
+        // Filter Tahun
         if (tahun) {
             query += " AND YEAR(tanggal_tebus) = ?";
             params.push(tahun);
         }
 
         const [rows] = await db.execute(query, params);
-        res.json(rows[0] || { total_urea: 0, total_npk: 0, total_npk_formula: 0, total_organik: 0 });
+
+        // Return hasil count dengan default 0 jika tidak ada data
+        res.json(rows[0] || {
+            count_urea: 0,
+            count_npk: 0,
+            count_npk_formula: 0,
+            count_organik: 0
+        });
 
     } catch (error) {
-        console.error("Error fetching sum:", error);
-        res.status(500).json({ message: "Error calculating sum", error });
+        console.error("Error fetching penebusan count:", error);
+        res.status(500).json({
+            message: "Error menghitung jumlah penebusan",
+            error: error.message
+        });
     }
 };
+
 // end dashboard 1
 
 // batas
 exports.getData = async (req, res) => {
     try {
-        const { start, length, draw, kabupaten, kecamatan, metode_penebusan, tanggal_tebus, bulan_awal, bulan_akhir } = req.query;
+        const { start, length, draw, kabupaten, kecamatan, metode_penebusan, bulan, tahun, bulan_awal, bulan_akhir } = req.query;
 
         let query = "SELECT *, DATE_FORMAT(tanggal_tebus, '%Y-%m') AS tanggal_tebus FROM verval WHERE 1=1";
         let countQuery = "SELECT COUNT(*) AS total FROM verval WHERE 1=1";
@@ -448,17 +595,23 @@ exports.getData = async (req, res) => {
             params.push(metode_penebusan);
             countParams.push(metode_penebusan);
         }
-        if (tanggal_tebus) {
-            query += " AND DATE_FORMAT(tanggal_tebus, '%Y-%m') = ?";
-            countQuery += " AND DATE_FORMAT(tanggal_tebus, '%Y-%m') = ?";
-            params.push(tanggal_tebus);
-            countParams.push(tanggal_tebus);
-        }
         if (bulan_awal && bulan_akhir) {
+            // Filter pakai rentang bulan (format: 'YYYY-MM')
             query += " AND DATE_FORMAT(tanggal_tebus, '%Y-%m') BETWEEN ? AND ?";
-            countQuery += " AND DATE_FORMAT(tanggal_tebus, '%Y-%m') BETWEEN ? AND ?";
             params.push(bulan_awal, bulan_akhir);
-            countParams.push(bulan_awal, bulan_akhir);
+
+        } else if (bulan && tahun) {
+            // Filter berdasarkan bulan dan tahun tunggal
+            query += " AND MONTH(tanggal_tebus) = ? AND YEAR(tanggal_tebus) = ?";
+            params.push(bulan, tahun);
+
+        } else if (bulan) {
+            query += " AND MONTH(tanggal_tebus) = ?";
+            params.push(bulan);
+
+        } else if (tahun) {
+            query += " AND YEAR(tanggal_tebus) = ?";
+            params.push(tahun);
         }
 
         // Pagination (gunakan 0 jika null)
@@ -888,6 +1041,174 @@ exports.getJumlahPetani = async (req, res) => {
 //     "BANTUL", "KOTA YOGYAKARTA", "SLEMAN", "KULON PROGO", "GUNUNG KIDUL"
 // ];
 
+exports.summaryPupuk = async (req, res) => {
+    try {
+        const { provinsi, kabupaten, tahun } = req.query;
+
+        if (!tahun) {
+            return res.json({
+                level: !provinsi ? "provinsi" : !kabupaten ? "kabupaten" : "kecamatan",
+                data: [],
+                totals: {
+                    urea_realisasi: 0,
+                    npk_realisasi: 0,
+                    npk_formula_realisasi: 0,
+                    organik_realisasi: 0,
+                    urea_alokasi: 0,
+                    npk_alokasi: 0,
+                    npk_formula_alokasi: 0,
+                    organik_alokasi: 0
+                }
+            });
+        }
+
+        const kabupatenDIY = ["SLEMAN", "BANTUL", "GUNUNG KIDUL", "KULON PROGO", "KOTA YOGYAKARTA"];
+
+        let selectField = "kabupaten";
+        let groupField = "kabupaten";
+        let whereClause = "WHERE tahun = ?";
+        const params = [tahun];
+
+        // Provinsi level
+        if (!provinsi) {
+            selectField = `
+                CASE 
+                    WHEN kabupaten IN (${kabupatenDIY.map(() => "?").join(",")}) THEN 'DI Yogyakarta'
+                    ELSE 'Jawa Tengah'
+                END
+            `;
+            groupField = "wilayah";
+            params.unshift(...kabupatenDIY);
+        }
+        // Kabupaten level
+        else if (provinsi && !kabupaten) {
+            if (provinsi === "DI Yogyakarta") {
+                whereClause += ` AND kabupaten IN (${kabupatenDIY.map(() => "?").join(",")})`;
+                params.push(...kabupatenDIY);
+            } else {
+                whereClause += ` AND kabupaten NOT IN (${kabupatenDIY.map(() => "?").join(",")})`;
+                params.push(...kabupatenDIY);
+            }
+        }
+        // Kecamatan level
+        else if (kabupaten) {
+            whereClause += ` AND kabupaten = ?`;
+            params.push(kabupaten);
+            selectField = "kecamatan";
+            groupField = "kecamatan";
+        }
+
+        // Query alokasi
+        const alokasiQuery = `
+            SELECT 
+                ${selectField} AS wilayah,
+                SUM(urea) AS alokasi_urea,
+                SUM(npk) AS alokasi_npk,
+                SUM(npk_formula) AS alokasi_npk_formula,
+                SUM(organik) AS alokasi_organik
+            FROM erdkk
+            ${whereClause}
+            GROUP BY ${groupField}
+        `;
+
+        // Query realisasi
+        const realisasiQuery = `
+            SELECT 
+                ${selectField.replace(/e\./g, "")} AS wilayah,
+                SUM(tebus_urea) AS realisasi_urea,
+                SUM(tebus_npk) AS realisasi_npk,
+                SUM(tebus_npk_formula) AS realisasi_npk_formula,
+                SUM(tebus_organik) AS realisasi_organik
+            FROM verval_summary
+            ${whereClause.replace(/e\./g, "")}
+            GROUP BY ${groupField}
+        `;
+
+        // Eksekusi query paralel
+        const [alokasiData, realisasiData] = await Promise.all([
+            db.query(alokasiQuery, params),
+            db.query(realisasiQuery, params)
+        ]);
+
+        const alokasi = alokasiData[0] || [];
+        const realisasi = realisasiData[0] || [];
+
+        // Gabungkan data
+        const mapData = {};
+
+        alokasi.forEach(item => {
+            mapData[item.wilayah] = {
+                wilayah: item.wilayah,
+                alokasi_urea: item.alokasi_urea || 0,
+                alokasi_npk: item.alokasi_npk || 0,
+                alokasi_npk_formula: item.alokasi_npk_formula || 0,
+                alokasi_organik: item.alokasi_organik || 0,
+                realisasi_urea: 0,
+                realisasi_npk: 0,
+                realisasi_npk_formula: 0,
+                realisasi_organik: 0
+            };
+        });
+
+        realisasi.forEach(item => {
+            if (!mapData[item.wilayah]) {
+                mapData[item.wilayah] = {
+                    wilayah: item.wilayah,
+                    alokasi_urea: 0,
+                    alokasi_npk: 0,
+                    alokasi_npk_formula: 0,
+                    alokasi_organik: 0,
+                    realisasi_urea: item.realisasi_urea || 0,
+                    realisasi_npk: item.realisasi_npk || 0,
+                    realisasi_npk_formula: item.realisasi_npk_formula || 0,
+                    realisasi_organik: item.realisasi_organik || 0
+                };
+            } else {
+                mapData[item.wilayah].realisasi_urea = item.realisasi_urea || 0;
+                mapData[item.wilayah].realisasi_npk = item.realisasi_npk || 0;
+                mapData[item.wilayah].realisasi_npk_formula = item.realisasi_npk_formula || 0;
+                mapData[item.wilayah].realisasi_organik = item.realisasi_organik || 0;
+            }
+        });
+
+        // Hitung total
+        const totals = {
+            urea_realisasi: 0,
+            npk_realisasi: 0,
+            npk_formula_realisasi: 0,
+            organik_realisasi: 0,
+            urea_alokasi: 0,
+            npk_alokasi: 0,
+            npk_formula_alokasi: 0,
+            organik_alokasi: 0
+        };
+
+        const finalData = Object.values(mapData).map(item => {
+            totals.urea_realisasi += item.realisasi_urea;
+            totals.npk_realisasi += item.realisasi_npk;
+            totals.npk_formula_realisasi += item.realisasi_npk_formula;
+            totals.organik_realisasi += item.realisasi_organik;
+            totals.urea_alokasi += item.alokasi_urea;
+            totals.npk_alokasi += item.alokasi_npk;
+            totals.npk_formula_alokasi += item.alokasi_npk_formula;
+            totals.organik_alokasi += item.alokasi_organik;
+
+            return item;
+        });
+
+        return res.json({
+            level: !provinsi ? "provinsi" : !kabupaten ? "kabupaten" : "kecamatan",
+            data: finalData,
+            totals
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+};
+
+
 exports.alokasiVsTebusan = async (req, res) => {
     try {
         const { start, length, draw, kabupaten, kecamatan, tahun } = req.query;
@@ -900,12 +1221,12 @@ exports.alokasiVsTebusan = async (req, res) => {
                 e.nik, 
                 e.nama_petani, 
                 e.kode_kios,
+                e.nama_kios,
                 e.tahun, 
                 e.urea, 
                 e.npk, 
                 e.npk_formula, 
                 e.organik,
-                
                 -- Data tebusan total
                 COALESCE(v.tebus_urea, 0) AS tebus_urea,
                 COALESCE(v.tebus_npk, 0) AS tebus_npk,
@@ -1051,7 +1372,8 @@ exports.getSalurKios = async (req, res) => {
             SELECT 
     kabupaten, 
     kecamatan, 
-    kode_kios,   
+    kode_kios,
+    MIN(nama_kios) AS nama_kios,
    SUM(urea) AS urea,
    SUM(npk) AS npk,
    SUM(npk_formula) AS npk_formula,
@@ -1318,15 +1640,18 @@ exports.getVervalSummary = async (req, res) => {
     }
 };
 
+
 exports.downloadPetaniSummary = async (req, res) => {
     try {
         const { kabupaten, tahun } = req.query;
 
         let query = `
             SELECT 
-            e.kabupaten, 
+                e.kabupaten, 
+                e.kecamatan,
                 e.nik, 
                 e.nama_petani, 
+                e.kode_kios,
                 e.tahun, 
                 e.urea, 
                 e.npk, 
@@ -1434,47 +1759,50 @@ exports.downloadPetaniSummary = async (req, res) => {
         };
 
         // 🔥 **Setup Header dengan Merge Cells**
+        // Updated header merges to include new columns
         worksheet.mergeCells('A1:A2'); // Kabupaten
-        worksheet.mergeCells('B1:B2'); // NIK
-        worksheet.mergeCells('C1:C2'); // Nama Petani
-        worksheet.mergeCells('D1:G1'); // Alokasi
-        worksheet.mergeCells('H1:K1'); // Sisa
-        worksheet.mergeCells('L1:O1'); // Tebusan
+        worksheet.mergeCells('B1:B2'); // Kecamatan
+        worksheet.mergeCells('C1:C2'); // NIK
+        worksheet.mergeCells('D1:D2'); // Nama Petani
+        worksheet.mergeCells('E1:E2'); // Kode Kios
+        worksheet.mergeCells('F1:I1'); // Alokasi (shifted right by 2 columns)
+        worksheet.mergeCells('J1:M1'); // Sisa
+        worksheet.mergeCells('N1:Q1'); // Tebusan
 
-        // Merge header bulanan, 4 kolom per bulan
-        worksheet.mergeCells('P1:S1'); // Januari
-        worksheet.mergeCells('T1:W1'); // Februari
-        worksheet.mergeCells('X1:AA1'); // Maret
-        worksheet.mergeCells('AB1:AE1'); // April
-        worksheet.mergeCells('AF1:AI1'); // Mei
-        worksheet.mergeCells('AJ1:AM1'); // Juni
-        worksheet.mergeCells('AN1:AQ1'); // Juli
-        worksheet.mergeCells('AR1:AU1'); // Agustus
-        worksheet.mergeCells('AV1:AY1'); // September
-        worksheet.mergeCells('AZ1:BC1'); // Oktober
-        worksheet.mergeCells('BD1:BG1'); // November
-        worksheet.mergeCells('BH1:BK1'); // Desember
+        // Merge header bulanan, 4 kolom per bulan (shifted right by 2 columns)
+        worksheet.mergeCells('R1:U1'); // Januari
+        worksheet.mergeCells('V1:Y1'); // Februari
+        worksheet.mergeCells('Z1:AC1'); // Maret
+        worksheet.mergeCells('AD1:AG1'); // April
+        worksheet.mergeCells('AH1:AK1'); // Mei
+        worksheet.mergeCells('AL1:AO1'); // Juni
+        worksheet.mergeCells('AP1:AS1'); // Juli
+        worksheet.mergeCells('AT1:AW1'); // Agustus
+        worksheet.mergeCells('AX1:AZ1'); // September
+        worksheet.mergeCells('BA1:BD1'); // Oktober
+        worksheet.mergeCells('BE1:BH1'); // November
+        worksheet.mergeCells('BI1:BL1'); // Desember
 
         // Set Header Utama
-        worksheet.getCell("D1").value = "Alokasi";
-        worksheet.getCell("H1").value = "Sisa";
-        worksheet.getCell("L1").value = "Tebusan";
+        worksheet.getCell("F1").value = "Alokasi";
+        worksheet.getCell("J1").value = "Sisa";
+        worksheet.getCell("N1").value = "Tebusan";
 
-        worksheet.getCell("P1").value = "Januari";
-        worksheet.getCell("T1").value = "Februari";
-        worksheet.getCell("X1").value = "Maret";
-        worksheet.getCell("AB1").value = "April";
-        worksheet.getCell("AF1").value = "Mei";
-        worksheet.getCell("AJ1").value = "Juni";
-        worksheet.getCell("AN1").value = "Juli";
-        worksheet.getCell("AR1").value = "Agustus";
-        worksheet.getCell("AV1").value = "September";
-        worksheet.getCell("AZ1").value = "Oktober";
-        worksheet.getCell("BD1").value = "November";
-        worksheet.getCell("BH1").value = "Desember";
+        worksheet.getCell("R1").value = "Januari";
+        worksheet.getCell("V1").value = "Februari";
+        worksheet.getCell("Z1").value = "Maret";
+        worksheet.getCell("AD1").value = "April";
+        worksheet.getCell("AH1").value = "Mei";
+        worksheet.getCell("AL1").value = "Juni";
+        worksheet.getCell("AP1").value = "Juli";
+        worksheet.getCell("AT1").value = "Agustus";
+        worksheet.getCell("AX1").value = "September";
+        worksheet.getCell("BA1").value = "Oktober";
+        worksheet.getCell("BE1").value = "November";
+        worksheet.getCell("BI1").value = "Desember";
 
         // Styling Header Utama
-        ["D1", "H1", "L1"].forEach(cell => {
+        ["F1", "J1", "N1"].forEach(cell => {
             worksheet.getCell(cell).alignment = { horizontal: "center", vertical: "middle" };
             worksheet.getCell(cell).font = { bold: true, size: 12 };
             worksheet.getCell(cell).fill = {
@@ -1485,7 +1813,7 @@ exports.downloadPetaniSummary = async (req, res) => {
         });
 
         // Styling Header Bulanan (Januari - Desember) -> Merah
-        ["P1", "T1", "X1", "AB1", "AF1", "AJ1", "AN1", "AR1", "AV1", "AZ1", "BD1", "BH1"].forEach(cell => {
+        ["R1", "V1", "Z1", "AD1", "AH1", "AL1", "AP1", "AT1", "AX1", "BA1", "BE1", "BI1"].forEach(cell => {
             worksheet.getCell(cell).alignment = { horizontal: "center", vertical: "middle" };
             worksheet.getCell(cell).font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } }; // Warna teks putih
             worksheet.getCell(cell).fill = {
@@ -1495,9 +1823,9 @@ exports.downloadPetaniSummary = async (req, res) => {
             };
         });
 
-        // ✅ **Tambahkan header kosong untuk memastikan Kabupaten, NIK, Nama Petani tetap muncul**
+        // ✅ **Tambahkan header kosong untuk memastikan Kabupaten, Kecamatan, NIK, Nama Petani, Kode Kios tetap muncul**
         worksheet.getRow(2).values = [
-            'Kabupaten', 'NIK', 'Nama Petani', // Tambahkan kolom awal agar tidak hilang
+            'Kabupaten', 'Kecamatan', 'NIK', 'Nama Petani', 'Kode Kios', // New columns added
             'Urea', 'NPK', 'NPK Formula', 'Organik', // Alokasi
             'Urea', 'NPK', 'NPK Formula', 'Organik', // Sisa
             'Urea', 'NPK', 'NPK Formula', 'Organik', // Tebusan
@@ -1528,7 +1856,7 @@ exports.downloadPetaniSummary = async (req, res) => {
 
         // 🔥 **Tambahkan Baris Sum Total**
         let totalRow = worksheet.addRow([
-            'TOTAL', '', '',
+            'TOTAL', '', '', '', '', // Empty for new columns
             data.reduce((sum, r) => sum + parseFloat(r.urea || 0), 0).toLocaleString(),
             data.reduce((sum, r) => sum + parseFloat(r.npk || 0), 0).toLocaleString(),
             data.reduce((sum, r) => sum + parseFloat(r.npk_formula || 0), 0).toLocaleString(),
@@ -1618,7 +1946,11 @@ exports.downloadPetaniSummary = async (req, res) => {
         // Isi data
         data.forEach((row) => {
             worksheet.addRow([
-                row.kabupaten, row.nik, row.nama_petani,
+                row.kabupaten,
+                row.kecamatan, // Added kecamatan
+                row.nik,
+                row.nama_petani,
+                row.kode_kios, // Added kode_kios
                 row.urea, row.npk, row.npk_formula, row.organik, // Alokasi
                 row.sisa_urea, row.sisa_npk, row.sisa_npk_formula, row.sisa_organik, // Sisa
                 row.tebus_urea, row.tebus_npk, row.tebus_npk_formula, row.tebus_organik, // Tebusan
@@ -1637,14 +1969,11 @@ exports.downloadPetaniSummary = async (req, res) => {
             ]);
         });
 
-
         worksheet.eachRow((row) => {
             row.eachCell((cell) => {
                 cell.border = borderStyle;
             });
         });
-
-
 
         // **Buat Nama File Sesuai Kabupaten**
         const safeKabupaten = kabupaten ? kabupaten.replace(/\s+/g, "_") : "ALL";
@@ -2066,119 +2395,121 @@ COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus)
         worksheet.mergeCells('B1:B3'); // Kecamatan
         worksheet.mergeCells('C1:C3'); // NIK
         worksheet.mergeCells('D1:D3'); // Nama Petani
-        worksheet.mergeCells('E1:H1'); // Alokasi
-        worksheet.mergeCells('E2:H2'); // Sub Header Alokasi
-        worksheet.mergeCells('I1:L1'); // Sisa
-        worksheet.mergeCells('I2:L2'); // Sub Header Sisa
-        worksheet.mergeCells('M1:P1'); // Tebusan
-        worksheet.mergeCells('M2:P2'); // Sub Header Tebusan
+        worksheet.mergeCells('E1:E3'); // Kode_kios
+        worksheet.mergeCells('F1:I1'); // Alokasi
+        worksheet.mergeCells('F2:I2'); // Sub Header Alokasi
+        worksheet.mergeCells('J1:M1'); // Sisa
+        worksheet.mergeCells('J2:M2'); // Sub Header Sisa
+        worksheet.mergeCells('N1:Q1'); // Tebusan
+        worksheet.mergeCells('N2:Q2'); // Sub Header Tebusan
 
         // Merge header bulanan, 8 kolom per bulan (4 Kartan + 4 Ipubers)
-        worksheet.mergeCells('Q1:X1'); // Januari
-        worksheet.mergeCells('Q2:T2'); // Sub Header Januari - Kartan
-        worksheet.mergeCells('U2:X2'); // Sub Header Januari - Ipubers
+        worksheet.mergeCells('R1:Y1'); // Januari
+        worksheet.mergeCells('R2:U2'); // Sub Header Januari - Kartan
+        worksheet.mergeCells('V2:Y2'); // Sub Header Januari - Ipubers
 
-        worksheet.mergeCells('Y1:AF1'); // Februari
-        worksheet.mergeCells('Y2:AB2'); // Sub Header Februari - Kartan
-        worksheet.mergeCells('AC2:AF2'); // Sub Header Februari - Ipubers
+        worksheet.mergeCells('Z1:AG1'); // Februari
+        worksheet.mergeCells('Z2:AC2'); // Sub Header Februari - Kartan
+        worksheet.mergeCells('AD2:AG2'); // Sub Header Februari - Ipubers
 
-        worksheet.mergeCells('AG1:AN1'); // Maret
-        worksheet.mergeCells('AG2:AJ2'); // Sub Header Maret - Kartan
-        worksheet.mergeCells('AK2:AN2'); // Sub Header Maret - Ipubers
+        worksheet.mergeCells('AH1:AO1'); // Maret
+        worksheet.mergeCells('AH2:AK2'); // Sub Header Maret - Kartan
+        worksheet.mergeCells('AL2:AO2'); // Sub Header Maret - Ipubers
 
-        worksheet.mergeCells('AO1:AV1'); // April
-        worksheet.mergeCells('AO2:AR2'); // Sub Header April - Kartan
-        worksheet.mergeCells('AS2:AV2'); // Sub Header April - Ipubers
+        worksheet.mergeCells('AP1:AW1'); // April
+        worksheet.mergeCells('AP2:AS2'); // Sub Header April - Kartan
+        worksheet.mergeCells('AT2:AW2'); // Sub Header April - Ipubers
 
-        worksheet.mergeCells('AW1:BD1'); // Mei
-        worksheet.mergeCells('AW2:AZ2'); // Sub Header Mei - Kartan
-        worksheet.mergeCells('BA2:BD2'); // Sub Header Mei - Ipubers
+        worksheet.mergeCells('AX1:BE1'); // Mei
+        worksheet.mergeCells('AX2:BA2'); // Sub Header Mei - Kartan
+        worksheet.mergeCells('BB2:BE2'); // Sub Header Mei - Ipubers
 
-        worksheet.mergeCells('BE1:BL1'); // Juni
-        worksheet.mergeCells('BE2:BH2'); // Sub Header Juni - Kartan
-        worksheet.mergeCells('BI2:BL2'); // Sub Header Juni - Ipubers
+        worksheet.mergeCells('BF1:BM1'); // Juni
+        worksheet.mergeCells('BF2:BI2'); // Sub Header Juni - Kartan
+        worksheet.mergeCells('BJ2:BM2'); // Sub Header Juni - Ipubers
 
-        worksheet.mergeCells('BM1:BT1'); // Juli
-        worksheet.mergeCells('BM2:BP2'); // Sub Header Juli - Kartan
-        worksheet.mergeCells('BQ2:BT2'); // Sub Header Juli - Ipubers
+        worksheet.mergeCells('BN1:BU1'); // Juli
+        worksheet.mergeCells('BN2:BQ2'); // Sub Header Juli - Kartan
+        worksheet.mergeCells('BR2:BU2'); // Sub Header Juli - Ipubers
 
-        worksheet.mergeCells('BU1:CB1'); // Agustus
-        worksheet.mergeCells('BU2:BX2'); // Sub Header Agustus - Kartan
-        worksheet.mergeCells('BY2:CB2'); // Sub Header Agustus - Ipubers
+        worksheet.mergeCells('BV1:CC1'); // Agustus
+        worksheet.mergeCells('BV2:BY2'); // Sub Header Agustus - Kartan
+        worksheet.mergeCells('BZ2:CC2'); // Sub Header Agustus - Ipubers
 
-        worksheet.mergeCells('CC1:CJ1'); // September
-        worksheet.mergeCells('CC2:CF2'); // Sub Header September - Kartan
-        worksheet.mergeCells('CG2:CJ2'); // Sub Header September - Ipubers
+        worksheet.mergeCells('CD1:CK1'); // September
+        worksheet.mergeCells('CD2:CG2'); // Sub Header September - Kartan
+        worksheet.mergeCells('CH2:CK2'); // Sub Header September - Ipubers
 
-        worksheet.mergeCells('CK1:CR1'); // Oktober
-        worksheet.mergeCells('CK2:CN2'); // Sub Header Oktober - Kartan
-        worksheet.mergeCells('CO2:CR2'); // Sub Header Oktober - Ipubers
+        worksheet.mergeCells('CL1:CS1'); // Oktober
+        worksheet.mergeCells('CL2:CO2'); // Sub Header Oktober - Kartan
+        worksheet.mergeCells('CP2:CS2'); // Sub Header Oktober - Ipubers
 
-        worksheet.mergeCells('CS1:CZ1'); // November
-        worksheet.mergeCells('CS2:CV2'); // Sub Header November - Kartan
-        worksheet.mergeCells('CW2:CZ2'); // Sub Header November - Ipubers
+        worksheet.mergeCells('CT1:DA1'); // November
+        worksheet.mergeCells('CT2:CW2'); // Sub Header November - Kartan
+        worksheet.mergeCells('CX2:DA2'); // Sub Header November - Ipubers
 
-        worksheet.mergeCells('DA1:DH1'); // Desember
-        worksheet.mergeCells('DA2:DD2'); // Sub Header Desember - Kartan
-        worksheet.mergeCells('DE2:DH2'); // Sub Header Desember - Ipubers
+        worksheet.mergeCells('DB1:DI1'); // Desember
+        worksheet.mergeCells('DB2:DE2'); // Sub Header Desember - Kartan
+        worksheet.mergeCells('DF2:DI2'); // Sub Header Desember - Ipubers
 
 
         // Set Header Utama
-        worksheet.getCell("E1").value = "Alokasi";
-        worksheet.getCell("I1").value = "Sisa";
-        worksheet.getCell("M1").value = "Tebusan";
+        worksheet.getCell("F1").value = "Alokasi";
+        worksheet.getCell("J1").value = "Sisa";
+        worksheet.getCell("N1").value = "Tebusan";
 
-        worksheet.getCell("Q1").value = "Januari";
-        worksheet.getCell("Q2").value = "Kartan";
-        worksheet.getCell("U2").value = "Ipubers";
+        worksheet.getCell("R1").value = "Januari";
+        worksheet.getCell("R2").value = "Kartan";
+        worksheet.getCell("V2").value = "Ipubers";
 
-        worksheet.getCell("Y1").value = "Februari";
-        worksheet.getCell("Y2").value = "Kartan";
-        worksheet.getCell("AC2").value = "Ipubers";
+        worksheet.getCell("Z1").value = "Februari";
+        worksheet.getCell("Z2").value = "Kartan";
+        worksheet.getCell("AD2").value = "Ipubers";
 
-        worksheet.getCell("AG1").value = "Maret";
-        worksheet.getCell("AG2").value = "Kartan";
-        worksheet.getCell("AK2").value = "Ipubers";
+        worksheet.getCell("AH1").value = "Maret";
+        worksheet.getCell("AH2").value = "Kartan";
+        worksheet.getCell("AL2").value = "Ipubers";
 
-        worksheet.getCell("AO1").value = "April";
-        worksheet.getCell("AO2").value = "Kartan";
-        worksheet.getCell("AS2").value = "Ipubers";
+        worksheet.getCell("AP1").value = "April";
+        worksheet.getCell("AP2").value = "Kartan";
+        worksheet.getCell("AT2").value = "Ipubers";
 
-        worksheet.getCell("AW1").value = "Mei";
-        worksheet.getCell("AW2").value = "Kartan";
-        worksheet.getCell("BA2").value = "Ipubers";
+        worksheet.getCell("AX1").value = "Mei";
+        worksheet.getCell("AX2").value = "Kartan";
+        worksheet.getCell("BB2").value = "Ipubers";
 
-        worksheet.getCell("BE1").value = "Juni";
-        worksheet.getCell("BE2").value = "Kartan";
-        worksheet.getCell("BI2").value = "Ipubers";
+        worksheet.getCell("BF1").value = "Juni";
+        worksheet.getCell("BF2").value = "Kartan";
+        worksheet.getCell("BJ2").value = "Ipubers";
 
-        worksheet.getCell("BM1").value = "Juli";
-        worksheet.getCell("BM2").value = "Kartan";
-        worksheet.getCell("BQ2").value = "Ipubers";
+        worksheet.getCell("BN1").value = "Juli";
+        worksheet.getCell("BN2").value = "Kartan";
+        worksheet.getCell("BR2").value = "Ipubers";
 
-        worksheet.getCell("BU1").value = "Agustus";
-        worksheet.getCell("BU2").value = "Kartan";
-        worksheet.getCell("BY2").value = "Ipubers";
+        worksheet.getCell("BV1").value = "Agustus";
+        worksheet.getCell("BV2").value = "Kartan";
+        worksheet.getCell("BZ2").value = "Ipubers";
 
-        worksheet.getCell("CC1").value = "September";
-        worksheet.getCell("CC2").value = "Kartan";
-        worksheet.getCell("CG2").value = "Ipubers";
+        worksheet.getCell("CD1").value = "September";
+        worksheet.getCell("CD2").value = "Kartan";
+        worksheet.getCell("CH2").value = "Ipubers";
 
-        worksheet.getCell("CK1").value = "Oktober";
-        worksheet.getCell("CK2").value = "Kartan";
-        worksheet.getCell("CO2").value = "Ipubers";
+        worksheet.getCell("CL1").value = "Oktober";
+        worksheet.getCell("CL2").value = "Kartan";
+        worksheet.getCell("CP2").value = "Ipubers";
 
-        worksheet.getCell("CS1").value = "November";
-        worksheet.getCell("CS2").value = "Kartan";
-        worksheet.getCell("CW2").value = "Ipubers";
+        worksheet.getCell("CT1").value = "November";
+        worksheet.getCell("CT2").value = "Kartan";
+        worksheet.getCell("CX2").value = "Ipubers";
 
-        worksheet.getCell("DA1").value = "Desember";
-        worksheet.getCell("DA2").value = "Kartan";
-        worksheet.getCell("DE2").value = "Ipubers";
+        worksheet.getCell("DB1").value = "Desember";
+        worksheet.getCell("DB2").value = "Kartan";
+        worksheet.getCell("DF2").value = "Ipubers";
 
 
-        // Styling Header Utama
-        ["E1", "I1", "M1"].forEach(cell => {
+
+        // Styling Header Utama (geser 1 kolom dari sebelumnya)
+        ["F1", "J1", "N1"].forEach(cell => {
             worksheet.getCell(cell).alignment = { horizontal: "center", vertical: "middle" };
             worksheet.getCell(cell).font = { bold: true, size: 12 };
             worksheet.getCell(cell).fill = {
@@ -2188,8 +2519,8 @@ COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus)
             };
         });
 
-        // Styling Header Bulanan (Januari - Desember) -> Merah
-        ["Q1", "Y1", "AG1", "AO1", "AW1", "BE1", "BM1", "BU1", "CC1", "CK1", "CS1", "DA1"].forEach(cell => {
+        // Styling Header Bulanan (Januari - Desember) -> Merah (Baris 1, geser 1 kolom)
+        ["R1", "Z1", "AH1", "AP1", "AX1", "BF1", "BN1", "BV1", "CD1", "CL1", "CT1", "DB1"].forEach(cell => {
             worksheet.getCell(cell).alignment = { horizontal: "center", vertical: "middle" };
             worksheet.getCell(cell).font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } }; // Warna teks putih
             worksheet.getCell(cell).fill = {
@@ -2199,7 +2530,8 @@ COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus)
             };
         });
 
-        ["Q2", "Y2", "AG2", "AO2", "AW2", "BE2", "BM2", "BU2", "CC2", "CK2", "CS2", "DA2"].forEach(cell => {
+        // Styling Header Bulanan (Baris 2, geser 1 kolom)
+        ["R2", "Z2", "AH2", "AP2", "AX2", "BF2", "BN2", "BV2", "CD2", "CL2", "CT2", "DB2"].forEach(cell => {
             worksheet.getCell(cell).alignment = { horizontal: "center", vertical: "middle" };
             worksheet.getCell(cell).font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } }; // Warna teks putih
             worksheet.getCell(cell).fill = {
@@ -2209,7 +2541,8 @@ COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus)
             };
         });
 
-        ["U2", "AC2", "AK2", "AS2", "BA2", "BI2", "BQ2", "BY2", "CG2", "CO2", "CW2", "DE2"].forEach(cell => {
+        // Styling Header Bulanan tambahan (Baris 2, geser 1 kolom)
+        ["V2", "AD2", "AL2", "AT2", "BB2", "BJ2", "BR2", "BZ2", "CH2", "CP2", "CX2", "DF2"].forEach(cell => {
             worksheet.getCell(cell).alignment = { horizontal: "center", vertical: "middle" };
             worksheet.getCell(cell).font = { bold: true, size: 12, color: { argb: 'FFFFFFFF' } }; // Warna teks putih
             worksheet.getCell(cell).fill = {
@@ -2218,10 +2551,11 @@ COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus)
                 fgColor: { argb: 'FFFF0000' } // Warna merah
             };
         });
+
 
         // ✅ **Tambahkan header kosong untuk memastikan Kabupaten, NIK, Nama Petani tetap muncul**
         worksheet.getRow(3).values = [
-            'Kabupaten', 'Kecamatan', 'NIK', 'Nama Petani', // Tambahkan kolom awal agar tidak hilang
+            'Kabupaten', 'Kecamatan', 'NIK', 'Nama Petani', 'Kode Kios', // Tambahkan kolom awal agar tidak hilang
             'Urea', 'NPK', 'NPK Formula', 'Organik', // Alokasi
             'Urea', 'NPK', 'NPK Formula', 'Organik', // Sisa
             'Urea', 'NPK', 'NPK Formula', 'Organik', // Tebusan
@@ -2267,7 +2601,7 @@ COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus)
 
         // 🔥 **Tambahkan Baris Sum Total**
         let totalRow = worksheet.addRow([
-            'TOTAL', '', '', '',
+            'TOTAL', '', '', '', '',
             data.reduce((sum, r) => sum + parseFloat(r.urea || 0), 0).toLocaleString(),
             data.reduce((sum, r) => sum + parseFloat(r.npk || 0), 0).toLocaleString(),
             data.reduce((sum, r) => sum + parseFloat(r.npk_formula || 0), 0).toLocaleString(),
@@ -2281,65 +2615,126 @@ COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus)
             data.reduce((sum, r) => sum + parseFloat(r.tebus_npk_formula || 0), 0).toLocaleString(),
             data.reduce((sum, r) => sum + parseFloat(r.tebus_organik || 0), 0).toLocaleString(),
 
-            data.reduce((sum, r) => sum + parseFloat(r.jan_tebus_urea || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.jan_tebus_npk || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.jan_tebus_npk_formula || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.jan_tebus_organik || 0), 0).toLocaleString(),
+            // January
+            data.reduce((sum, r) => sum + parseFloat(r.jan_kartan_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jan_kartan_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jan_kartan_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jan_kartan_organik || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jan_ipubers_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jan_ipubers_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jan_ipubers_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jan_ipubers_organik || 0), 0).toLocaleString(),
 
-            data.reduce((sum, r) => sum + parseFloat(r.feb_tebus_urea || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.feb_tebus_npk || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.feb_tebus_npk_formula || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.feb_tebus_organik || 0), 0).toLocaleString(),
+            // February
+            data.reduce((sum, r) => sum + parseFloat(r.feb_kartan_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.feb_kartan_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.feb_kartan_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.feb_kartan_organik || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.feb_ipubers_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.feb_ipubers_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.feb_ipubers_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.feb_ipubers_organik || 0), 0).toLocaleString(),
 
-            data.reduce((sum, r) => sum + parseFloat(r.mar_tebus_urea || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.mar_tebus_npk || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.mar_tebus_npk_formula || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.mar_tebus_organik || 0), 0).toLocaleString(),
+            // March
+            data.reduce((sum, r) => sum + parseFloat(r.mar_kartan_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.mar_kartan_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.mar_kartan_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.mar_kartan_organik || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.mar_ipubers_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.mar_ipubers_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.mar_ipubers_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.mar_ipubers_organik || 0), 0).toLocaleString(),
 
-            data.reduce((sum, r) => sum + parseFloat(r.apr_tebus_urea || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.apr_tebus_npk || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.apr_tebus_npk_formula || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.apr_tebus_organik || 0), 0).toLocaleString(),
+            // April
+            data.reduce((sum, r) => sum + parseFloat(r.apr_kartan_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.apr_kartan_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.apr_kartan_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.apr_kartan_organik || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.apr_ipubers_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.apr_ipubers_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.apr_ipubers_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.apr_ipubers_organik || 0), 0).toLocaleString(),
 
-            data.reduce((sum, r) => sum + parseFloat(r.mei_tebus_urea || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.mei_tebus_npk || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.mei_tebus_npk_formula || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.mei_tebus_organik || 0), 0).toLocaleString(),
+            // May
+            data.reduce((sum, r) => sum + parseFloat(r.mei_kartan_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.mei_kartan_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.mei_kartan_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.mei_kartan_organik || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.mei_ipubers_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.mei_ipubers_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.mei_ipubers_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.mei_ipubers_organik || 0), 0).toLocaleString(),
 
-            data.reduce((sum, r) => sum + parseFloat(r.jun_tebus_urea || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.jun_tebus_npk || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.jun_tebus_npk_formula || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.jun_tebus_organik || 0), 0).toLocaleString(),
+            // June
+            data.reduce((sum, r) => sum + parseFloat(r.jun_kartan_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jun_kartan_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jun_kartan_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jun_kartan_organik || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jun_ipubers_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jun_ipubers_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jun_ipubers_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jun_ipubers_organik || 0), 0).toLocaleString(),
 
-            data.reduce((sum, r) => sum + parseFloat(r.jul_tebus_urea || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.jul_tebus_npk || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.jul_tebus_npk_formula || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.jul_tebus_organik || 0), 0).toLocaleString(),
+            // July
+            data.reduce((sum, r) => sum + parseFloat(r.jul_kartan_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jul_kartan_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jul_kartan_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jul_kartan_organik || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jul_ipubers_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jul_ipubers_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jul_ipubers_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.jul_ipubers_organik || 0), 0).toLocaleString(),
 
-            data.reduce((sum, r) => sum + parseFloat(r.agu_tebus_urea || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.agu_tebus_npk || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.agu_tebus_npk_formula || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.agu_tebus_organik || 0), 0).toLocaleString(),
+            // August
+            data.reduce((sum, r) => sum + parseFloat(r.agu_kartan_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.agu_kartan_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.agu_kartan_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.agu_kartan_organik || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.agu_ipubers_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.agu_ipubers_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.agu_ipubers_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.agu_ipubers_organik || 0), 0).toLocaleString(),
 
-            data.reduce((sum, r) => sum + parseFloat(r.sep_tebus_urea || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.sep_tebus_npk || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.sep_tebus_npk_formula || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.sep_tebus_organik || 0), 0).toLocaleString(),
+            // September
+            data.reduce((sum, r) => sum + parseFloat(r.sep_kartan_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.sep_kartan_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.sep_kartan_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.sep_kartan_organik || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.sep_ipubers_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.sep_ipubers_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.sep_ipubers_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.sep_ipubers_organik || 0), 0).toLocaleString(),
 
-            data.reduce((sum, r) => sum + parseFloat(r.okt_tebus_urea || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.okt_tebus_npk || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.okt_tebus_npk_formula || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.okt_tebus_organik || 0), 0).toLocaleString(),
+            // October
+            data.reduce((sum, r) => sum + parseFloat(r.okt_kartan_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.okt_kartan_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.okt_kartan_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.okt_kartan_organik || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.okt_ipubers_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.okt_ipubers_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.okt_ipubers_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.okt_ipubers_organik || 0), 0).toLocaleString(),
 
-            data.reduce((sum, r) => sum + parseFloat(r.nov_tebus_urea || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.nov_tebus_npk || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.nov_tebus_npk_formula || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.nov_tebus_organik || 0), 0).toLocaleString(),
+            // November
+            data.reduce((sum, r) => sum + parseFloat(r.nov_kartan_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.nov_kartan_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.nov_kartan_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.nov_kartan_organik || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.nov_ipubers_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.nov_ipubers_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.nov_ipubers_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.nov_ipubers_organik || 0), 0).toLocaleString(),
 
-            data.reduce((sum, r) => sum + parseFloat(r.des_tebus_urea || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.des_tebus_npk || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.des_tebus_npk_formula || 0), 0).toLocaleString(),
-            data.reduce((sum, r) => sum + parseFloat(r.des_tebus_organik || 0), 0).toLocaleString(),
+            // December
+            data.reduce((sum, r) => sum + parseFloat(r.des_kartan_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.des_kartan_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.des_kartan_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.des_kartan_organik || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.des_ipubers_urea || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.des_ipubers_npk || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.des_ipubers_npk_formula || 0), 0).toLocaleString(),
+            data.reduce((sum, r) => sum + parseFloat(r.des_ipubers_organik || 0), 0).toLocaleString(),
+
 
         ]);
 
@@ -2369,7 +2764,7 @@ COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus)
         // Isi data
         data.forEach((row) => {
             worksheet.addRow([
-                row.kabupaten, row.kecamatan, row.nik, row.nama_petani,
+                row.kabupaten, row.kecamatan, row.nik, row.nama_petani, row.kode_kios,
                 row.urea, row.npk, row.npk_formula, row.organik, // Alokasi
                 row.sisa_urea, row.sisa_npk, row.sisa_npk_formula, row.sisa_organik, // Sisa
                 row.tebus_urea, row.tebus_npk, row.tebus_npk_formula, row.tebus_organik, // Tebusan
@@ -2449,8 +2844,8 @@ exports.downloadSalur = async (req, res) => {
                 SUM(npk) AS npk,
                 SUM(npk_formula) AS npk_formula,
                 SUM(organik) AS organik
-            FROM verval
-            WHERE 1=1`;
+            FROM verval WHERE 1=1
+            `;
         let params = [];
 
         if (kabupaten) {
@@ -2690,19 +3085,401 @@ exports.downloadSalur = async (req, res) => {
 
 // wcm
 
+exports.wcmVsVerval = async (req, res) => {
+    try {
+        const { tahun, bulan, produk, kabupaten, status = 'ALL', start = 0, length = 10, draw = 1 } = req.query;
+
+        const produkFilter = produk && produk !== 'ALL' ? produk.toUpperCase() : 'ALL';
+        const statusFilter = status.toUpperCase();
+
+        const params = [];
+        let whereClauses = ['wcm.tahun = ?'];
+        params.push(tahun);
+
+        if (bulan && bulan !== 'ALL') {
+            whereClauses.push('wcm.bulan = ?');
+            params.push(bulan);
+        }
+
+        if (produk && produk !== 'ALL') {
+            whereClauses.push('wcm.produk = ?');
+            params.push(produkFilter);
+        }
+
+        if (kabupaten && kabupaten !== 'ALL') {
+            whereClauses.push('wcm.kabupaten = ?');
+            params.push(kabupaten);
+        }
+
+        const whereSQL = whereClauses.length > 0 ? ' WHERE ' + whereClauses.join(' AND ') : '';
+
+        const baseQuery = `
+            SELECT 
+    wcm.provinsi,
+    wcm.kabupaten, 
+    wcm.kode_distributor, 
+    wcm.distributor,   
+    wcm.kecamatan,
+    wcm.kode_kios,
+    wcm.nama_kios,
+    wcm.bulan,
+    wcm.produk,
+    ROUND(SUM(wcm.stok_awal) * 1000, 0) AS stok_awal_wcm,
+    ROUND(SUM(wcm.penebusan) * 1000, 0) AS penebusan_wcm,
+    ROUND(SUM(wcm.penyaluran) * 1000, 0) AS penyaluran_wcm,
+    MAX(IFNULL(verval.total_penyaluran, 0)) AS penyaluran_verval,
+    ROUND(SUM(wcm.stok_akhir) * 1000, 0) AS stok_akhir_wcm,
+    CASE 
+        WHEN ROUND(SUM(wcm.penyaluran) * 1000, 0) = MAX(IFNULL(verval.total_penyaluran, 0)) THEN 'Sesuai'
+        ELSE 'Tidak Sesuai'
+    END AS status_penyaluran
+FROM wcm
+LEFT JOIN (
+    SELECT 
+        kode_kios,
+        kecamatan,
+        kabupaten,
+        bulan,
+        tahun,
+        produk,
+        SUM(penyaluran) AS total_penyaluran
+    FROM verval_f6
+    GROUP BY kode_kios, kecamatan, kabupaten, bulan, tahun, produk
+) AS verval
+ON wcm.kode_kios = verval.kode_kios 
+AND wcm.kecamatan = verval.kecamatan
+AND wcm.kabupaten = verval.kabupaten
+AND wcm.bulan = verval.bulan
+AND wcm.tahun = verval.tahun
+AND wcm.produk = verval.produk
+${whereSQL}
+GROUP BY 
+    wcm.provinsi,
+    wcm.kabupaten, 
+    wcm.kode_distributor, 
+    wcm.distributor,   
+    wcm.kecamatan,
+    wcm.kode_kios,
+    wcm.nama_kios,
+    wcm.bulan,
+    wcm.produk
+        `;
+
+        // Count total records tanpa filter status
+        const countQuery = `SELECT COUNT(*) AS total FROM (${baseQuery}) AS count_table`;
+        const [countResult] = await db.query(countQuery, params);
+        const recordsTotal = countResult[0].total;
+
+        // Filter status jika bukan ALL
+        let filteredQuery = baseQuery;
+        const filteredParams = [...params];
+        if (statusFilter !== 'ALL') {
+            filteredQuery = `
+                SELECT * FROM (${baseQuery}) AS filtered_table
+                WHERE status_penyaluran = ?
+            `;
+            filteredParams.push(statusFilter === 'SESUAI' ? 'Sesuai' : 'Tidak Sesuai');
+        }
+
+        // Count records after filter
+        const filteredCountQuery = `SELECT COUNT(*) AS total FROM (${filteredQuery}) AS count_filtered_table`;
+        const [filteredCountResult] = await db.query(filteredCountQuery, filteredParams);
+        const recordsFiltered = filteredCountResult[0].total;
+
+        // Apply pagination
+        const finalQuery = `
+            ${filteredQuery}
+            LIMIT ? OFFSET ?
+        `;
+        filteredParams.push(parseInt(length), parseInt(start));
+
+        const [data] = await db.query(finalQuery, filteredParams);
+
+        res.json({
+            draw: parseInt(draw),
+            recordsTotal,
+            recordsFiltered,
+            data
+        });
+    } catch (error) {
+        console.error('Error in wcmVsVerval:', error);
+        res.status(500).json({ message: 'Terjadi kesalahan saat memproses data.', error: error.message });
+    }
+};
+
+exports.exportExcelWcmVsVerval = async (req, res) => {
+    try {
+        const { tahun, bulan, produk, kabupaten, status = 'ALL' } = req.query;
+
+        // Validasi parameter wajib
+        if (!tahun) {
+            return res.status(400).json({ message: 'Parameter tahun wajib diisi' });
+        }
+
+        const produkFilter = produk && produk !== 'ALL' ? produk.toUpperCase() : 'ALL';
+        const statusFilter = status.toUpperCase();
+
+        const params = [];
+        let whereClauses = ['wcm.tahun = ?'];
+        params.push(tahun);
+
+        if (bulan && bulan !== 'ALL') {
+            whereClauses.push('wcm.bulan = ?');
+            params.push(bulan);
+        }
+
+        if (produk && produk !== 'ALL') {
+            whereClauses.push('wcm.produk = ?');
+            params.push(produkFilter);
+        }
+
+        if (kabupaten && kabupaten !== 'ALL') {
+            whereClauses.push('wcm.kabupaten = ?');
+            params.push(kabupaten);
+        }
+
+        const whereSQL = whereClauses.length > 0 ? ' WHERE ' + whereClauses.join(' AND ') : '';
+
+        const baseQuery = `
+    SELECT 
+        wcm.provinsi,
+        wcm.kabupaten, 
+        wcm.kode_distributor, 
+        wcm.distributor,   
+        wcm.kecamatan,
+        wcm.kode_kios,
+        wcm.nama_kios,
+        wcm.produk,
+        wcm.bulan,
+        ROUND(SUM(wcm.stok_awal) * 1000, 0) AS stok_awal_wcm,
+        ROUND(SUM(wcm.penebusan) * 1000, 0) AS penebusan_wcm,
+        ROUND(SUM(wcm.penyaluran) * 1000, 0) AS penyaluran_wcm,
+        MAX(IFNULL(verval.total_penyaluran, 0)) AS penyaluran_verval,
+        ROUND(SUM(wcm.stok_akhir) * 1000, 0) AS stok_akhir_wcm,
+        CASE 
+            WHEN ROUND(SUM(wcm.penyaluran) * 1000, 0) = MAX(IFNULL(verval.total_penyaluran, 0)) THEN 'Sesuai'
+            ELSE 'Tidak Sesuai'
+        END AS status_penyaluran
+    FROM wcm
+    LEFT JOIN (
+        SELECT 
+            kode_kios,
+            kecamatan,
+            kabupaten,
+            bulan,
+            tahun,
+            produk,
+            SUM(penyaluran) AS total_penyaluran
+        FROM verval_f6
+        GROUP BY kode_kios, kecamatan, kabupaten, bulan, tahun, produk
+    ) AS verval
+    ON wcm.kode_kios = verval.kode_kios 
+    AND wcm.kecamatan = verval.kecamatan
+    AND wcm.kabupaten = verval.kabupaten
+    AND wcm.bulan = verval.bulan
+    AND wcm.tahun = verval.tahun
+    AND wcm.produk = verval.produk
+    ${whereSQL}
+    GROUP BY 
+        wcm.provinsi,
+        wcm.kabupaten, 
+        wcm.kode_distributor, 
+        wcm.distributor,   
+        wcm.kecamatan,
+        wcm.kode_kios,
+        wcm.nama_kios,
+        wcm.produk,
+        wcm.bulan
+    ORDER BY wcm.kabupaten, wcm.kecamatan, wcm.kode_kios
+`;
+        // Filter status jika bukan ALL
+        let finalQuery = baseQuery;
+        if (statusFilter !== 'ALL') {
+            finalQuery = `
+                SELECT * FROM (${baseQuery}) AS filtered_table
+                WHERE status_penyaluran = ?
+            `;
+            params.push(statusFilter === 'SESUAI' ? 'Sesuai' : 'Tidak Sesuai');
+        }
+
+        const [data] = await db.query(finalQuery, params);
+
+        // Create Excel workbook
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('WCM vs Verval');
+
+        // Styling untuk header
+        const headerStyle = {
+            font: { bold: true, color: { argb: 'FFFFFFFF' } },
+            alignment: { vertical: 'middle', horizontal: 'center', wrapText: true },
+            border: {
+                top: { style: 'thin', color: { argb: 'FF000000' } },
+                left: { style: 'thin', color: { argb: 'FF000000' } },
+                bottom: { style: 'thin', color: { argb: 'FF000000' } },
+                right: { style: 'thin', color: { argb: 'FF000000' } }
+            }
+        };
+
+        // Header row 1
+        worksheet.mergeCells('A1:A2');
+        worksheet.getCell('A1').value = 'Provinsi';
+        worksheet.getCell('A1').style = { ...headerStyle, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7F7F7F' } } };
+
+        worksheet.mergeCells('B1:B2');
+        worksheet.getCell('B1').value = 'Kabupaten';
+        worksheet.getCell('B1').style = { ...headerStyle, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7F7F7F' } } };
+
+        worksheet.mergeCells('C1:C2');
+        worksheet.getCell('C1').value = 'Kode Distributor';
+        worksheet.getCell('C1').style = { ...headerStyle, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7F7F7F' } } };
+
+        worksheet.mergeCells('D1:D2');
+        worksheet.getCell('D1').value = 'Distributor';
+        worksheet.getCell('D1').style = { ...headerStyle, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7F7F7F' } } };
+
+        worksheet.mergeCells('E1:E2');
+        worksheet.getCell('E1').value = 'Kecamatan';
+        worksheet.getCell('E1').style = { ...headerStyle, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7F7F7F' } } };
+
+        worksheet.mergeCells('F1:F2');
+        worksheet.getCell('F1').value = 'Kode Kios';
+        worksheet.getCell('F1').style = { ...headerStyle, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7F7F7F' } } };
+
+        worksheet.mergeCells('G1:G2');
+        worksheet.getCell('G1').value = 'Nama Kios';
+        worksheet.getCell('G1').style = { ...headerStyle, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7F7F7F' } } };
+
+        worksheet.mergeCells('H1:H2');
+        worksheet.getCell('H1').value = 'Produk';
+        worksheet.getCell('H1').style = { ...headerStyle, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7F7F7F' } } };
+
+        worksheet.mergeCells('I1:I2');
+        worksheet.getCell('I1').value = 'Bulan';
+        worksheet.getCell('I1').style = { ...headerStyle, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7F7F7F' } } };
+
+        worksheet.mergeCells('J1:L1');
+        worksheet.getCell('J1').value = 'WCM';
+        worksheet.getCell('J1').style = { ...headerStyle, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } } };
+
+        worksheet.getCell('M1').value = 'VERVAL';
+        worksheet.getCell('M1').style = { ...headerStyle, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFEB9C' } }, font: { ...headerStyle.font, color: { argb: 'FF000000' } } };
+        worksheet.getCell('M2').value = 'Penyaluran';
+        worksheet.getCell('M2').style = { ...headerStyle, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFEB9C' } }, font: { ...headerStyle.font, color: { argb: 'FF000000' } } };
+
+        worksheet.getCell('N1').value = 'WCM';
+        worksheet.getCell('N1').style = { ...headerStyle, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } } };
+        worksheet.getCell('N2').value = 'Stok Akhir';
+        worksheet.getCell('N2').style = { ...headerStyle, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } } };
+
+        worksheet.mergeCells('O1:O2');
+        worksheet.getCell('O1').value = 'Status';
+        worksheet.getCell('O1').style = { ...headerStyle, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF7F7F7F' } } };
+
+        // Header row 2 (hanya untuk kolom WCM)
+        worksheet.getCell('J2').value = 'Stok Awal';
+        worksheet.getCell('J2').style = { ...headerStyle, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } } };
+
+        worksheet.getCell('K2').value = 'Penebusan';
+        worksheet.getCell('K2').style = { ...headerStyle, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } } };
+
+        worksheet.getCell('L2').value = 'Penyaluran';
+        worksheet.getCell('L2').style = { ...headerStyle, fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4472C4' } } };
+
+        // Add data rows
+        data.forEach((row, index) => {
+            const dataRow = worksheet.addRow([
+                row.provinsi,
+                row.kabupaten,
+                row.kode_distributor,
+                row.distributor,
+                row.kecamatan,
+                row.kode_kios,
+                row.nama_kios,
+                row.produk,
+                row.bulan,
+                row.stok_awal_wcm,
+                row.penebusan_wcm,
+                row.penyaluran_wcm,
+                row.penyaluran_verval,
+                row.stok_akhir_wcm,
+                row.status_penyaluran
+            ]);
+
+            // Format angka dengan pemisah ribuan
+            [9, 10, 11, 12, 13].forEach(col => {
+                dataRow.getCell(col).numFmt = '#,##0';
+            });
+
+            // Warna status
+            if (row.status_penyaluran === 'Sesuai') {
+                dataRow.getCell(15).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC6EFCE' } };
+            } else {
+                dataRow.getCell(15).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFC7CE' } };
+            }
+        });
+
+        // Set column widths
+        worksheet.columns = [
+            { width: 15 }, // Provinsi
+            { width: 15 }, // Kabupaten
+            { width: 15 }, // Kode Distributor
+            { width: 20 }, // Distributor
+            { width: 15 }, // Kecamatan
+            { width: 15 }, // Kode Kios
+            { width: 25 }, // Nama Kios
+            { width: 15 }, // Produk
+            { width: 10 }, // Bulan
+            { width: 12 }, // Stok Awal WCM
+            { width: 12 }, // Penebusan WCM
+            { width: 12 }, // Penyaluran WCM
+            { width: 12 }, // Penyaluran Verval
+            { width: 12 }, // Stok Akhir WCM
+            { width: 12 }  // Status
+        ];
+
+        // Freeze header rows
+        worksheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 2 }];
+
+        // Set response headers
+        res.setHeader(
+            'Content-Type',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        );
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename=wcm_vs_verval_${tahun}${bulan ? '_' + bulan : ''}.xlsx`
+        );
+
+        // Write workbook to response
+        await workbook.xlsx.write(res);
+        res.end();
+
+    } catch (error) {
+        console.error('Error in exportExcelWcmVsVerval:', error);
+        res.status(500).json({
+            message: 'Terjadi kesalahan saat mengekspor data.',
+            error: error.message
+        });
+    }
+};
+
 exports.getWcm = async (req, res) => {
     try {
-        const { start, length, draw, produk, tahun } = req.query;
+        const { start, length, draw, produk, tahun, provinsi, kabupaten } = req.query;
 
         // Query utama untuk mengambil data
         let query = `
-            SELECT 
+            SELECT
+    kode_provinsi,
+    provinsi,
+    kode_kabupaten,
     kabupaten, 
     kode_distributor, 
     distributor,   
     kecamatan,
     kode_kios,
     nama_kios,
+    produk,
 
 SUM(CASE WHEN bulan = 1 THEN stok_awal ELSE 0 END) AS jan_awal,
 SUM(CASE WHEN bulan = 1 THEN penebusan ELSE 0 END) AS jan_tebus,
@@ -2792,7 +3569,21 @@ FROM wcm
             countParams.push(tahun);
         }
 
-        query += " GROUP BY kabupaten, kode_distributor, distributor, kecamatan, kode_kios, nama_kios";
+        if (provinsi) {
+            query += " AND provinsi = ?";
+            countQuery += " AND provinsi = ?";
+            params.push(provinsi);
+            countParams.push(provinsi);
+        }
+
+        if (kabupaten) {
+            query += " AND kabupaten = ?";
+            countQuery += " AND kabupaten = ?";
+            params.push(kabupaten);
+            countParams.push(kabupaten);
+        }
+
+        query += " GROUP BY kode_provinsi, provinsi, kode_kabupaten, kabupaten, kode_distributor, distributor, kecamatan, kode_kios, nama_kios, produk";
 
         // Eksekusi count query untuk mendapatkan total data
         const [totalResult] = await db.query(countQuery, countParams);
@@ -2822,16 +3613,18 @@ FROM wcm
 
 exports.downloadWcm = async (req, res) => {
     try {
-        const { produk, tahun } = req.query;
+        const { produk, tahun, provinsi, kabupaten } = req.query;
 
         let query = `
             SELECT 
+                provinsi,
                 kabupaten, 
                 kode_distributor, 
                 distributor, 
                 kecamatan,
                 kode_kios,
                 nama_kios,
+                produk,
                 ${[...Array(12).keys()].map(bulan => `
                     SUM(CASE WHEN bulan = ${bulan + 1} THEN stok_awal ELSE 0 END) AS stok_awal_${bulan + 1},
                     SUM(CASE WHEN bulan = ${bulan + 1} THEN penebusan ELSE 0 END) AS penebusan_${bulan + 1},
@@ -2853,7 +3646,18 @@ exports.downloadWcm = async (req, res) => {
             params.push(tahun);
         }
 
-        query += ` GROUP BY kabupaten, kode_distributor, distributor, kecamatan, kode_kios, nama_kios`;
+        if (provinsi) {
+            query += " AND provinsi = ?";
+            params.push(provinsi);
+        }
+
+        if (kabupaten) {
+            query += " AND kabupaten = ?";
+            params.push(kabupaten);
+        }
+
+        query += ` GROUP BY provinsi, kabupaten, kode_distributor, distributor, kecamatan, kode_kios, nama_kios, produk
+                   ORDER BY provinsi, kabupaten, kode_distributor`;
 
         const [data] = await db.query(query, params);
 
@@ -2873,21 +3677,25 @@ exports.downloadWcm = async (req, res) => {
         ];
 
         // Header Utama
-        worksheet.mergeCells("A1:A2"); // Kabupaten
-        worksheet.mergeCells("B1:B2"); // id distributor
-        worksheet.mergeCells("C1:C2"); // distributor
-        worksheet.mergeCells("D1:D2"); // kecamatan
-        worksheet.mergeCells("E1:E2"); // kode kios
-        worksheet.mergeCells("F1:F2"); // nama kios
-        worksheet.getCell("A1").value = "KABUPATEN";
-        worksheet.getCell("B1").value = "ID DISTRIBUTOR";
-        worksheet.getCell("C1").value = "DISTRIBUTOR";
-        worksheet.getCell("D1").value = "KECAMATAN";
-        worksheet.getCell("E1").value = "KODE PENGECER";
-        worksheet.getCell("F1").value = "PENGECER";
+        worksheet.mergeCells("A1:A2"); // Provinsi
+        worksheet.mergeCells("B1:B2"); // Kabupaten
+        worksheet.mergeCells("C1:C2"); // id distributor
+        worksheet.mergeCells("D1:D2"); // distributor
+        worksheet.mergeCells("E1:E2"); // kecamatan
+        worksheet.mergeCells("F1:F2"); // kode kios
+        worksheet.mergeCells("G1:G2"); // nama kios
+        worksheet.mergeCells("H1:H2"); // produk
+        worksheet.getCell("A1").value = "PROVINSI";
+        worksheet.getCell("B1").value = "KABUPATEN";
+        worksheet.getCell("C1").value = "ID DISTRIBUTOR";
+        worksheet.getCell("D1").value = "DISTRIBUTOR";
+        worksheet.getCell("E1").value = "KECAMATAN";
+        worksheet.getCell("F1").value = "KODE PENGECER";
+        worksheet.getCell("G1").value = "PENGECER";
+        worksheet.getCell("H1").value = "PRODUK";
 
         // Header Bulan
-        let colStart = 7; // Mulai dari kolom G
+        let colStart = 9; // Mulai dari kolom I (setelah kolom produk)
         bulanList.forEach((bulan, index) => {
             let colEnd = colStart + 3; // Setiap bulan memiliki 4 kolom (stok awal, tebus, salur, stok akhir)
             worksheet.mergeCells(1, colStart, 1, colEnd);
@@ -2916,98 +3724,170 @@ exports.downloadWcm = async (req, res) => {
 
         // Atur lebar kolom
         worksheet.columns = [
-            { key: "kabupaten", width: 20 }, // Kolom A
-            { key: "kode_distributor", width: 15 }, // Kolom B
-            { key: "distributor", width: 25 }, // Kolom C
-            { key: "kecamatan", width: 20 }, // Kolom D
-            { key: "kode_kios", width: 15 }, // Kolom E
-            { key: "nama_kios", width: 25 }, // Kolom F
-            ...Array.from({ length: 12 * 4 }, () => ({ width: 12 })) // Kolom G dan seterusnya
+            { key: "provinsi", width: 20 }, // Kolom A
+            { key: "kabupaten", width: 20 }, // Kolom B
+            { key: "kode_distributor", width: 15 }, // Kolom C
+            { key: "distributor", width: 25 }, // Kolom D
+            { key: "kecamatan", width: 20 }, // Kolom E
+            { key: "kode_kios", width: 15 }, // Kolom F
+            { key: "nama_kios", width: 25 }, // Kolom G
+            { key: "produk", width: 20 }, // Kolom H
+            ...Array.from({ length: 12 * 4 }, () => ({ width: 12 })) // Kolom I dan seterusnya
         ];
 
-        // Kelompokkan data berdasarkan distributor
+        // Kelompokkan data berdasarkan provinsi, kabupaten, dan distributor
         const groupedData = data.reduce((acc, row) => {
-            if (!acc[row.distributor]) {
-                acc[row.distributor] = [];
+            if (!acc[row.provinsi]) {
+                acc[row.provinsi] = {};
             }
-            acc[row.distributor].push(row);
+
+            if (!acc[row.provinsi][row.kabupaten]) {
+                acc[row.provinsi][row.kabupaten] = {};
+            }
+
+            if (!acc[row.provinsi][row.kabupaten][row.distributor]) {
+                acc[row.provinsi][row.kabupaten][row.distributor] = [];
+            }
+
+            acc[row.provinsi][row.kabupaten][row.distributor].push(row);
             return acc;
         }, {});
 
         // Tambahkan data ke worksheet
-        Object.keys(groupedData).forEach(distributor => {
-            const rows = groupedData[distributor];
-            let totalRow = {
-                kabupaten: '',
-                kode_distributor: '',
-                distributor: `Total ${distributor}`, // Tambahkan nama distributor ke baris total
-                kecamatan: '',
-                kode_kios: '',
-                nama_kios: '',
-                stok_awal: Array(12).fill(0),
-                penebusan: Array(12).fill(0),
-                penyaluran: Array(12).fill(0),
-                stok_akhir: Array(12).fill(0)
-            };
+        Object.keys(groupedData).forEach(provinsi => {
+            Object.keys(groupedData[provinsi]).forEach(kabupaten => {
+                const distributors = groupedData[provinsi][kabupaten];
+                let kabupatenTotal = {
+                    provinsi: '',
+                    kabupaten: '',
+                    kode_distributor: '',
+                    distributor: `Total ${kabupaten}`,
+                    kecamatan: '',
+                    kode_kios: '',
+                    nama_kios: '',
+                    produk: '',
+                    stok_awal: Array(12).fill(0),
+                    penebusan: Array(12).fill(0),
+                    penyaluran: Array(12).fill(0),
+                    stok_akhir: Array(12).fill(0)
+                };
 
-            rows.forEach(row => {
-                let rowData = [
-                    row.kabupaten,
-                    row.kode_distributor,
-                    row.distributor,
-                    row.kecamatan,
-                    row.kode_kios,
-                    row.nama_kios,
+                Object.keys(distributors).forEach(distributor => {
+                    const rows = distributors[distributor];
+                    let distributorTotal = {
+                        provinsi: '',
+                        kabupaten: '',
+                        kode_distributor: '',
+                        distributor: `Total ${distributor}`,
+                        kecamatan: '',
+                        kode_kios: '',
+                        nama_kios: '',
+                        produk: '',
+                        stok_awal: Array(12).fill(0),
+                        penebusan: Array(12).fill(0),
+                        penyaluran: Array(12).fill(0),
+                        stok_akhir: Array(12).fill(0)
+                    };
+
+                    rows.forEach(row => {
+                        let rowData = [
+                            row.provinsi,
+                            row.kabupaten,
+                            row.kode_distributor,
+                            row.distributor,
+                            row.kecamatan,
+                            row.kode_kios,
+                            row.nama_kios,
+                            row.produk
+                        ];
+
+                        // Tambahkan data bulanan
+                        for (let i = 1; i <= 12; i++) {
+                            rowData.push(
+                                parseFloat((row[`stok_awal_${i}`] || 0).toFixed(3)),
+                                parseFloat((row[`penebusan_${i}`] || 0).toFixed(3)),
+                                parseFloat((row[`penyaluran_${i}`] || 0).toFixed(3)),
+                                parseFloat((row[`stok_akhir_${i}`] || 0).toFixed(3))
+                            );
+
+                            // Hitung total distributor
+                            distributorTotal.stok_awal[i - 1] += row[`stok_awal_${i}`] || 0;
+                            distributorTotal.penebusan[i - 1] += row[`penebusan_${i}`] || 0;
+                            distributorTotal.penyaluran[i - 1] += row[`penyaluran_${i}`] || 0;
+                            distributorTotal.stok_akhir[i - 1] += row[`stok_akhir_${i}`] || 0;
+
+                            // Hitung total kabupaten
+                            kabupatenTotal.stok_awal[i - 1] += row[`stok_awal_${i}`] || 0;
+                            kabupatenTotal.penebusan[i - 1] += row[`penebusan_${i}`] || 0;
+                            kabupatenTotal.penyaluran[i - 1] += row[`penyaluran_${i}`] || 0;
+                            kabupatenTotal.stok_akhir[i - 1] += row[`stok_akhir_${i}`] || 0;
+                        }
+
+                        let addedRow = worksheet.addRow(rowData);
+                        addedRow.eachCell((cell) => {
+                            cell.border = borderStyle;
+                            cell.alignment = { horizontal: "center", vertical: "middle" };
+                        });
+                    });
+
+                    // Tambahkan baris total distributor
+                    let distributorTotalRowData = [
+                        distributorTotal.provinsi,
+                        distributorTotal.kabupaten,
+                        distributorTotal.kode_distributor,
+                        distributorTotal.distributor,
+                        distributorTotal.kecamatan,
+                        distributorTotal.kode_kios,
+                        distributorTotal.nama_kios,
+                        distributorTotal.produk
+                    ];
+
+                    for (let i = 0; i < 12; i++) {
+                        distributorTotalRowData.push(
+                            parseFloat(distributorTotal.stok_awal[i].toFixed(3)),
+                            parseFloat(distributorTotal.penebusan[i].toFixed(3)),
+                            parseFloat(distributorTotal.penyaluran[i].toFixed(3)),
+                            parseFloat(distributorTotal.stok_akhir[i].toFixed(3))
+                        );
+                    }
+
+                    let addedDistributorTotalRow = worksheet.addRow(distributorTotalRowData);
+                    addedDistributorTotalRow.eachCell((cell) => {
+                        cell.border = borderStyle;
+                        cell.font = { bold: true };
+                        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD3D3D3" } };
+                        cell.alignment = { horizontal: "center", vertical: "middle" };
+                    });
+                });
+
+                // Tambahkan baris total kabupaten
+                let kabupatenTotalRowData = [
+                    kabupatenTotal.provinsi,
+                    kabupatenTotal.kabupaten,
+                    kabupatenTotal.kode_distributor,
+                    kabupatenTotal.distributor,
+                    kabupatenTotal.kecamatan,
+                    kabupatenTotal.kode_kios,
+                    kabupatenTotal.nama_kios,
+                    kabupatenTotal.produk
                 ];
 
-                // Tambahkan data bulanan
-                for (let i = 1; i <= 12; i++) {
-                    rowData.push(
-                        parseFloat((row[`stok_awal_${i}`] || 0).toFixed(3)), // Batasi 3 digit
-                        parseFloat((row[`penebusan_${i}`] || 0).toFixed(3)), // Batasi 3 digit
-                        parseFloat((row[`penyaluran_${i}`] || 0).toFixed(3)), // Batasi 3 digit
-                        parseFloat((row[`stok_akhir_${i}`] || 0).toFixed(3))  // Batasi 3 digit
+                for (let i = 0; i < 12; i++) {
+                    kabupatenTotalRowData.push(
+                        parseFloat(kabupatenTotal.stok_awal[i].toFixed(3)),
+                        parseFloat(kabupatenTotal.penebusan[i].toFixed(3)),
+                        parseFloat(kabupatenTotal.penyaluran[i].toFixed(3)),
+                        parseFloat(kabupatenTotal.stok_akhir[i].toFixed(3))
                     );
-
-                    // Hitung total
-                    totalRow.stok_awal[i - 1] += row[`stok_awal_${i}`] || 0;
-                    totalRow.penebusan[i - 1] += row[`penebusan_${i}`] || 0;
-                    totalRow.penyaluran[i - 1] += row[`penyaluran_${i}`] || 0;
-                    totalRow.stok_akhir[i - 1] += row[`stok_akhir_${i}`] || 0;
                 }
 
-                let addedRow = worksheet.addRow(rowData);
-                addedRow.eachCell((cell) => {
+                let addedKabupatenTotalRow = worksheet.addRow(kabupatenTotalRowData);
+                addedKabupatenTotalRow.eachCell((cell) => {
                     cell.border = borderStyle;
+                    cell.font = { bold: true };
+                    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFA9A9A9" } }; // Warna abu-abu lebih gelap
                     cell.alignment = { horizontal: "center", vertical: "middle" };
                 });
-            });
-
-            // Tambahkan baris total
-            let totalRowData = [
-                totalRow.kabupaten,
-                totalRow.kode_distributor,
-                totalRow.distributor, // Nama distributor akan muncul di sini
-                totalRow.kecamatan,
-                totalRow.kode_kios,
-                totalRow.nama_kios,
-            ];
-
-            for (let i = 0; i < 12; i++) {
-                totalRowData.push(
-                    parseFloat(totalRow.stok_awal[i].toFixed(3)), // Batasi 3 digit
-                    parseFloat(totalRow.penebusan[i].toFixed(3)), // Batasi 3 digit
-                    parseFloat(totalRow.penyaluran[i].toFixed(3)), // Batasi 3 digit
-                    parseFloat(totalRow.stok_akhir[i].toFixed(3))  // Batasi 3 digit
-                );
-            }
-
-            let addedTotalRow = worksheet.addRow(totalRowData);
-            addedTotalRow.eachCell((cell) => {
-                cell.border = borderStyle;
-                cell.font = { bold: true };
-                cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD3D3D3" } }; // Warna abu-abu
-                cell.alignment = { horizontal: "center", vertical: "middle" };
             });
         });
 
@@ -3021,3 +3901,227 @@ exports.downloadWcm = async (req, res) => {
         res.status(500).json({ error: "Terjadi kesalahan dalam mengunduh data" });
     }
 };
+
+exports.downloadWcmF5 = async (req, res) => {
+    try {
+        const { produk, tahun, provinsi, kabupaten } = req.query;
+
+        let query = `
+            SELECT 
+                produk,
+                kode_provinsi,
+                provinsi,
+                kode_kabupaten,
+                kabupaten, 
+                kode_distributor, 
+                distributor,
+                ${[...Array(12).keys()].map(bulan => `
+                    SUM(CASE WHEN bulan = ${bulan + 1} THEN stok_awal ELSE 0 END) AS stok_awal_${bulan + 1},
+                    SUM(CASE WHEN bulan = ${bulan + 1} THEN penebusan ELSE 0 END) AS penebusan_${bulan + 1},
+                    SUM(CASE WHEN bulan = ${bulan + 1} THEN penyaluran ELSE 0 END) AS penyaluran_${bulan + 1},
+                    SUM(CASE WHEN bulan = ${bulan + 1} THEN stok_akhir ELSE 0 END) AS stok_akhir_${bulan + 1}
+                `).join(",")}
+            FROM wcm
+            WHERE 1=1`;
+
+        let params = [];
+
+        if (produk) {
+            query += " AND produk = ?";
+            params.push(produk);
+        }
+
+        if (tahun) {
+            query += " AND tahun = ?";
+            params.push(tahun);
+        }
+
+        if (provinsi) {
+            query += " AND provinsi = ?";
+            params.push(provinsi);
+        }
+
+        if (kabupaten) {
+            query += " AND kabupaten = ?";
+            params.push(kabupaten);
+        }
+
+        query += ` GROUP BY produk, kode_provinsi, provinsi, kode_kabupaten, kabupaten, kode_distributor, distributor
+                   ORDER BY provinsi, kabupaten, kode_distributor`;
+
+        const [data] = await db.query(query, params);
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("WCM");
+
+        // Define border style here so it's accessible to helper function
+        const borderStyle = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            bottom: { style: "thin" },
+            right: { style: "thin" },
+        };
+
+        const bulanList = [
+            "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        ];
+
+        // Header Utama
+        worksheet.mergeCells("A1:A2"); // Produk
+        worksheet.mergeCells("B1:B2"); // Kode Provinsi
+        worksheet.mergeCells("C1:C2"); // Provinsi
+        worksheet.mergeCells("D1:D2"); // Kode Kabupaten
+        worksheet.mergeCells("E1:E2"); // Kabupaten
+        worksheet.mergeCells("F1:F2"); // Kode Distributor
+        worksheet.mergeCells("G1:G2"); // Distributor
+        worksheet.getCell("A1").value = "PRODUK";
+        worksheet.getCell("B1").value = "KODE PROVINSI";
+        worksheet.getCell("C1").value = "PROVINSI";
+        worksheet.getCell("D1").value = "KODE KABUPATEN";
+        worksheet.getCell("E1").value = "KABUPATEN";
+        worksheet.getCell("F1").value = "KODE DISTRIBUTOR";
+        worksheet.getCell("G1").value = "DISTRIBUTOR";
+
+        // Header Bulan
+        let colStart = 8; // Mulai dari kolom H
+        bulanList.forEach((bulan, index) => {
+            let colEnd = colStart + 3;
+            worksheet.mergeCells(1, colStart, 1, colEnd);
+            worksheet.getCell(1, colStart).value = bulan;
+            worksheet.getCell(1, colStart).alignment = { horizontal: "center", vertical: "middle" };
+            worksheet.getCell(1, colStart).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDD4B39" } };
+
+            // Subheader Bulan
+            worksheet.getCell(2, colStart).value = "STOK AWAL";
+            worksheet.getCell(2, colStart + 1).value = "TEBUS";
+            worksheet.getCell(2, colStart + 2).value = "SALUR";
+            worksheet.getCell(2, colStart + 3).value = "STOK AKHIR";
+
+            colStart += 4;
+        });
+
+        // Format Header
+        [1, 2].forEach(rowNum => {
+            worksheet.getRow(rowNum).eachCell((cell) => {
+                cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDD4B39" } };
+                cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+                cell.alignment = { horizontal: "center", vertical: "middle" };
+                cell.border = borderStyle;
+            });
+        });
+
+        // Atur lebar kolom
+        worksheet.columns = [
+            { key: "produk", width: 20 },
+            { key: "kode_provinsi", width: 15 },
+            { key: "provinsi", width: 20 },
+            { key: "kode_kabupaten", width: 15 },
+            { key: "kabupaten", width: 20 },
+            { key: "kode_distributor", width: 15 },
+            { key: "distributor", width: 25 },
+            ...Array.from({ length: 12 * 4 }, () => ({ width: 12 }))
+        ];
+
+        // Kelompokkan data berdasarkan kabupaten
+        const groupedByKabupaten = {};
+        let currentKabupaten = null;
+        let kabupatenStartRow = 3; // Mulai dari row 3 (setelah header)
+
+        data.forEach((row, index) => {
+            if (row.kabupaten !== currentKabupaten) {
+                if (currentKabupaten !== null) {
+                    // Add total for previous kabupaten
+                    addKabupatenTotal(worksheet, groupedByKabupaten[currentKabupaten], kabupatenStartRow, index + 2, borderStyle);
+                }
+                currentKabupaten = row.kabupaten;
+                kabupatenStartRow = index + 3; // +3 karena header 2 row dan data mulai row 3
+                groupedByKabupaten[currentKabupaten] = [];
+            }
+            groupedByKabupaten[currentKabupaten].push(row);
+
+            // Add data row
+            let rowData = [
+                row.produk,
+                row.kode_provinsi,
+                row.provinsi,
+                row.kode_kabupaten,
+                row.kabupaten,
+                row.kode_distributor,
+                row.distributor
+            ];
+
+            for (let i = 1; i <= 12; i++) {
+                rowData.push(
+                    parseFloat((row[`stok_awal_${i}`] || 0).toFixed(3)),
+                    parseFloat((row[`penebusan_${i}`] || 0).toFixed(3)),
+                    parseFloat((row[`penyaluran_${i}`] || 0).toFixed(3)),
+                    parseFloat((row[`stok_akhir_${i}`] || 0).toFixed(3))
+                );
+            }
+
+            let addedRow = worksheet.addRow(rowData);
+            addedRow.eachCell((cell) => {
+                cell.border = borderStyle;
+                cell.alignment = { horizontal: "center", vertical: "middle" };
+            });
+        });
+
+        // Add total for last kabupaten
+        if (currentKabupaten !== null) {
+            addKabupatenTotal(worksheet, groupedByKabupaten[currentKabupaten], kabupatenStartRow, data.length + 2, borderStyle);
+        }
+
+        // Kirim file Excel
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        res.setHeader("Content-Disposition", "attachment; filename=wcm.xlsx");
+        await workbook.xlsx.write(res);
+        res.end();
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Terjadi kesalahan dalam mengunduh data" });
+    }
+};
+
+// Helper function to add kabupaten total
+function addKabupatenTotal(worksheet, kabupatenData, startRow, endRow, borderStyle) {
+    const totalRow = ["TOTAL", "", "", "", kabupatenData[0].kabupaten, "", ""];
+    const monthlyTotals = Array(12).fill().map(() => ({
+        stok_awal: 0,
+        penebusan: 0,
+        penyaluran: 0,
+        stok_akhir: 0
+    }));
+
+    // Calculate totals
+    kabupatenData.forEach(row => {
+        for (let i = 1; i <= 12; i++) {
+            monthlyTotals[i - 1].stok_awal += row[`stok_awal_${i}`] || 0;
+            monthlyTotals[i - 1].penebusan += row[`penebusan_${i}`] || 0;
+            monthlyTotals[i - 1].penyaluran += row[`penyaluran_${i}`] || 0;
+            monthlyTotals[i - 1].stok_akhir += row[`stok_akhir_${i}`] || 0;
+        }
+    });
+
+    // Add monthly totals to row
+    monthlyTotals.forEach(month => {
+        totalRow.push(
+            parseFloat(month.stok_awal.toFixed(3)),
+            parseFloat(month.penebusan.toFixed(3)),
+            parseFloat(month.penyaluran.toFixed(3)),
+            parseFloat(month.stok_akhir.toFixed(3))
+        );
+    });
+
+    // Add total row
+    const totalRowAdded = worksheet.addRow(totalRow);
+    totalRowAdded.eachCell((cell) => {
+        cell.border = borderStyle;
+        cell.font = { bold: true };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD3D3D3" } };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+    });
+
+    // Add empty row after total
+    worksheet.addRow([]);
+}

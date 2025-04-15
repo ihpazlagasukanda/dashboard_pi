@@ -1,0 +1,324 @@
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <%- include('./partials/head'); %>
+    </head>
+    <body>
+        <div class="wrapper">
+            <%- include('./partials/header'); %>
+
+            <div class="container">
+                <div class="page-inner">
+                    <br>
+                    <div class="page-header">
+                        <h3 class="fw-bold mb-3">Realisasi F5 & F6</h3>
+                        <ul class="breadcrumbs mb-3">
+                            <li class="nav-home">
+                                <a href="/">
+                                    <i class="icon-home"></i>
+                                </a>
+                            </li>
+                            <li class="separator">
+                                <i class="icon-arrow-right"></i>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/wcmvsverval">Data</a>
+                            </li>
+                            <li class="separator">
+                                <i class="icon-arrow-right"></i>
+                            </li>
+                            <li class="nav-item">
+                                <a href="/wcmvsverval">Realisasi F5 & F6</a>
+                            </li>
+                        </ul>
+                    </div>
+            
+                    <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
+                        <div>
+                            <p class="op-7 mb-2">Untuk Menampilkan Data Sesuai, Harap Pilih</p>
+                        </div>
+
+                        <div class="ms-md-auto py-2 py-md-0">
+                            <button id="download-excel" class="btn btn-primary btn-round">
+                                Download
+                            </button>
+                                <div
+                                    id="loading-spinner"
+                                    class="hidden fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center"
+                                >
+                                    <div
+                                    class="bg-white p-5 rounded-lg flex items-center space-x-3"
+                                    >
+                                    <div
+                                        class="animate-spin h-8 w-8 border-t-4 border-blue-600 border-solid rounded-full"
+                                    ></div>
+                                    <span class="text-lg font-semibold"
+                                        >Mengunduh data, harap tunggu...</span
+                                    >
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Spinner Loading -->
+                    <div id="loading-spinner" class="hidden fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center">
+                        <div class="bg-white p-5 rounded-lg flex items-center space-x-3 shadow-lg">
+                            <div class="animate-spin h-8 w-8 border-t-4 border-blue-600 border-solid rounded-full"></div>
+                            <span class="text-lg font-semibold text-gray-700">Mengunduh data, harap tunggu...</span>
+                        </div>
+                    </div>
+            
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+                        <div class="grid grid-cols-2 items-center gap-2">
+                            <label for="tahunSelect" class="text-sm font-medium text-gray-700">Tahun</label>
+                            <select id="tahunSelect" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
+                                <option value="">Semua Tahun</option>
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026">2026</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 items-center gap-2">
+                            <label for="bulanSelect" class="text-sm font-medium text-gray-700">Bulan</label>
+                            <select id="bulanSelect" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
+                                <option value="">Semua Bulan</option>
+                                <option value="1">Januari</option>
+                                <option value="2">Februari</option>
+                                <option value="3">Maret</option>
+                                <option value="4">April</option>
+                                <option value="5">Mei</option>
+                                <option value="6">Juni</option>
+                                <option value="7">Juli</option>
+                                <option value="8">Agustus</option>
+                                <option value="9">September</option>
+                                <option value="10">Oktober</option>
+                                <option value="11">November</option>
+                                <option value="12">Desember</option>
+                            </select>
+                        </div>
+
+                        <!-- Kabupaten -->
+                        <div class="grid grid-cols-2 items-center gap-2">
+                            <label for="kabupatenSelect" class="text-sm font-medium text-gray-700">Kabupaten</label>
+                            <select id="kabupatenSelect" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
+                                <option value="">Semua Kabupaten</option>
+                                <option value="BOYOLALI">BOYOLALI</option>
+                                <option value="SRAGEN">SRAGEN</option>
+                                <option value="KOTA SURAKARTA">KOTA SURAKARTA</option>
+                                <option value="KOTA MAGELANG">KOTA MAGELANG</option>
+                                <option value="MAGELANG">MAGELANG</option>
+                                <option value="SUKOHARJO">SUKOHARJO</option>
+                                <option value="KLATEN">KLATEN</option>
+                                <option value="WONOGIRI">WONOGIRI</option>
+                                <option value="KARANGANYAR">KARANGANYAR</option>
+                                <option value="BANTUL">BANTUL</option>
+                                <option value="KOTA YOGYAKARTA">KOTA YOGYAKARTA</option>
+                                <option value="SLEMAN">SLEMAN</option>
+                                <option value="KULON PROGO">KULON PROGO</option>
+                                <option value="GUNUNG KIDUL">GUNUNG KIDUL</option>
+                            </select>
+                        </div>
+        
+                        <div class="grid grid-cols-2 items-center gap-2">
+                            <label for="produkSelect" class="text-sm font-medium text-gray-700">Produk</label>
+                            <select id="produkSelect" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
+                                <option value="">Semua Produk</option>
+                                <option value="UREA">UREA</option>
+                                <option value="NPK">NPK</option>
+                                <option value="ORGANIK">ORGANIK</option>
+                                <option value="NPK KAKAO">NPK KAKAO</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 items-center gap-2">
+                            <label for="statusSelect" class="text-sm font-medium text-gray-700">Status</label>
+                            <select id="statusSelect" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
+                                <option value="ALL">Semua</option>
+                                <option value="SESUAI">Sesuai</option>
+                                <option value="TIDAK SESUAI">Tidak Sesuai</option>
+                            </select>
+                        </div>
+                    
+                        
+                    </div>
+
+                    <!-- Tabel Data -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-head-row">
+                                        <div class="card-title">Realisasi F5 & F6</div>
+                                        <div class="card-tools"></div>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table id="summary-verval-table" class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th rowspan="2">Provinsi</th>
+                                                    <th rowspan="2">Kabupaten</th>
+                                                    <th rowspan="2">Kode Distributor</th>
+                                                    <th rowspan="2">Distributor</th>
+                                                    <th rowspan="2">Kecamatan</th>
+                                                    <th rowspan="2">Kode Kios</th>
+                                                    <th rowspan="2">Nama Kios</th>
+                                                    <th rowspan="2">Produk</th>
+                                                    <th rowspan="2">Bulan</th>
+                                                    <th colspan="3" class="text-center bg-primary text-white">WCM</th>
+                                                    <th class="text-center bg-warning text-dark">VERVAL</th>
+                                                    <th class="text-center bg-secondary text-white">WCM</th>
+                                                    <th rowspan="2">Status</th>
+                                                </tr>
+                                                <tr>
+                                                    <th class="bg-primary text-white">Stok Awal</th>
+                                                    <th class="bg-primary text-white">Penebusan</th>
+                                                    <th class="bg-primary text-white">Penyaluran</th>
+                                                    <th class="bg-warning text-dark">Penyaluran</th>
+                                                    <th class="bg-secondary text-white">Stok Akhir</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="dataTable">
+                                                <!-- Data akan dimasukkan melalui JavaScript -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <%- include('./partials/footer'); %>
+        </div>
+
+        <script>
+            $(document).ready(function () {
+                let table = $('#summary-verval-table').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    deferLoading: 0, // Jangan langsung load data
+                    ajax: {
+                        url: "/api/data/wcmvsverval",
+                        type: "GET",
+                        data: function (d) {
+                            d.kabupaten = $('#kabupatenSelect').val();
+                            d.bulan = $('#bulanSelect').val();
+                            d.tahun = $('#tahunSelect').val();
+                            d.produk = $('#produkSelect').val();
+                            d.status = $('#statusSelect').val();
+                        }
+                    },
+                    columns: [
+                        { data: "provinsi" },
+                        { data: "kabupaten" },
+                        { data: "kode_distributor" },
+                        { data: "distributor" },
+                        { data: "kecamatan" },
+                        { data: "kode_kios" },
+                        { data: "nama_kios" },
+                        { data: "produk" },
+                        { data: "bulan" },
+                        // { data: "stok_awal_wcm", render: $.fn.dataTable.render.number(',', '.', 0, '') },
+                        // { data: "penebusan_wcm", render: $.fn.dataTable.render.number(',', '.', 0, '') },
+                        // { data: "penyaluran_wcm", render: $.fn.dataTable.render.number(',', '.', 0, '') },
+                        // { data: "penyaluran_verval", render: $.fn.dataTable.render.number(',', '.', 0, '') },
+                        // { data: "stok_akhir_wcm", render: $.fn.dataTable.render.number(',', '.', 0, '') },
+                        { data: "stok_awal_wcm" },
+                        { data: "penebusan_wcm" },
+                        { data: "penyaluran_wcm" },
+                        { data: "penyaluran_verval" },
+                        { data: "stok_akhir_wcm" },
+                        { data: "status_penyaluran" }
+                    ]
+                });
+
+                $('#kabupatenSelect, #tahunSelect, #bulanSelect, #produkSelect, #statusSelect').on('change', function () {
+                    table.draw();
+                });
+
+                $("#download-excel").click(function () {
+    // Tampilkan loading spinner
+    $('#loading-spinner').removeClass('hidden');
+    
+    // Ambil semua parameter filter
+    let params = {
+        kabupaten: $("#kabupatenSelect").val() || "ALL",
+        tahun: $("#tahunSelect").val() || "", // Wajib diisi
+        bulan: $("#bulanSelect").val() || "ALL",
+        produk: $("#produkSelect").val() || "ALL",
+        status: $("#statusSelect").val() || "ALL"
+    };
+
+    // Validasi tahun wajib diisi
+    if (!params.tahun) {
+        alert('Tahun harus dipilih untuk download data');
+        $('#loading-spinner').addClass('hidden');
+        return;
+    }
+
+    // Buat URL download
+    const queryString = $.param(params);
+    const downloadUrl = `/api/download/wcmvsverval?${queryString}`;
+    
+    // Buat elemen <a> tersembunyi untuk trigger download
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = 'realisasi_f5_f6.xlsx';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    // Sembunyikan loading spinner setelah 2 detik (asumsi download selesai)
+    setTimeout(() => {
+        $('#loading-spinner').addClass('hidden');
+    }, 2000);
+});
+
+                // Hide spinner when page loads
+                $('#loading-spinner').addClass('hidden');
+            });
+        </script>
+
+        <!-- Core JS Files -->
+        <script src="./assets/js/core/jquery-3.7.1.min.js"></script>
+        <script src="./assets/js/core/popper.min.js"></script>
+        <script src="./assets/js/core/bootstrap.min.js"></script>
+
+        <!-- jQuery Scrollbar -->
+        <script src="./assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
+
+        <!-- Chart JS -->
+        <script src="./assets/js/plugin/chart.js/chart.min.js"></script>
+
+        <!-- jQuery Sparkline -->
+        <script src="./assets/js/plugin/jquery.sparkline/jquery.sparkline.min.js"></script>
+
+        <!-- Chart Circle -->
+        <script src="./assets/js/plugin/chart-circle/circles.min.js"></script>
+
+        <!-- Datatables -->
+        <script src="./assets/js/plugin/datatables/datatables.min.js"></script>
+
+        <!-- Bootstrap Notify -->
+        <script src="./assets/js/plugin/bootstrap-notify/bootstrap-notify.min.js"></script>
+
+        <!-- jQuery Vector Maps -->
+        <script src="./assets/js/plugin/jsvectormap/jsvectormap.min.js"></script>
+        <script src="./assets/js/plugin/jsvectormap/world.js"></script>
+
+        <!-- Sweet Alert -->
+        <script src="./assets/js/plugin/sweetalert/sweetalert.min.js"></script>
+
+        <!-- Kaiadmin JS -->
+        <script src="./assets/js/kaiadmin.min.js"></script>
+
+        <!-- Kaiadmin DEMO methods, don't include it in your project! -->
+        <script src="./assets/js/setting-demo.js"></script>
+        <script src="./assets/js/demo.js"></script>
+    </body>
+    </html>

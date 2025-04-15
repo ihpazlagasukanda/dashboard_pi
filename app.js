@@ -9,14 +9,14 @@ const authMiddleware = require('./middleware/auth');
 const erdkkRoutes = require("./routes/erdkkRoutes");
 const wcmRoutes = require("./routes/wcmRoutes");
 const outRouter = require("./routes/outRoutes");
+const skRoutes = require("./routes/skRoutes");
 require('dotenv').config();
 
 const app = express();
 
-// Konfigurasi storage untuk multer
-const storage = multer.memoryStorage(); // Simpan file di memori (RAM)
+// Konfigurasi multer
+const storage = multer.memoryStorage(); // Penyimpanan di RAM
 const upload = multer({ storage: storage });
-
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
@@ -30,71 +30,99 @@ app.set('views', path.join(__dirname, 'views'));
 // Akses file statis
 app.use(express.static('public'));
 
-// Halaman login
+// Middleware untuk pengecekan level admin
+function requireLevel(level) {
+    return function (req, res, next) {
+        if (!req.user || req.user.level < level) {
+            return res.status(403).render('access-denied'); // Menampilkan halaman access-denied
+        }
+        next();
+    };
+}
+
+// Routes untuk halaman utama dan login
+app.get('/', authMiddleware, (req, res) => {
+    res.render('index', { user: req.user });
+});
+
 app.get('/login', (req, res) => {
     res.render('login');
 });
 
-// Proteksi halaman hanya untuk admin yang login
-app.get('/', authMiddleware, (req, res) => {
-    res.render('index');
-});
-
-
-app.get('/upload', authMiddleware, (req, res) => {
-    res.render('upload');
-});
-
+// Halaman lain dengan proteksi autentikasi
 app.get('/dataverval', authMiddleware, (req, res) => {
-    res.render('dataTable');
+    res.render('dataTable', { user: req.user });
 });
 
 app.get('/salurkios', authMiddleware, (req, res) => {
-    res.render('salurkios');
+    res.render('salurkios', { user: req.user });
 });
 
 app.get('/dashboard2', authMiddleware, (req, res) => {
-    res.render('chart');
+    res.render('chart', { user: req.user });
 });
 
-app.get('/upload-erdkk', authMiddleware, (req, res) => {
-    res.render('upload-erdkk');
+// Halaman Upload - Hanya level 2
+app.get('/upload', authMiddleware, requireLevel(2), (req, res) => {
+    res.render('upload', { user: req.user });
 });
 
-app.get('/upload-wcm', authMiddleware, (req, res) => {
-    res.render('upload-wcm');
+app.get('/upload-erdkk', authMiddleware, requireLevel(2), (req, res) => {
+    res.render('upload-erdkk', { user: req.user });
 });
 
+app.get('/upload-wcm', authMiddleware, requireLevel(2), (req, res) => {
+    res.render('upload-wcm', { user: req.user });
+});
+
+app.get('/upload-skbupati', authMiddleware, requireLevel(2), (req, res) => {
+    res.render('upload-skBupati', { user: req.user });
+});
+
+// Routes untuk halaman lain
 app.get('/erdkk', authMiddleware, (req, res) => {
-    res.render('erdkk');
+    res.render('erdkk', { user: req.user });
 });
 
 app.get('/esummary', authMiddleware, (req, res) => {
-    res.render('alokasivstebusan')
+    res.render('alokasivstebusan', { user: req.user });
 });
 
 app.get('/summary', authMiddleware, (req, res) => {
-    res.render('esummary')
+    res.render('esummary', { user: req.user });
 });
 
 app.get('/wcm', authMiddleware, (req, res) => {
-    res.render('wcm')
+    res.render('wcm', { user: req.user });
 });
 
-// Menangani file upload route
+app.get('/wcmf5', authMiddleware, (req, res) => {
+    res.render('f5', { user: req.user });
+});
+
+app.get('/sum', authMiddleware, (req, res) => {
+    res.render('sum', { user: req.user });
+});
+
+app.get('/wcmvsverval', authMiddleware, (req, res) => {
+    res.render('wcmvsverval', { user: req.user });
+});
+
+app.get('/visualisasi', authMiddleware, (req, res) => {
+    res.render('visualisasi', { user: req.user });
+});
+
+// API Routes
 app.use('/api/files', authMiddleware, fileRoutes);
 app.use('/api', authMiddleware, dataRoutes);
 app.use('/api/data', authMiddleware, erdkkRoutes);
 app.use('/api/data', authMiddleware, wcmRoutes);
-app.use('/upload', outRouter);
+app.use('/api/data', authMiddleware, skRoutes);
+app.use(authRoutes);  // Pastikan authRoutes ada
+app.use('/upload', outRouter);  // Route untuk upload
 
-app.use(express.json({ limit: '50mb' })); // Sesuaikan ukuran jika perlu
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-// Gunakan route untuk login/logout
-app.use(authRoutes);
-
-// 🚀 Run server
+// Jalankan server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server berjalan port:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
