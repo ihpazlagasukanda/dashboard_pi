@@ -187,7 +187,7 @@ exports.uploadFile = async (req, res) => {
                     const kodeTransaksi = generateKodeTransaksi(); // otomatis buat kode unik
 
                     return {
-                        kabupaten: row.getCell(2).text || '',
+                        kabupaten: (row.getCell(2).text || '').replace(/^KAB\.\s*/i, '').trim(),
                         kecamatan: row.getCell(3).text || '',
                         kodeTransaksi: kodeTransaksi,
                         poktan: '',
