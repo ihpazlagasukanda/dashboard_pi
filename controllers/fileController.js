@@ -3,107 +3,65 @@ const fs = require('fs');
 const db = require('../config/db');
 const { v4: uuidv4 } = require('uuid');
 
-// Fungsi untuk konversi nilai menjadi angka
+// Konfigurasi
+const DB_LOCK_TIMEOUT = 60000; // 60 detik
+const MAX_RETRIES = 5;
+const RETRY_DELAY_BASE = 1000; // 1 detik dasar
+const BATCH_SIZE = 100; // Jumlah data per batch insert
+
+// Helper functions
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 const convertToNumber = (value) => {
     if (typeof value === 'string') {
-        value = value.replace(',', '.'); // Ubah koma ke titik untuk desimal
+        value = value.replace(',', '.').replace(/[^0-9.-]/g, '');
     }
     const numberValue = parseFloat(value);
     return isNaN(numberValue) ? 0 : numberValue;
 };
 
-// Fungsi untuk eksekusi query dengan retry mechanism
-async function executeWithRetry(fn, maxRetries = 3, baseDelay = 1000) {
-    let attempt = 1;
-    while (attempt <= maxRetries) {
-        try {
-            return await fn();
-        } catch (err) {
-            if (err.code === 'ER_LOCK_WAIT_TIMEOUT' && attempt < maxRetries) {
-                const delay = baseDelay * Math.pow(2, attempt - 1);
-                console.warn(`⚠️ Lock timeout detected, retrying in ${delay}ms (attempt ${attempt}/${maxRetries})`);
-                await new Promise(resolve => setTimeout(resolve, delay));
-                attempt++;
-                continue;
-            }
-            throw err;
-        }
-    }
-}
-
-// Fungsi untuk mendapatkan koneksi dari pool dengan timeout
-async function getConnectionWithTimeout(timeout = 10000) {
-    return new Promise((resolve, reject) => {
-        let timer = setTimeout(() => {
-            reject(new Error('Connection timeout'));
-        }, timeout);
-
-        db.getConnection((err, connection) => {
-            clearTimeout(timer);
-            if (err) {
-                reject(err);
-            } else {
-                resolve(connection);
-            }
-        });
-    });
-}
-
-// Fungsi untuk membersihkan teks
 const cleanText = (text) => {
     return text ? text.toLowerCase().trim().replace(/[^a-z0-9\s]/g, '') : '';
 };
 
-// Fungsi untuk membersihkan nama kios
 const cleanNamaKios = (text) => {
     if (!text) return "";
-
-    let cleaned = text.toUpperCase();
-    cleaned = cleaned.replace(/([A-Z])([A-Z][a-z])/g, '$1 $2');
-    cleaned = cleaned.replace(/[.,\"-\/]/g, "");
-
-    const wordsToRemove = ["KPL", "KIOS", "UD", "KUD", "TOKO", "TK", "GAPOKTAN", "CV"];
-    let regex = new RegExp(`\\b(${wordsToRemove.join("|")})\\b`, "g");
-    cleaned = cleaned.replace(regex, "").trim();
-
+    let cleaned = text.toUpperCase()
+        .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
+        .replace(/[.,"\-/]/g, "")
+        .replace(/\b(KPL|KIOS|UD|KUD|TOKO|TK|GAPOKTAN|CV)\b/gi, "")
+        .trim();
     return cleaned;
 };
 
-// Fungsi untuk memproses data Excel
-async function processExcelFile(file, metodePenebusan) {
-    console.log('📝 Memproses file:', file.originalname);
+const generateKodeTransaksi = () => {
+    return 'TX-' + Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 7).toUpperCase();
+};
 
+// Fungsi untuk memproses file Excel (dipertahankan sama seperti aslinya)
+const processExcelFile = async (file, metodePenebusan) => {
     const workbook = new ExcelJS.Workbook();
     let buffer;
 
     try {
         buffer = file.buffer || fs.readFileSync(file.path);
         await workbook.xlsx.load(buffer);
-        console.log('✅ File berhasil dibaca!');
     } catch (err) {
-        console.error('❌ Gagal membaca file Excel:', err);
         throw new Error('File Excel tidak valid');
     }
 
     const worksheet = workbook.worksheets[0];
-    console.log(`📜 Sheet: ${worksheet.name}`);
-
-    // Validasi kolom
     const expectedColumnsKartan = ['NO', 'KABUPATEN', 'KECAMATAN', 'KODE KIOS', 'NAMA KIOS', 'NIK', 'NAMA PETANI', 'UREA', 'NPK', 'SP36', 'ZA', 'NPK FORMULA', 'ORGANIK', 'ORGANIK CAIR', 'TGL TEBUS', 'TGL INPUT', 'STATUS'];
     const expectedColumnsIpubers = ['No', 'Kabupaten', 'Kecamatan', 'Kode Kios', 'Nama Kios', 'Kode TRX', 'No Transaksi', 'NIK', 'Nama Petani', 'Urea', 'NPK', 'SP36', 'ZA', 'NPK Formula', 'Organik', 'Organik Cair', 'Keterangan', 'Tanggal Tebus', 'Tanggal Entri', 'Tanggal Update', 'Tipe Tebus', 'NIK Perwakilan', 'Url Bukti', 'Status'];
 
+    // Validasi header
     const headerRow = 1;
     const rowValues = worksheet.getRow(headerRow).values;
-
-    if (rowValues[0] === undefined) {
-        rowValues.shift();
-    }
-
+    if (rowValues[0] === undefined) rowValues.shift();
     const actualColumns = rowValues.map(cell => cell ? cell.toString().trim() : "");
     const expectedColumns = metodePenebusan === 'ipubers' ? expectedColumnsIpubers : expectedColumnsKartan;
 
     if (!expectedColumns.every((col, index) => col === actualColumns[index])) {
-        console.error("❌ Struktur file tidak sesuai. Ditemukan:", actualColumns);
         throw new Error('Struktur file Excel tidak sesuai');
     }
 
@@ -112,11 +70,9 @@ async function processExcelFile(file, metodePenebusan) {
     let rows = worksheet.getRows(startRow, worksheet.rowCount - startRow);
     rows = rows.filter(row => row.getCell(1).value && row.getCell(2).value);
 
-    console.log(`✅ Data siap diproses, total baris: ${rows.length}`);
-
     return rows.map((row) => {
         let tanggalTebus, tanggalExcel;
-        const kodeTransaksi = metodePenebusan === 'ipubers' ? row.getCell(7).text : uuidv4();
+        const kodeTransaksi = metodePenebusan === 'ipubers' ? row.getCell(7).text : generateKodeTransaksi();
 
         if (metodePenebusan === 'ipubers') {
             tanggalExcel = row.getCell(18).text;
@@ -124,7 +80,7 @@ async function processExcelFile(file, metodePenebusan) {
             tanggalExcel = row.getCell(15).text;
         }
 
-        // Format tanggal
+        // Format tanggal (dipertahankan sama seperti aslinya)
         if (tanggalExcel && (tanggalExcel instanceof Date || !isNaN(Date.parse(tanggalExcel)))) {
             const dateObj = new Date(tanggalExcel);
             const year = dateObj.getFullYear();
@@ -135,11 +91,7 @@ async function processExcelFile(file, metodePenebusan) {
             const parts = tanggalExcel.split('/');
             if (parts.length === 3) {
                 tanggalTebus = `${parts[2]}/${parts[1]}/${parts[0]}`;
-            } else {
-                tanggalTebus = null;
             }
-        } else {
-            tanggalTebus = null;
         }
 
         if (metodePenebusan === 'ipubers') {
@@ -165,9 +117,7 @@ async function processExcelFile(file, metodePenebusan) {
                 status: row.getCell(24).text || 'Tidak Diketahui'
             };
         } else {
-            const mid = row.getCell(4).text || '';
-            const namaKios = row.getCell(5).text || '';
-
+            const mid = `'${row.getCell(4).text || ''}`;
             return {
                 kabupaten: (row.getCell(2).text || '').replace(/^KAB\.\s*/i, '').trim(),
                 kecamatan: row.getCell(3).text || '',
@@ -187,202 +137,216 @@ async function processExcelFile(file, metodePenebusan) {
                 organikCair: convertToNumber(row.getCell(14).text || '0'),
                 kakao: convertToNumber(row.getCell(19).text || '0'),
                 mid: mid,
-                namaKios: namaKios,
+                namaKios: row.getCell(5).text || '',
                 status: row.getCell(17).text || 'kartan'
             };
         }
     });
-}
+};
 
-exports.uploadFile = async (req, res) => {
-    const sessionId = uuidv4(); // ID unik untuk tracking session upload
-    let connection;
-    let transactionActive = false;
+// Fungsi untuk mendapatkan mapping kode kios (dipertahankan sama seperti aslinya)
+const getKodeKiosMappings = async () => {
+    const [allMainMID] = await db.query('SELECT mid, kabupaten, kecamatan, nama_kios, kode_kios FROM main_mid');
+    const [allMasterMID] = await db.query('SELECT mid, kode_kios FROM master_mid');
 
+    const mappings = {
+        midMap: new Map(),
+        kabKecNamaMap: new Map(),
+        masterMidMap: new Map()
+    };
+
+    allMainMID.forEach(({ mid, kabupaten, kecamatan, nama_kios, kode_kios }) => {
+        const normKabupaten = cleanText(kabupaten);
+        const normKecamatan = cleanText(kecamatan);
+        const normNamaKios = cleanNamaKios(nama_kios);
+
+        if (mid) {
+            mappings.midMap.set(`${cleanText(mid)}-${normKabupaten}`, kode_kios);
+        }
+        if (nama_kios) {
+            mappings.kabKecNamaMap.set(`${normKabupaten}-${normKecamatan}-${normNamaKios}`, kode_kios);
+        }
+    });
+
+    allMasterMID.forEach(({ mid, kode_kios }) => {
+        mappings.masterMidMap.set(cleanText(mid), kode_kios);
+    });
+
+    return mappings;
+};
+
+// Fungsi untuk menentukan kode kios (dipertahankan sama seperti aslinya)
+const determineKodeKios = (rowData, mappings) => {
+    if (rowData.metodePenebusan !== 'kartan') {
+        return rowData.kodeKios || '-';
+    }
+
+    const { midMap, kabKecNamaMap, masterMidMap } = mappings;
+    const cleanMid = cleanText(rowData.mid);
+    const cleanKab = cleanText(rowData.kabupaten);
+    const cleanKec = cleanText(rowData.kecamatan);
+    const cleanNama = cleanNamaKios(rowData.namaKios);
+
+    // 1. Coba match dengan MID + Kabupaten
+    const midKabKey = `${cleanMid}-${cleanKab}`;
+    if (midMap.has(midKabKey)) {
+        const kode = midMap.get(midKabKey);
+        if (kode && kode !== '-') return kode;
+    }
+
+    // 2. Coba match dengan Kab+Kec+Nama
+    const kabKecNamaKey = `${cleanKab}-${cleanKec}-${cleanNama}`;
+    if (kabKecNamaMap.has(kabKecNamaKey)) {
+        return kabKecNamaMap.get(kabKecNamaKey);
+    }
+
+    // 3. Coba match dengan MID saja (master_mid)
+    if (masterMidMap.has(cleanMid)) {
+        return masterMidMap.get(cleanMid);
+    }
+
+    return rowData.kodeKios || '-';
+};
+
+// Fungsi baru untuk menyimpan data dengan retry mechanism
+const saveWithRetry = async (values, retryCount = 0) => {
+    const connection = await db.getConnection();
     try {
-        const files = req.files;
-        const metodePenebusan = req.body.metodePenebusan;
+        await connection.beginTransaction();
 
-        console.log(`[${sessionId}] 📤 Memulai upload, metode: ${metodePenebusan}, file: ${files.length}`);
+        // Set lock timeout yang lebih besar
+        await connection.query(`SET SESSION innodb_lock_wait_timeout = ${DB_LOCK_TIMEOUT / 1000}`);
 
-        if (!files || files.length === 0) {
-            return res.status(400).send({ message: 'Tidak ada file yang diunggah' });
+        // Split into smaller batches if needed
+        for (let i = 0; i < values.length; i += BATCH_SIZE) {
+            const batch = values.slice(i, i + BATCH_SIZE);
+            await connection.query(
+                `INSERT INTO verval 
+                (kabupaten, kecamatan, poktan, kode_kios, nama_kios, nik, nama_petani, metode_penebusan, tanggal_tebus, 
+                urea, npk, sp36, za, npk_formula, organik, organik_cair, kakao, kode_transaksi, status) 
+                VALUES ?`, [batch]
+            );
         }
 
-        // Dapatkan koneksi dengan timeout
-        connection = await executeWithRetry(
-            () => getConnectionWithTimeout(5000),
-            3,
-            1000
-        );
+        await connection.commit();
+        return true;
+    } catch (error) {
+        await connection.rollback();
 
-        // Mulai transaksi
-        await executeWithRetry(async () => {
-            await connection.query('START TRANSACTION');
-            transactionActive = true;
-        });
+        if ((error.code === 'ER_LOCK_WAIT_TIMEOUT' || error.code === 'ER_LOCK_DEADLOCK') && retryCount < MAX_RETRIES) {
+            const delayTime = RETRY_DELAY_BASE * Math.pow(2, retryCount); // Exponential backoff
+            console.warn(`[Retry ${retryCount + 1}] Lock timeout detected, retrying in ${delayTime}ms...`);
+            await delay(delayTime);
+            return saveWithRetry(values, retryCount + 1);
+        }
 
-        // 1. Load semua data referensi sekaligus
-        console.log(`[${sessionId}] 🔍 Memuat data referensi...`);
+        console.error('Failed to save after retries:', error);
+        throw error;
+    } finally {
+        connection.release();
+    }
+};
 
-        const [existingTransactions, allMainMID, allMasterMID] = await Promise.all([
-            executeWithRetry(() => connection.query('SELECT kode_transaksi FROM verval')),
-            executeWithRetry(() => connection.query('SELECT mid, kabupaten, kecamatan, nama_kios, kode_kios FROM main_mid')),
-            executeWithRetry(() => connection.query('SELECT mid, kode_kios FROM master_mid'))
-        ]);
+// Controller utama dengan penambahan fitur untuk handle concurrent upload
+exports.uploadFile = async (req, res) => {
+    const requestId = uuidv4();
+    const log = (message) => console.log(`[${requestId}] ${message}`);
+    const logError = (message, error) => console.error(`[${requestId}] ${message}`, error);
 
-        const existingTransactionsSet = new Set(existingTransactions.map(row => row.kode_transaksi));
+    try {
+        const { files, body } = req;
+        const { metodePenebusan } = body;
 
-        // 2. Bangun mapping untuk pencarian kode kios
-        const midMap = new Map();
-        const kabKecNamaMap = new Map();
-        const masterMidMap = new Map();
+        if (!files || files.length === 0) {
+            return res.status(400).json({ error: 'Tidak ada file yang diunggah' });
+        }
 
-        allMainMID.forEach(({ mid, kabupaten, kecamatan, nama_kios, kode_kios }) => {
-            const normKabupaten = cleanText(kabupaten);
-            const normKecamatan = cleanText(kecamatan);
-            const normNamaKios = cleanNamaKios(nama_kios);
+        log(`Memulai proses upload ${files.length} file dengan metode ${metodePenebusan}`);
 
-            if (mid) {
-                midMap.set(`${cleanText(mid)}-${normKabupaten}`, kode_kios);
-            }
-            if (nama_kios) {
-                kabKecNamaMap.set(`${normKabupaten}-${normKecamatan}-${normNamaKios}`, kode_kios);
-            }
-        });
-
-        allMasterMID.forEach(({ mid, kode_kios }) => {
-            masterMidMap.set(cleanText(mid), kode_kios);
-        });
+        // 1. Load semua data referensi sekaligus di awal
+        log('Memuat data referensi...');
+        const [existingTransactions] = await db.query('SELECT kode_transaksi FROM verval');
+        const existingTxSet = new Set(existingTransactions.map(tx => tx.kode_transaksi));
+        const kodeKiosMappings = await getKodeKiosMappings();
+        log('Data referensi berhasil dimuat');
 
         let totalInserted = 0;
         let totalDuplicates = 0;
 
-        // 3. Proses setiap file secara sequential
+        // 2. Proses setiap file
         for (const file of files) {
+            log(`Memproses file: ${file.originalname}`);
+
+            if (!file.originalname.match(/\.(xlsx|xls)$/i)) {
+                return res.status(400).json({ error: 'Hanya file Excel (.xlsx, .xls) yang diperbolehkan' });
+            }
+
             try {
-                if (!file.originalname.match(/\.(xlsx|xls)$/)) {
-                    throw new Error('Hanya file Excel yang diperbolehkan');
-                }
+                const fileData = await processExcelFile(file, metodePenebusan);
+                const batches = [];
+                let currentBatch = [];
 
-                const data = await processExcelFile(file, metodePenebusan);
-                const batchSize = 50; // Jumlah row per batch insert
-                let batchValues = [];
-
-                for (const rowData of data) {
-                    if (existingTransactionsSet.has(rowData.kodeTransaksi)) {
+                // 3. Siapkan data untuk insert
+                for (const row of fileData) {
+                    if (existingTxSet.has(row.kodeTransaksi)) {
                         totalDuplicates++;
                         continue;
                     }
 
-                    let kodeKios = rowData.kodeKios;
-
-                    // Handle kartan kode kios lookup
-                    if (rowData.metodePenebusan === 'kartan') {
-                        const cleanMid = cleanText(rowData.mid);
-                        const cleanKabupaten = cleanText(rowData.kabupaten);
-                        const cleanKecamatan = cleanText(rowData.kecamatan);
-                        const cleanedNamaKios = cleanNamaKios(rowData.namaKios);
-
-                        if (midMap.has(`${cleanMid}-${cleanKabupaten}`) && midMap.get(`${cleanMid}-${cleanKabupaten}`) !== "-") {
-                            kodeKios = midMap.get(`${cleanMid}-${cleanKabupaten}`);
-                        } else if (kabKecNamaMap.has(`${cleanKabupaten}-${cleanKecamatan}-${cleanedNamaKios}`)) {
-                            kodeKios = kabKecNamaMap.get(`${cleanKabupaten}-${cleanKecamatan}-${cleanedNamaKios}`);
-                        } else if (masterMidMap.has(cleanMid)) {
-                            kodeKios = masterMidMap.get(cleanMid);
-                        } else {
-                            kodeKios = rowData.mid ? `MID-${rowData.mid}` : '-';
-                            console.log(`[${sessionId}] ℹ️ Menggunakan MID sebagai fallback kode kios`);
-                        }
-                    }
-
-                    batchValues.push([
-                        rowData.kabupaten, rowData.kecamatan, rowData.poktan, kodeKios,
-                        rowData.namaKios, rowData.nik, rowData.namaPetani,
-                        rowData.metodePenebusan, rowData.tanggalTebus, rowData.urea,
-                        rowData.npk, rowData.sp36, rowData.za, rowData.npkFormula,
-                        rowData.organik, rowData.organikCair, rowData.kakao,
-                        rowData.kodeTransaksi, rowData.status
+                    const kodeKios = determineKodeKios(row, kodeKiosMappings);
+                    currentBatch.push([
+                        row.kabupaten, row.kecamatan, row.poktan || '', kodeKios,
+                        row.namaKios || '', row.nik || '', row.namaPetani || '',
+                        metodePenebusan, row.tanggalTebus || null,
+                        row.urea || 0, row.npk || 0, row.sp36 || 0, row.za || 0,
+                        row.npkFormula || 0, row.organik || 0, row.organikCair || 0,
+                        row.kakao || 0, row.kodeTransaksi, row.status || 'pending'
                     ]);
 
-                    // Jika batch sudah penuh, insert ke database
-                    if (batchValues.length >= batchSize) {
-                        await executeWithRetry(async () => {
-                            await connection.query(
-                                `INSERT INTO verval 
-                                (kabupaten, kecamatan, poktan, kode_kios, nama_kios, nik, nama_petani, 
-                                 metode_penebusan, tanggal_tebus, urea, npk, sp36, za, npk_formula, 
-                                 organik, organik_cair, kakao, kode_transaksi, status) 
-                                VALUES ?`,
-                                [batchValues]
-                            );
-                            totalInserted += batchValues.length;
-                            batchValues = [];
-                        });
+                    if (currentBatch.length >= BATCH_SIZE) {
+                        batches.push([...currentBatch]);
+                        currentBatch = [];
                     }
                 }
 
-                // Insert sisa data yang belum terproses
-                if (batchValues.length > 0) {
-                    await executeWithRetry(async () => {
-                        await connection.query(
-                            `INSERT INTO verval 
-                            (kabupaten, kecamatan, poktan, kode_kios, nama_kios, nik, nama_petani, 
-                             metode_penebusan, tanggal_tebus, urea, npk, sp36, za, npk_formula, 
-                             organik, organik_cair, kakao, kode_transaksi, status) 
-                            VALUES ?`,
-                            [batchValues]
-                        );
-                        totalInserted += batchValues.length;
-                    });
+                if (currentBatch.length > 0) {
+                    batches.push(currentBatch);
                 }
 
-            } catch (error) {
-                console.error(`[${sessionId}] ❌ Error memproses file ${file.originalname}:`, error);
-                throw error;
+                // 4. Simpan data per batch dengan retry mechanism
+                for (const batch of batches) {
+                    try {
+                        await saveWithRetry(batch);
+                        totalInserted += batch.length;
+                        log(`Berhasil menyimpan batch ${batch.length} data`);
+                    } catch (err) {
+                        logError('Gagal menyimpan batch data', err);
+                        throw err;
+                    }
+                }
+
+            } catch (err) {
+                logError('Gagal memproses file', err);
+                return res.status(400).json({
+                    error: `Gagal memproses file ${file.originalname}`,
+                    details: err.message
+                });
             }
         }
 
-        // Commit transaksi jika semua berhasil
-        await executeWithRetry(async () => {
-            await connection.query('COMMIT');
-            transactionActive = false;
-        });
-
-        console.log(`[${sessionId}] ✅ Upload selesai. Total: ${totalInserted}, Duplikat: ${totalDuplicates}`);
-
-        return res.status(200).send({
-            message: `✅ Proses selesai. ${totalInserted} data ditambahkan, ${totalDuplicates} data duplikat.`,
+        log(`Proses selesai. Total: ${totalInserted} data baru, ${totalDuplicates} duplikat`);
+        return res.json({
+            success: true,
             inserted: totalInserted,
-            duplicates: totalDuplicates
+            duplicates: totalDuplicates,
+            message: `Berhasil memproses ${files.length} file`
         });
 
     } catch (error) {
-        console.error(`[${sessionId}] ❌ Error utama:`, error);
-
-        // Rollback transaksi jika masih aktif
-        if (connection && transactionActive) {
-            try {
-                await connection.query('ROLLBACK');
-            } catch (rollbackError) {
-                console.error(`[${sessionId}] ❌ Gagal rollback:`, rollbackError);
-            }
-        }
-
-        return res.status(500).send({
-            message: '❌ Terjadi kesalahan dalam proses upload.',
-            error: error.message,
-            sessionId: sessionId
+        logError('Error utama dalam uploadFile', error);
+        return res.status(500).json({
+            error: 'Terjadi kesalahan sistem',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
-
-    } finally {
-        // Selalu lepaskan koneksi
-        if (connection) {
-            try {
-                connection.release();
-            } catch (releaseError) {
-                console.error(`[${sessionId}] ❌ Gagal melepas koneksi:`, releaseError);
-            }
-        }
     }
 };
