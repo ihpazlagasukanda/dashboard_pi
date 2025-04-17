@@ -191,7 +191,7 @@ exports.uploadFile = async (req, res) => {
                         kecamatan: row.getCell(3).text || '',
                         kodeTransaksi: kodeTransaksi,
                         poktan: '',
-                        kodeKios: '-',
+                        kodeKios: mid || '-',
                         nik: row.getCell(6).text || '',
                         namaPetani: row.getCell(7).text || '',
                         metodePenebusan: 'kartan',

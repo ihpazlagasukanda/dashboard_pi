@@ -4,6 +4,7 @@ const db = require("../config/db"); // Sesuaikan dengan koneksi MySQL kamu
 const dataController = require("../controllers/dataController");
 const { getAllData } = require("../controllers/dataController");
 const { getSummaryData } = require("../controllers/dataController");
+const { datacatalog } = require("googleapis/build/src/apis/datacatalog");
 // Route untuk mendapatkan data dengan pagination
 // router.get("/data", dataController.getDataWithPagination);
 
@@ -51,6 +52,11 @@ router.get('/download/wcm', dataController.downloadWcm);
 router.get('/data/wcmvsverval', dataController.wcmVsVerval);
 router.get('/download/wcmf5', dataController.downloadWcmF5);
 router.get('/download/wcmvsverval', dataController.exportExcelWcmVsVerval);
+router.get('/download/summary-pupuk', dataController.downloadSummaryPupuk);
+
+// Endpoint untuk last updated
+router.get('/lastupdated/global', dataController.getLastUpdatedGlobal);
+router.get('/lastupdated/kabupaten', dataController.getLastUpdatedPerKabupaten);
 
 // routes/filterRoutes.js
 router.get("/filters", async (req, res) => {

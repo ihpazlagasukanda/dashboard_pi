@@ -31,6 +31,11 @@
               </li>
             </ul>
           </div>
+          <!-- Last Updated Text -->
+          <p id="lastUpdatedGlobal" class="text-end fst-italic text-muted small mb-1" style="cursor:pointer;" data-bs-toggle="modal" data-bs-target="#modalLastUpdated">
+            Last updated: ...
+          </p>
+
           <div class="row">
             <div class="col-md-12">
               <div class="card">
@@ -171,6 +176,21 @@
 
       <!-- End Custom template -->
     </div>
+    <!-- Modal -->
+    <div class="modal fade" id="modalLastUpdated" tabindex="-1" aria-labelledby="modalLastUpdatedLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalLastUpdatedLabel">Last Updated per Kabupaten</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+          </div>
+          <div class="modal-body" id="kabupatenLastUpdateList">
+            <div class="text-center text-muted">Memuat data...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!--   Core JS Files   -->
     <!--   Core JS Files   -->
     <script src="../assets/js/core/jquery-3.7.1.min.js"></script>
@@ -215,36 +235,94 @@
 
     <!-- Script untuk mengontrol modal dan kontennya -->
     <script>
-      document
-        .getElementById("openModal")
-        .addEventListener("click", function () {
-          var modal = new bootstrap.Modal(
-            document.getElementById("modalPetunjuk")
-          );
-          modal.show();
-          showContent("contentHelp"); // Default ke Help
-        });
+      // === LAST UPDATED GLOBAL ===
+      async function loadLastUpdatedGlobal() {
+        try {
+          const res = await fetch('/api/lastupdated/global');
+          const data = await res.json();
+    
+          if (data.lastUpdated) {
+            const date = new Date(data.lastUpdated);
+            const formatter = new Intl.DateTimeFormat('id-ID', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+            document.getElementById('lastUpdatedGlobal').innerText =
+              'Last updated: ' + formatter.format(date);
+          } else {
+            document.getElementById('lastUpdatedGlobal').innerText =
+              'Last updated: tidak tersedia';
+          }
+        } catch (err) {
+          document.getElementById('lastUpdatedGlobal').innerText =
+            'Last updated: gagal memuat';
+          console.error(err);
+        }
+      }
+    
+      // === LAST UPDATED PER KABUPATEN ===
+      document.getElementById('lastUpdatedGlobal').addEventListener('click', async () => {
+        const container = document.getElementById('kabupatenLastUpdateList');
+        container.innerHTML = '<div class="text-center text-muted">Loading...</div>';
+    
+        try {
+          const res = await fetch('/api/lastupdated/kabupaten');
+          const data = await res.json();
+    
+          if (!data.length) {
+            container.innerHTML = '<div class="text-center text-danger">Tidak ada data ditemukan.</div>';
+            return;
+          }
+    
+          container.innerHTML = '';
+          data.forEach(item => {
+            const [year, month, day] = item.lastUpdated.split('-');
+const bulanNama = new Intl.DateTimeFormat('id-ID', { month: 'long' }).format(new Date(`${year}-${month}-01`));
 
+    
+            const div = document.createElement('div');
+            div.className = 'mb-1';
+            div.innerHTML = `<strong>${item.kabupaten}</strong>: ${formatter.format(date)}`;
+            container.appendChild(div);
+          });
+    
+          const modal = new bootstrap.Modal(document.getElementById("modalLastUpdate"));
+          modal.show();
+        } catch (err) {
+          container.innerHTML = '<div class="text-danger">Gagal memuat data.</div>';
+          console.error(err);
+        }
+      });
+    
+      loadLastUpdatedGlobal();
+    
+      // === MODAL FUNGSI-FUNGSI TETAP JALAN ===
+      document.getElementById("openModal").addEventListener("click", function () {
+        var modal = new bootstrap.Modal(document.getElementById("modalPetunjuk"));
+        modal.show();
+        showContent("contentHelp"); // Default Help
+      });
+    
       document.getElementById("btnHelp").addEventListener("click", function () {
         showContent("contentHelp");
       });
-      document
-        .getElementById("btnKartan")
-        .addEventListener("click", function () {
-          showContent("contentKartan");
-        });
-      document
-        .getElementById("btnIPubers")
-        .addEventListener("click", function () {
-          showContent("contentIPubers");
-        });
-
+    
+      document.getElementById("btnKartan").addEventListener("click", function () {
+        showContent("contentKartan");
+      });
+    
+      document.getElementById("btnIPubers").addEventListener("click", function () {
+        showContent("contentIPubers");
+      });
+    
       function showContent(contentId) {
-        document
-          .querySelectorAll(".modal-content-section")
-          .forEach((el) => el.classList.add("d-none"));
+        document.querySelectorAll(".modal-content-section").forEach((el) =>
+          el.classList.add("d-none")
+        );
         document.getElementById(contentId).classList.remove("d-none");
       }
     </script>
+    
   </body>
 </html>
