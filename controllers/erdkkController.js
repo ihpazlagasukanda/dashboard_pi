@@ -72,18 +72,6 @@ exports.uploadErdkk = async (req, res) => {
             'Pupuk NPK Formula (Kg) MT3', 'Pupuk Organik (Kg) MT3'
         ];
 
-        // const expectedColumnsNonDIY = [
-        //     'Nama Penyuluh', 'Kode Kecamatan', 'Kecamatan', 'Kode Desa', 'Kode Kios Pengecer',
-        //     'Nama Kios Pengecer', 'Gapoktan', 'Nama Poktan', 'Nama Petani', 'KTP',
-        //     'Tempat Lahir', 'Tanggal Lahir', 'Nama Ibu Kandung', 'Alamat', 'Subsektor',
-        //     'Komoditas MT1', 'Luas Lahan (Ha) MT1', 'Pupuk Urea (Kg) MT1', 'Pupuk NPK (Kg) MT1',
-        //     'Pupuk NPK Formula (Kg) MT1', 'Pupuk Organik (Kg) MT1', 'Komoditas MT2',
-        //     'Luas Lahan (Ha) MT2', 'Pupuk Urea (Kg) MT2', 'Pupuk NPK (Kg) MT2',
-        //     'Pupuk NPK Formula (Kg) MT2', 'Pupuk Organik (Kg) MT2', 'Komoditas MT3',
-        //     'Luas Lahan (Ha) MT3', 'Pupuk Urea (Kg) MT3', 'Pupuk NPK (Kg) MT3',
-        //     'Pupuk NPK Formula (Kg) MT3', 'Pupuk Organik (Kg) MT3'
-        // ];
-
         // Tentukan apakah kabupaten termasuk DIY atau bukan
         const isDIY = ["SLEMAN", "BANTUL", "GUNUNG KIDUL", "KULON PROGO", "KOTA YOGYAKARTA"].includes(kabupaten.toUpperCase());
         const expectedColumns = isDIY ? expectedColumnsDIY : expectedColumnsNonDIY;
@@ -132,18 +120,19 @@ exports.uploadErdkk = async (req, res) => {
             }
 
             // Hitung total pupuk
-            const totalUrea = Number(row.getCell(16 + shift).value || 0) +
-                Number(row.getCell(22 + shift).value || 0) +
-                Number(row.getCell(28 + shift).value || 0);
-            const totalNpk = Number(row.getCell(17 + shift).value || 0) +
-                Number(row.getCell(23 + shift).value || 0) +
-                Number(row.getCell(29 + shift).value || 0);
-            const totalNpkFormula = Number(row.getCell(18 + shift).value || 0) +
-                Number(row.getCell(24 + shift).value || 0) +
-                Number(row.getCell(30 + shift).value || 0);
-            const totalOrganik = Number(row.getCell(19 + shift).value || 0) +
-                Number(row.getCell(25 + shift).value || 0) +
-                Number(row.getCell(31 + shift).value || 0);
+            const totalUrea = isNaN(Number(row.getCell(16 + shift).value)) ? 0 : Number(row.getCell(16 + shift).value) +
+                isNaN(Number(row.getCell(22 + shift).value)) ? 0 : Number(row.getCell(22 + shift).value) +
+                    isNaN(Number(row.getCell(28 + shift).value)) ? 0 : Number(row.getCell(28 + shift).value);
+            const totalNpk = isNaN(Number(row.getCell(17 + shift).value)) ? 0 : Number(row.getCell(17 + shift).value) +
+                isNaN(Number(row.getCell(23 + shift).value)) ? 0 : Number(row.getCell(23 + shift).value) +
+                    isNaN(Number(row.getCell(29 + shift).value)) ? 0 : Number(row.getCell(29 + shift).value);
+            const totalNpkFormula = isNaN(Number(row.getCell(18 + shift).value)) ? 0 : Number(row.getCell(18 + shift).value) +
+                isNaN(Number(row.getCell(24 + shift).value)) ? 0 : Number(row.getCell(24 + shift).value) +
+                    isNaN(Number(row.getCell(30 + shift).value)) ? 0 : Number(row.getCell(30 + shift).value);
+            const totalOrganik = isNaN(Number(row.getCell(19 + shift).value)) ? 0 : Number(row.getCell(19 + shift).value) +
+                isNaN(Number(row.getCell(25 + shift).value)) ? 0 : Number(row.getCell(25 + shift).value) +
+                    isNaN(Number(row.getCell(31 + shift).value)) ? 0 : Number(row.getCell(31 + shift).value);
+
 
             // Gabungkan baris duplikat di Excel
             const key = `${kabupaten}-${nik}-${kodeKios}-${tahun}`;
