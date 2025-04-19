@@ -577,39 +577,49 @@
       }
     
       // === LAST UPDATED PER KABUPATEN ===
-      document.getElementById('lastUpdatedGlobal').addEventListener('click', async () => {
-        const container = document.getElementById('kabupatenLastUpdateList');
-        container.innerHTML = '<div class="text-center text-muted">Loading...</div>';
-    
-        try {
-          const res = await fetch('/api/lastupdated/kabupaten');
-          const data = await res.json();
-    
-          if (!data.length) {
+      // === LAST UPDATED PER KABUPATEN ===
+document.getElementById('lastUpdatedGlobal').addEventListener('click', async () => {
+    const container = document.getElementById('kabupatenLastUpdateList');
+    container.innerHTML = '<div class="text-center text-muted">Loading...</div>';
+
+    try {
+        const res = await fetch('/api/lastupdated/kabupaten');
+        const data = await res.json();
+
+        if (!data.length) {
             container.innerHTML = '<div class="text-center text-danger">Tidak ada data ditemukan.</div>';
             return;
-          }
-    
-          container.innerHTML = '';
-          data.forEach(item => {
-          const [year, month, day] = item.lastUpdated.split('-');
-          const bulanNama = new Intl.DateTimeFormat('id-ID', { month: 'long' }).format(new Date(`${year}-${month}-01`));
+        }
 
-    
+        // Create a formatter instance
+        const formatter = new Intl.DateTimeFormat('id-ID', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        container.innerHTML = '';
+        data.forEach(item => {
+            const date = new Date(item.lastUpdated);
             const div = document.createElement('div');
             div.className = 'mb-1';
             div.innerHTML = `<strong>${item.kabupaten}</strong>: ${formatter.format(date)}`;
             container.appendChild(div);
-          });
-    
-          const modal = new bootstrap.Modal(document.getElementById("modalLastUpdate"));
-          modal.show();
-        } catch (err) {
-          container.innerHTML = '<div class="text-danger">Gagal memuat data.</div>';
-          console.error(err);
-        }
-      });
-    
+        });
+
+        const modal = new bootstrap.Modal(document.getElementById("modalLastUpdated"));
+        modal.show();
+    } catch (err) {
+        container.innerHTML = '<div class="text-danger">Gagal memuat data.</div>';
+        console.error(err);
+    }
+});
+
+// Pastikan modal-backdrop dihilangkan saat ditutup
+$('#modalLastUpdated, #modalPetunjuk').on('hidden.bs.modal', function () {
+        $('body').removeClass('modal-open');
+        $('.modal-backdrop').remove();
+    });
       loadLastUpdatedGlobal();
 
     // Download Excel
