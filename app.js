@@ -126,6 +126,9 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Jalankan server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+// Set timeout server menjadi 10 menit (600.000 ms)
+server.setTimeout(1800000); // 600.000 ms = 10 menit
