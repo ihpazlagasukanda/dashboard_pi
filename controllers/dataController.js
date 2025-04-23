@@ -820,6 +820,8 @@ exports.getSalurKiosSum = async (req, res) => {
 
 
 exports.getSum = async (req, res) => {
+    const { kabupaten, kecamatan, metode_penebusan, bulan, tahun, bulan_awal, bulan_akhir } = req.query;
+
     let query = `
         SELECT 
             SUM(urea) as urea, 
@@ -834,25 +836,41 @@ exports.getSum = async (req, res) => {
 
     let params = [];
 
-    if (req.query.kabupaten) {
+    if (kabupaten) {
         query += " AND kabupaten = ?";
-        params.push(req.query.kabupaten);
+        countQuery += " AND kabupaten = ?";
+        params.push(kabupaten);
+        countParams.push(kabupaten);
     }
-    if (req.query.kecamatan) {
+    if (kecamatan) {
         query += " AND kecamatan = ?";
-        params.push(req.query.kecamatan);
+        countQuery += " AND kecamatan = ?";
+        params.push(kecamatan);
+        countParams.push(kecamatan);
     }
-    if (req.query.metode_penebusan) {
+    if (metode_penebusan) {
         query += " AND metode_penebusan = ?";
-        params.push(req.query.metode_penebusan);
+        countQuery += " AND metode_penebusan = ?";
+        params.push(metode_penebusan);
+        countParams.push(metode_penebusan);
     }
-    if (req.query.tanggal_tebus) {
-        query += " AND DATE_FORMAT(tanggal_tebus, '%Y-%m') = ?";
-        params.push(req.query.tanggal_tebus);
-    }
-    if (req.query.bulan_awal && req.query.bulan_akhir) {
-        query += " AND tanggal_tebus BETWEEN ? AND ?";
-        params.push(req.query.bulan_awal, req.query.bulan_akhir);
+    if (bulan_awal && bulan_akhir) {
+        // Filter pakai rentang bulan (format: 'YYYY-MM')
+        query += " AND DATE_FORMAT(tanggal_tebus, '%Y-%m') BETWEEN ? AND ?";
+        params.push(bulan_awal, bulan_akhir);
+
+    } else if (bulan && tahun) {
+        // Filter berdasarkan bulan dan tahun tunggal
+        query += " AND MONTH(tanggal_tebus) = ? AND YEAR(tanggal_tebus) = ?";
+        params.push(bulan, tahun);
+
+    } else if (bulan) {
+        query += " AND MONTH(tanggal_tebus) = ?";
+        params.push(bulan);
+
+    } else if (tahun) {
+        query += " AND YEAR(tanggal_tebus) = ?";
+        params.push(tahun);
     }
 
     try {
