@@ -488,6 +488,13 @@
             params.bulan_akhir = `${params.tahun}-${params.bulan_akhir}`;
           }
 
+          // Hapus params yang kosong
+  Object.keys(params).forEach(key => {
+    if (!params[key]) {
+      delete params[key];
+    }
+  });
+
           $.ajax({
             url: '/api/data/sum',
             type: 'GET',

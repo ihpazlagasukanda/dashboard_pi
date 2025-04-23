@@ -838,21 +838,15 @@ exports.getSum = async (req, res) => {
 
     if (kabupaten) {
         query += " AND kabupaten = ?";
-        countQuery += " AND kabupaten = ?";
         params.push(kabupaten);
-        countParams.push(kabupaten);
     }
     if (kecamatan) {
         query += " AND kecamatan = ?";
-        countQuery += " AND kecamatan = ?";
         params.push(kecamatan);
-        countParams.push(kecamatan);
     }
     if (metode_penebusan) {
         query += " AND metode_penebusan = ?";
-        countQuery += " AND metode_penebusan = ?";
         params.push(metode_penebusan);
-        countParams.push(metode_penebusan);
     }
     if (bulan_awal && bulan_akhir) {
         // Filter pakai rentang bulan (format: 'YYYY-MM')
