@@ -1957,7 +1957,7 @@ exports.downloadPetaniSummary = async (req, res) => {
                 COALESCE(t.okt_organik, 0) AS okt_organik,
                 COALESCE(t.nov_organik, 0) AS nov_organik,
                 COALESCE(t.des_organik, 0) AS des_organik
-            FROM erdkk e
+            FROM erdkk e FORCE INDEX (idx_erdkk_nik_kabupaten_tahun)
             LEFT JOIN verval_summary v 
                 ON e.nik = v.nik
                 AND e.kabupaten = v.kabupaten
@@ -2578,7 +2578,7 @@ COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus)
 COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus) = 12 THEN v.npk_formula ELSE 0 END), 0) AS des_ipubers_npk_formula,
 COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus) = 12 THEN v.organik ELSE 0 END), 0) AS des_ipubers_organik
 
-            FROM erdkk e
+            FROM erdkk e FORCE INDEX (idx_erdkk_nik_kabupaten_tahun)
             LEFT JOIN verval v 
                 ON e.nik = v.nik
                 AND e.kabupaten = v.kabupaten
