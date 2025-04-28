@@ -436,14 +436,18 @@
             });
 
             function fetchSummaryData() {
-                let kabupaten = $('#kabupatenSelect').val();
-                let kecamatan = $('#kecamatanSelect').val();
-                let tahun = $('#tahunSelect').val();
+                   const filters = {
+                        kabupaten: $('#kabupatenSelect').val(),
+                        kecamatan: $('#kecamatanSelect').val(),
+                        tahun: $('#tahunSelect').val()
+                    };
+    
+                if (!filters.kabupaten || !filters.tahun) return; 
 
                 $.ajax({
                     url: "/api/petani-summary",
                     type: "GET",
-                    data: { kabupaten: kabupaten, tahun: tahun, kecamatan: kecamatan },
+                    data: filters,
                     success: function (response) {
                         if (response.sum) {
                             $("#sum-urea-text").text(parseFloat(response.sum.total_urea || 0).toLocaleString("id-ID"));
@@ -534,15 +538,11 @@
                 let tahun = $('#tahunSelect').val();
                 let kecamatan = $('#kecamatanSelect').val();
 
-                if (kabupaten && tahun) {
-                    table.draw(); // Load data hanya jika filter kabupaten & tahun dipilih
+               if (kabupaten && tahun) {
+                    $.when(table.draw()).then(function() {
+                        fetchSummaryData(); // Panggil setelah tabel selesai reload
+                    });
                 }
-
-                if (kabupaten && tahun && kecamatan) {
-                    table.draw(); // Load ulang jika kecamatan juga dipilih
-                }
-
-                fetchSummaryData(); // Panggil fetchSummaryData() hanya sekali
             });
 
             $('#download-summary').on('click', function () {
