@@ -119,19 +119,40 @@ exports.uploadErdkk = async (req, res) => {
                 continue;
             }
 
+            const parseExcelNumber = (value) => {
+  if (value === null || value === undefined) return 0;
+  
+  // Jika sudah number, langsung kembalikan
+  if (typeof value === 'number') return value;
+  
+  // Handle string
+  if (typeof value === 'string') {
+    // Bersihkan spasi dan karakter non-numeric
+    let cleaned = value.trim().replace(/[^\d,.-]/g, '');
+    
+    // Ganti koma dengan titik untuk decimal
+    cleaned = cleaned.replace(',', '.');
+    
+    // Parse ke float
+    const parsed = parseFloat(cleaned);
+    
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  
+  return 0;
+};
+
+// Gunakan dalam perhitungan:
+const getCellValue = (cell) => {
+  return parseExcelNumber(row.getCell(cell).value);
+};
+
+
             // Hitung total pupuk
-            const totalUrea = isNaN(Number(row.getCell(16 + shift).value)) ? 0 : Number(row.getCell(16 + shift).value) +
-                isNaN(Number(row.getCell(22 + shift).value)) ? 0 : Number(row.getCell(22 + shift).value) +
-                    isNaN(Number(row.getCell(28 + shift).value)) ? 0 : Number(row.getCell(28 + shift).value);
-            const totalNpk = isNaN(Number(row.getCell(17 + shift).value)) ? 0 : Number(row.getCell(17 + shift).value) +
-                isNaN(Number(row.getCell(23 + shift).value)) ? 0 : Number(row.getCell(23 + shift).value) +
-                    isNaN(Number(row.getCell(29 + shift).value)) ? 0 : Number(row.getCell(29 + shift).value);
-            const totalNpkFormula = isNaN(Number(row.getCell(18 + shift).value)) ? 0 : Number(row.getCell(18 + shift).value) +
-                isNaN(Number(row.getCell(24 + shift).value)) ? 0 : Number(row.getCell(24 + shift).value) +
-                    isNaN(Number(row.getCell(30 + shift).value)) ? 0 : Number(row.getCell(30 + shift).value);
-            const totalOrganik = isNaN(Number(row.getCell(19 + shift).value)) ? 0 : Number(row.getCell(19 + shift).value) +
-                isNaN(Number(row.getCell(25 + shift).value)) ? 0 : Number(row.getCell(25 + shift).value) +
-                    isNaN(Number(row.getCell(31 + shift).value)) ? 0 : Number(row.getCell(31 + shift).value);
+            const totalUrea = getCellValue(16 + shift) + getCellValue(22 + shift) + getCellValue(28 + shift);
+const totalNpk = getCellValue(17 + shift) + getCellValue(23 + shift) + getCellValue(29 + shift);
+const totalNpkFormula = getCellValue(18 + shift) + getCellValue(24 + shift) + getCellValue(30 + shift);
+const totalOrganik = getCellValue(19 + shift) + getCellValue(25 + shift) + getCellValue(31 + shift);
 
 
             // Gabungkan baris duplikat di Excel
