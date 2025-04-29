@@ -3352,11 +3352,11 @@ exports.wcmVsVerval = async (req, res) => {
             SELECT 
     wcm.provinsi,
     wcm.kabupaten, 
-    wcm.kode_distributor, 
-    wcm.distributor,   
     wcm.kecamatan,
     wcm.kode_kios,
-    wcm.nama_kios,
+    wcm.nama_kios, 
+    wcm.kode_distributor, 
+    wcm.distributor,  
     wcm.bulan,
     wcm.produk,
     ROUND(SUM(wcm.stok_awal) * 1000, 0) AS stok_awal_wcm,
@@ -3391,13 +3391,14 @@ ${whereSQL}
 GROUP BY 
     wcm.provinsi,
     wcm.kabupaten, 
-    wcm.kode_distributor, 
-    wcm.distributor,   
     wcm.kecamatan,
     wcm.kode_kios,
     wcm.nama_kios,
+    wcm.kode_distributor, 
+    wcm.distributor,   
     wcm.bulan,
     wcm.produk
+    ORDER BY wcm.kode_kios
         `;
 
         // Count total records tanpa filter status
