@@ -2,11 +2,11 @@ const ExcelJS = require("exceljs");
 const db = require("../config/db");
 
 // Fungsi untuk mengecek apakah data SK Bupati sudah ada
-const cekDataSkBupati = async (tahun) => {
+const cekDataSkBupati = async (tahun, produk) => {
     try {
         const [rows] = await db.execute(
-            "SELECT COUNT(*) AS count FROM sk_bupati WHERE tahun = ?",
-            [tahun]
+            "SELECT COUNT(*) AS count FROM sk_bupati WHERE tahun = ? AND produk = ?",
+            [tahun, produk]
         );
         return (rows[0]?.count || 0) > 0;
     } catch (error) {
@@ -25,17 +25,17 @@ exports.uploadSkBupati = async (req, res) => {
             return res.status(400).json({ success: false, message: "File tidak ditemukan" });
         }
 
-        const { tahun, forceUpload } = req.body;
-        if (!tahun) {
-            return res.status(400).json({ success: false, message: "Tahun harus diisi" });
+        const { tahun, produk, forceUpload } = req.body;
+        if (!tahun || !produk) {
+            return res.status(400).json({ success: false, message: "Tahun dan Produk harus diisi" });
         }
 
         // Cek data existing
-        const isDataExist = await cekDataSkBupati(tahun);
+        const isDataExist = await cekDataSkBupati(tahun, produk);
         if (isDataExist && !forceUpload) {
             return res.status(200).json({
                 success: false,
-                message: `SK Bupati Tahun ${tahun} sudah ada. Yakin ingin mengupload ulang?`,
+                message: `SK Bupati Tahun ${tahun} ${produk} sudah ada. Yakin ingin mengupload ulang?`,
                 confirmRequired: true
             });
         }
@@ -51,9 +51,8 @@ exports.uploadSkBupati = async (req, res) => {
 
         // Validasi header
         const expectedColumns = [
-            'Provinsi', 'Kabupaten', 'Kecamatan', 'Tahun',
-            'Alokasi Urea', 'Alokasi Npk', 'Alokasi Organik',
-            'Alokasi Npk Formula', 'Alokasi Npk Kakao'
+            'KABUPATEN', 'ID DISTRIBUTOR', 'DISTRIBUTOR', 'KODE KEC',
+            'KECAMATAN', 'TOTAL'
         ];
 
         const rowValues = sheet.getRow(1).values;
@@ -83,46 +82,37 @@ exports.uploadSkBupati = async (req, res) => {
         sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
             if (rowNumber === 1) return; // Skip header
 
-            const provinsi = row.getCell(1).value?.toString().trim() || "";
-            const kabupaten = row.getCell(2).value?.toString().trim() || "";
-            const kecamatan = row.getCell(3).value?.toString().trim() || "";
-            const tahunCell = row.getCell(4).value;
-            const tahunData = tahunCell?.result || tahunCell?.toString().trim() || "";
+            const kabupaten = row.getCell(1).value?.toString().trim() || "";
+            const kodeDistributor = row.getCell(2).value?.toString().trim() || "";
+            const distributor = row.getCell(3).value?.toString().trim() || "";
+            const kodeKecamatan = row.getCell(4).value?.toString().trim() || "";
+            const kecamatan = row.getCell(5).value?.toString().trim() || "";
+            const alokasi = (parseFloat(row.getCell(6).value) || 0) * 1000; // Konversi ton ke kg
 
-            const urea = parseFloat(row.getCell(5).value) || 0;
-            const npk = parseFloat(row.getCell(6).value) || 0;
-            const organik = parseFloat(row.getCell(7).value) || 0;
-            const npkFormula = parseFloat(row.getCell(8).value) || 0;
-            const npkKakao = parseFloat(row.getCell(9).value) || 0;
 
             // Skip jika data tidak lengkap
-            if (!provinsi || !kabupaten || !tahunData) {
+            if (!kabupaten || !kodeDistributor || !kodeKecamatan) {
                 skippedCount++;
                 return;
             }
 
-            const key = `${provinsi}|${kabupaten}|${tahunData}`;
+            const key = `${kabupaten}|${kodeDistributor}|${kodeKecamatan}`;
 
             if (!skBupatiMap.has(key)) {
                 skBupatiMap.set(key, {
-                    provinsi,
+                    tahun,
                     kabupaten,
+                    kodeDistributor,
+                    distributor,
+                    kodeKecamatan,
                     kecamatan,
-                    tahun: tahunData,
-                    urea,
-                    npk,
-                    organik,
-                    npkFormula,
-                    npkKakao
+                    produk,
+                    alokasi
                 });
             } else {
                 // Jika duplikat, jumlahkan alokasinya
                 const existing = skBupatiMap.get(key);
-                existing.urea += urea;
-                existing.npk += npk;
-                existing.organik += organik;
-                existing.npkFormula += npkFormula;
-                existing.npkKakao += npkKakao;
+                existing.alokasi += alokasi;
             }
         });
 
@@ -130,18 +120,17 @@ exports.uploadSkBupati = async (req, res) => {
         for (const data of skBupatiMap.values()) {
             await connection.execute(
                 `INSERT INTO sk_bupati 
-                (provinsi, kabupaten, kecamatan, tahun, alokasi_urea, alokasi_npk, alokasi_organik, alokasi_npk_formula, alokasi_npk_kakao) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                (tahun, kabupaten, kode_distributor, distributor, kode_kecamatan, kecamatan, produk, alokasi) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
-                    data.provinsi,
-                    data.kabupaten,
-                    data.kecamatan,
                     data.tahun,
-                    data.urea,
-                    data.npk,
-                    data.organik,
-                    data.npkFormula,
-                    data.npkKakao
+                    data.kabupaten,
+                    data.kodeDistributor,
+                    data.distributor,
+                    data.kodeKecamatan,
+                    data.kecamatan,
+                    data.produk,
+                    data.alokasi
                 ]
             );
             insertedCount++;
@@ -151,7 +140,7 @@ exports.uploadSkBupati = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: `Berhasil upload SK Bupati Tahun ${tahun}.`,
+            message: `Berhasil upload SK Bupati Tahun ${tahun} ${produk}.`,
             inserted: insertedCount,
             skipped: skippedCount,
             duplicateMerged: skBupatiMap.size - insertedCount
