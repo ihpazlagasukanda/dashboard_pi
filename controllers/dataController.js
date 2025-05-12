@@ -307,51 +307,6 @@ WHERE 1 = 1
     }
 };
 
-exports.getSkBupatiAlokasi = async (req, res) => {
-    try {
-        const { kabupaten, kecamatan, tahun, provinsi } = req.query; // Tambah provinsi dari frontend
-
-        let query = `
-            SELECT 
-                alokasi_urea AS total_urea, 
-                alokasi_npk AS total_npk, 
-                alokasi_npk_formula AS total_npk_formula, 
-                alokasi_organik AS total_organik,
-                alokasi_npk_kakao AS total_npk_kakao
-            FROM sk_bupati
-            WHERE 1 = 1
-        `;
-
-        let params = [];
-
-        if (provinsi) {
-            query += " AND provinsi = ?";
-            params.push(provinsi);
-        }
-
-        if (kabupaten) {
-            query += " AND kabupaten = ?";
-            params.push(kabupaten);
-        }
-
-        if (kecamatan) {
-            query += " AND kecamatan = ?";
-            params.push(kecamatan);
-        }
-
-        if (tahun) {
-            query += " AND tahun = ?";
-            params.push(tahun);
-        }
-
-        const [rows] = await db.execute(query, params);
-        res.json(rows[0]); // Kirim hasil SUM ke frontend
-    } catch (error) {
-        console.error("Database Error:", error);
-        res.status(500).json({ message: "Error menghitung Alokasi", error });
-    }
-};
-
 exports.getErdkkCount = async (req, res) => {
     try {
         const { provinsi, kabupaten, kecamatan, tahun } = req.query; // Tambah provinsi
