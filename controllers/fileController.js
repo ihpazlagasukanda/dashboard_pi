@@ -52,10 +52,11 @@ const processExcelFile = async (file, metodePenebusan) => {
 
     const worksheet = workbook.worksheets[0];
     const expectedColumnsKartan = ['NO', 'KABUPATEN', 'KECAMATAN', 'KODE KIOS', 'NAMA KIOS', 'NIK', 'NAMA PETANI', 'UREA', 'NPK', 'SP36', 'ZA', 'NPK FORMULA', 'ORGANIK', 'ORGANIK CAIR', 'TGL TEBUS', 'TGL INPUT', 'STATUS'];
-    const expectedColumnsIpubers = ['No', 'Kabupaten', 'Kecamatan', 'Kode Kios', 'Nama Kios', 'Kode TRX', 'No Transaksi', 'NIK', 'Nama Petani', 'Urea', 'NPK', 'SP36', 'ZA', 'NPK Formula', 'Organik', 'Organik Cair', 'Keterangan', 'Tanggal Tebus', 'Tanggal Entri', 'Tanggal Update', 'Tipe Tebus', 'NIK Perwakilan', 'Url Bukti', 'Status'];
+ const expectedColumnsIpubers = ['NO', 'KABUPATEN', 'KECAMATAN', 'NO TRANSAKSI', 'KODE KIOS', 'NAMA KIOS', 'POKTAN', 'NIK', 'NAMA PETANI', 'KOMODITAS','UREA', 'NPK','NPK FORMULA', 'ORGANIK', 'ORGANIK CAIR', 'TGL TEBUS', 'TGL INPUT', 'STATUS'];
+//const expectedColumnsIpubers = ['No', 'Kabupaten',	'Kecamatan', 'Kode Kios',	'Nama Kios',	'Kode TRX', 'No Transaksi',	'NIK',	'Nama Petani',	'Urea', 'NPK',	'SP36',	'ZA',	'NPK Formula',	'Organik',	'Organik Cair',	'Keterangan',	'Tanggal Tebus',	'Tanggal Entri',	'Tanggal Update',	'Tipe Tebus',	'NIK Perwakilan',	'Url Bukti',	'Status'];
 
     // Validasi header
-    const headerRow = 1;
+    const headerRow = metodePenebusan === 'ipubers' ? 1 : 2;
     const rowValues = worksheet.getRow(headerRow).values;
     if (rowValues[0] === undefined) rowValues.shift();
     const actualColumns = rowValues.map(cell => cell ? cell.toString().trim() : "");
@@ -66,16 +67,17 @@ const processExcelFile = async (file, metodePenebusan) => {
     }
 
     // Proses data
-    const startRow = 2;
+    const startRow = headerRow + 1;
     let rows = worksheet.getRows(startRow, worksheet.rowCount - startRow);
     rows = rows.filter(row => row.getCell(1).value && row.getCell(2).value);
 
     return rows.map((row) => {
         let tanggalTebus, tanggalExcel;
-        const kodeTransaksi = metodePenebusan === 'ipubers' ? row.getCell(7).text : generateKodeTransaksi();
-
+    //    const kodeTransaksi = metodePenebusan === 'ipubers' ? row.getCell(7).text : generateKodeTransaksi();
+        const kodeTransaksi = metodePenebusan === 'ipubers' ? row.getCell(4).text : generateKodeTransaksi();
         if (metodePenebusan === 'ipubers') {
-            tanggalExcel = row.getCell(18).text;
+       //     tanggalExcel = row.getCell(18).text;
+            tanggalExcel = row.getCell(16).text;
         } else if (metodePenebusan === 'kartan') {
             tanggalExcel = row.getCell(15).text;
         }
@@ -96,25 +98,45 @@ const processExcelFile = async (file, metodePenebusan) => {
 
         if (metodePenebusan === 'ipubers') {
             return {
+                // kabupaten: (row.getCell(2).text || '').replace(/^KAB\.\s*/i, '').trim(),
+                // kecamatan: row.getCell(3).text || '',
+                // kodeTransaksi: kodeTransaksi,
+                // poktan: row.getCell(25).text || '',
+                // kodeKios: row.getCell(4).text || '',
+                // namaKios: row.getCell(5).text || '',
+                // nik: row.getCell(8).text || '',
+                // namaPetani: row.getCell(9).text || '',
+                // metodePenebusan: 'ipubers',
+                // tanggalTebus: tanggalTebus,
+                // urea: convertToNumber(row.getCell(10).text || '0'),
+                // npk: convertToNumber(row.getCell(11).text || '0'),
+                // sp36: convertToNumber(row.getCell(12).text || '0'),
+                // za: convertToNumber(row.getCell(13).text || '0'),
+                // npkFormula: convertToNumber(row.getCell(14).text || '0'),
+                // organik: convertToNumber(row.getCell(15).text || '0'),
+                // organikCair: convertToNumber(row.getCell(16).text || '0'),
+                // kakao: convertToNumber(row.getCell(26).text || '0'),
+                // status: row.getCell(24).text || 'Tidak Diketahui'
+
                 kabupaten: (row.getCell(2).text || '').replace(/^KAB\.\s*/i, '').trim(),
                 kecamatan: row.getCell(3).text || '',
                 kodeTransaksi: kodeTransaksi,
-                poktan: row.getCell(25).text || '',
-                kodeKios: row.getCell(4).text || '',
-                namaKios: row.getCell(5).text || '',
+                poktan: row.getCell(7).text || '',
+                kodeKios: row.getCell(5).text || '',
+                namaKios: row.getCell(6).text || '',
                 nik: row.getCell(8).text || '',
                 namaPetani: row.getCell(9).text || '',
                 metodePenebusan: 'ipubers',
                 tanggalTebus: tanggalTebus,
-                urea: convertToNumber(row.getCell(10).text || '0'),
-                npk: convertToNumber(row.getCell(11).text || '0'),
-                sp36: convertToNumber(row.getCell(12).text || '0'),
-                za: convertToNumber(row.getCell(13).text || '0'),
-                npkFormula: convertToNumber(row.getCell(14).text || '0'),
-                organik: convertToNumber(row.getCell(15).text || '0'),
-                organikCair: convertToNumber(row.getCell(16).text || '0'),
-                kakao: convertToNumber(row.getCell(26).text || '0'),
-                status: row.getCell(24).text || 'Tidak Diketahui'
+                urea: convertToNumber(row.getCell(11).text || '0'),
+                npk: convertToNumber(row.getCell(26).text || '0'),
+                sp36: convertToNumber(row.getCell(28).text || '0'),
+                za: convertToNumber(row.getCell(29).text || '0'),
+                npkFormula: convertToNumber(row.getCell(13).text || '0'),
+                organik: convertToNumber(row.getCell(14).text || '0'),
+                organikCair: convertToNumber(row.getCell(15).text || '0'),
+                kakao: convertToNumber(row.getCell(27).text || '0'),
+                status: row.getCell(18).text || 'Tidak Diketahui'
             };
         } else {
             const mid = `'${row.getCell(4).text || ''}`;

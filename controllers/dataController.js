@@ -1957,12 +1957,12 @@ exports.downloadPetaniSummary = async (req, res) => {
                 COALESCE(t.okt_organik, 0) AS okt_organik,
                 COALESCE(t.nov_organik, 0) AS nov_organik,
                 COALESCE(t.des_organik, 0) AS des_organik
-            FROM erdkk e
-            LEFT JOIN verval_summary v 
+            FROM erdkk e FORCE INDEX (idx_erdkk_nik_kabupaten_tahun)
+            INNER JOIN verval_summary v 
                 ON e.nik = v.nik
                 AND e.kabupaten = v.kabupaten
                 AND e.tahun = v.tahun
-            LEFT JOIN tebusan_per_bulan t 
+            INNER JOIN tebusan_per_bulan t 
                 ON e.nik = t.nik
                 AND e.kabupaten = t.kabupaten
                 AND e.tahun = t.tahun
@@ -2578,8 +2578,8 @@ COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus)
 COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus) = 12 THEN v.npk_formula ELSE 0 END), 0) AS des_ipubers_npk_formula,
 COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus) = 12 THEN v.organik ELSE 0 END), 0) AS des_ipubers_organik
 
-            FROM erdkk e
-            LEFT JOIN verval v 
+            FROM erdkk e FORCE INDEX (idx_erdkk_nik_kabupaten_tahun)
+            INNER JOIN verval v 
                 ON e.nik = v.nik
                 AND e.kabupaten = v.kabupaten
                 AND e.tahun = YEAR(v.tanggal_tebus)
@@ -3352,11 +3352,11 @@ exports.wcmVsVerval = async (req, res) => {
             SELECT 
     wcm.provinsi,
     wcm.kabupaten, 
-    wcm.kode_distributor, 
-    wcm.distributor,   
     wcm.kecamatan,
     wcm.kode_kios,
-    wcm.nama_kios,
+    wcm.nama_kios, 
+    wcm.kode_distributor, 
+    wcm.distributor,  
     wcm.bulan,
     wcm.produk,
     ROUND(SUM(wcm.stok_awal) * 1000, 0) AS stok_awal_wcm,
@@ -3391,13 +3391,14 @@ ${whereSQL}
 GROUP BY 
     wcm.provinsi,
     wcm.kabupaten, 
-    wcm.kode_distributor, 
-    wcm.distributor,   
     wcm.kecamatan,
     wcm.kode_kios,
     wcm.nama_kios,
+    wcm.kode_distributor, 
+    wcm.distributor,   
     wcm.bulan,
     wcm.produk
+    ORDER BY wcm.kode_kios
         `;
 
         // Count total records tanpa filter status
