@@ -1966,12 +1966,12 @@ exports.downloadPetaniSummary = async (req, res) => {
                 COALESCE(t.nov_organik, 0) AS nov_organik,
                 COALESCE(t.des_organik, 0) AS des_organik
             FROM erdkk e FORCE INDEX (idx_erdkk_nik_kabupaten_tahun)
-            INNER JOIN verval_summary v 
+            LEFT JOIN verval_summary v 
                 ON e.nik = v.nik
                 AND e.kabupaten = v.kabupaten
                 AND e.tahun = v.tahun
                 AND e.kecamatan = v.kecamatan
-            INNER JOIN tebusan_per_bulan t 
+            LEFT JOIN tebusan_per_bulan t 
                 ON e.nik = t.nik
                 AND e.kabupaten = t.kabupaten
                 AND e.tahun = t.tahun
