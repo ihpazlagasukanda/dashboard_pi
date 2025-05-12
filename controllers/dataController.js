@@ -1846,10 +1846,12 @@ exports.getVervalSummary = async (req, res) => {
             ON e.nik = v.nik 
             AND e.kabupaten = v.kabupaten
             AND e.tahun = v.tahun
+            AND e.kecamatan = v.kecamatan
         LEFT JOIN tebusan_per_bulan t
             ON e.nik = t.nik
             AND e.kabupaten = t.kabupaten
             AND e.tahun = t.tahun
+            AND e.kecamatan = t.kecamatan
             WHERE 1=1
         `;
 
@@ -1968,10 +1970,12 @@ exports.downloadPetaniSummary = async (req, res) => {
                 ON e.nik = v.nik
                 AND e.kabupaten = v.kabupaten
                 AND e.tahun = v.tahun
+                AND e.kecamatan = v.kecamatan
             INNER JOIN tebusan_per_bulan t 
                 ON e.nik = t.nik
                 AND e.kabupaten = t.kabupaten
                 AND e.tahun = t.tahun
+                AND e.kecamatan = t.kecamatan
             WHERE 1=1
         `;
 
@@ -2585,10 +2589,11 @@ COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus)
 COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus) = 12 THEN v.organik ELSE 0 END), 0) AS des_ipubers_organik
 
             FROM erdkk e FORCE INDEX (idx_erdkk_nik_kabupaten_tahun)
-            INNER JOIN verval v 
+            LEFT JOIN verval v 
                 ON e.nik = v.nik
                 AND e.kabupaten = v.kabupaten
                 AND e.tahun = YEAR(v.tanggal_tebus)
+                AND e.kecamatan = v.kecamatan
             WHERE 1=1
         `;
 
