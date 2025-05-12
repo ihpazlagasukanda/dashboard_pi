@@ -15,7 +15,10 @@ router.get("/data/summary", getSummaryData);
 router.get("/erdkk", dataController.getErdkk);
 
 // untuk dashboard 1
+//pilihan jenis alokasi
 router.get("/erdkk/summary", dataController.getErdkkSummary);
+router.get("/sk-bupati/alokasi", dataController.getSkBupatiAlokasi);
+
 router.get("/verval/summary", dataController.getSummaryPenebusan);
 router.get("/erdkk/count", dataController.getErdkkCount);
 router.get("/verval/count", dataController.getPenebusanCount);
