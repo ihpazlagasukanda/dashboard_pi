@@ -1966,12 +1966,12 @@ exports.downloadPetaniSummary = async (req, res) => {
                 COALESCE(t.nov_organik, 0) AS nov_organik,
                 COALESCE(t.des_organik, 0) AS des_organik
             FROM erdkk e FORCE INDEX (idx_erdkk_nik_kabupaten_tahun)
-            LEFT JOIN verval_summary v 
+            INNER JOIN verval_summary v 
                 ON e.nik = v.nik
                 AND e.kabupaten = v.kabupaten
                 AND e.tahun = v.tahun
                 AND e.kecamatan = v.kecamatan
-            LEFT JOIN tebusan_per_bulan t 
+            INNER JOIN tebusan_per_bulan t 
                 ON e.nik = t.nik
                 AND e.kabupaten = t.kabupaten
                 AND e.tahun = t.tahun
@@ -2589,7 +2589,7 @@ COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus)
 COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus) = 12 THEN v.organik ELSE 0 END), 0) AS des_ipubers_organik
 
             FROM erdkk e FORCE INDEX (idx_erdkk_nik_kabupaten_tahun)
-            LEFT JOIN verval v 
+            INNER JOIN verval v 
                 ON e.nik = v.nik
                 AND e.kabupaten = v.kabupaten
                 AND e.tahun = YEAR(v.tanggal_tebus)
