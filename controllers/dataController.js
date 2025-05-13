@@ -2588,12 +2588,13 @@ COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus)
 COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus) = 12 THEN v.npk_formula ELSE 0 END), 0) AS des_ipubers_npk_formula,
 COALESCE(SUM(CASE WHEN v.metode_penebusan = 'ipubers' AND MONTH(v.tanggal_tebus) = 12 THEN v.organik ELSE 0 END), 0) AS des_ipubers_organik
 
-            FROM erdkk e FORCE INDEX (idx_erdkk_nik_kabupaten_tahun)
+            FROM erdkk e
             INNER JOIN verval v 
                 ON e.nik = v.nik
                 AND e.kabupaten = v.kabupaten
                 AND e.tahun = YEAR(v.tanggal_tebus)
                 AND e.kecamatan = v.kecamatan
+                AND e.kode_kios = v.kode_kios
             WHERE 1=1
         `;
 
