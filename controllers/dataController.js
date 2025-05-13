@@ -1537,10 +1537,14 @@ exports.alokasiVsTebusan = async (req, res) => {
                 ON e.nik = v.nik
                 AND e.kabupaten = v.kabupaten
                 AND e.tahun = v.tahun
+                AND e.kecamatan = v.kecamatan
+                AND e.kode_kios = v.kode_kios
             LEFT JOIN tebusan_per_bulan t 
                 ON e.nik = t.nik
                 AND e.kabupaten = t.kabupaten
                 AND e.tahun = t.tahun
+                AND e.kecamatan = t.kecamatan
+                AND e.kode_kios = t.kode_kios
             WHERE 1=1
         `;
 
@@ -1971,11 +1975,13 @@ exports.downloadPetaniSummary = async (req, res) => {
                 AND e.kabupaten = v.kabupaten
                 AND e.tahun = v.tahun
                 AND e.kecamatan = v.kecamatan
+                AND e.kode_kios = v.kode_kios
             INNER JOIN tebusan_per_bulan t 
                 ON e.nik = t.nik
                 AND e.kabupaten = t.kabupaten
                 AND e.tahun = t.tahun
                 AND e.kecamatan = t.kecamatan
+                AND e.kode_kios = t.kode_kios
             WHERE 1=1
         `;
 
