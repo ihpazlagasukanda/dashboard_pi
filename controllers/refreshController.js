@@ -1,5 +1,4 @@
-// File: refreshCache.js
-const db = require('./config/db');
+const db = require('../config/db');
 const { exec } = require('child_process');
 
 async function refreshCache() {
