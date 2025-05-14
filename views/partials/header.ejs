@@ -50,11 +50,13 @@
                     <span class="sub-item">Rekap Realisasi</span>
                   </a>
                 </li>
+                <% if (user.level == 2) { %>
                 <li>
                   <a href="/visualisasi">
                     <span class="sub-item">Grafik Penebusan</span>
                   </a>
                 </li>
+                <% } %>
               </ul>
             </div>
           </li>
