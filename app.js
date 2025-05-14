@@ -58,9 +58,9 @@ app.get('/salurkios', authMiddleware, (req, res) => {
     res.render('salurkios', { user: req.user });
 });
 
-app.get('/dashboard2', authMiddleware, (req, res) => {
-    res.render('chart', { user: req.user });
-});
+// app.get('/dashboard2', authMiddleware, (req, res) => {
+//     res.render('chart', { user: req.user });
+// });
 
 // Halaman Upload - Hanya level 2
 app.get('/upload', authMiddleware, requireLevel(2), (req, res) => {
@@ -108,9 +108,14 @@ app.get('/wcmvsverval', authMiddleware, (req, res) => {
     res.render('wcmvsverval', { user: req.user });
 });
 
-app.get('/visualisasi', authMiddleware, (req, res) => {
-    res.render('visualisasi', { user: req.user });
+// app.get('/visualisasi', authMiddleware, (req, res) => {
+//     res.render('visualisasi', { user: req.user });
+// });
+
+app.get('/visualisasi', authMiddleware, requireLevel(2), (req, res) => {
+    res.render('visulisasi', { user: req.user });
 });
+
 
 // API Routes
 app.use('/api/files', authMiddleware, fileRoutes);
