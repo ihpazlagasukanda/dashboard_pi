@@ -10,6 +10,7 @@ const erdkkRoutes = require("./routes/erdkkRoutes");
 const wcmRoutes = require("./routes/wcmRoutes");
 const outRouter = require("./routes/outRoutes");
 const skRoutes = require("./routes/skRoutes");
+const triggerCron = require("./routes/triggerCron");
 require('dotenv').config();
 
 const app = express();
@@ -39,6 +40,8 @@ function requireLevel(level) {
         next();
     };
 }
+
+require('./jobs/reportCron');
 
 // Routes untuk halaman utama dan login
 app.get('/', authMiddleware, (req, res) => {
@@ -123,6 +126,7 @@ app.use('/api', authMiddleware, dataRoutes);
 app.use('/api/data', authMiddleware, erdkkRoutes);
 app.use('/api/data', authMiddleware, wcmRoutes);
 app.use('/api/data', authMiddleware, skRoutes);
+app.use('/trigger', authMiddleware, triggerCron);
 app.use(authRoutes);  // Pastikan authRoutes ada
 app.use('/upload', outRouter);  // Route untuk upload
 
