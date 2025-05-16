@@ -28,7 +28,7 @@ async function generateAllReports() {
             'SUKOHARJO'
         ];
 
-        const tahunList = [2025];
+        const tahunList = [2024, 2025];
 
         for (const kabupaten of kabupatenList) {
             for (const tahun of tahunList) {
