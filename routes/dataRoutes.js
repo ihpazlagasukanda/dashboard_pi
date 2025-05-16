@@ -4,9 +4,70 @@ const db = require("../config/db"); // Sesuaikan dengan koneksi MySQL kamu
 const dataController = require("../controllers/dataController");
 const { getAllData } = require("../controllers/dataController");
 const { getSummaryData } = require("../controllers/dataController");
+const path = require('path');
+const fs = require('fs');
+
 const { datacatalog } = require("googleapis/build/src/apis/datacatalog");
-// Route untuk mendapatkan data dengan pagination
-// router.get("/data", dataController.getDataWithPagination);
+
+// const { generatePetaniReport } = require('../services/excelService');
+// const { processLargeExport } = require('../services/bigDataService');
+// const { generateExportPath } = require('../services/cacheService');
+
+// Endpoint untuk request export
+// router.post('/export', async (req, res) => {
+//     try {
+//         const exportPath = generateExportPath(req.body.kabupaten);
+
+//         // Untuk data kecil (<50k rows)
+//         if (req.body.smallExport) {
+//             await generatePetaniReport(req.body, exportPath);
+//             return res.json({
+//                 downloadUrl: `/download?file=${path.basename(exportPath)}`
+//             });
+//         }
+
+//         // Untuk data besar (background process)
+//         processLargeExport(req.body, (progress) => {
+//             req.io.emit('export-progress', { progress });
+//         }).then(() => {
+//             req.io.emit('export-ready', {
+//                 downloadUrl: `/download?file=${path.basename(exportPath)}`
+//             });
+//         });
+
+//         res.json({ message: 'Export sedang diproses...' });
+//     } catch (error) {
+//         res.status(500).json({ error: error.message });
+//     }
+// });
+
+router.get('/download-export', (req, res) => {
+    const fileName = req.query.file;
+
+    if (!fileName || typeof fileName !== 'string') {
+        return res.status(400).json({ error: 'Parameter file wajib diisi' });
+    }
+
+    const filePath = path.join(__dirname, '../temp_exports', fileName);
+
+    if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: 'File tidak ditemukan' });
+    }
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+
+    fileStream.on('end', () => {
+        try {
+            fs.unlinkSync(filePath);
+        } catch (err) {
+            console.error('Gagal menghapus file:', err);
+        }
+    });
+});
 
 router.get("/data/all", getAllData);
 
