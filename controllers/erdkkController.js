@@ -62,7 +62,7 @@ exports.uploadErdkk = async (req, res) => {
 
         // Daftar kolom yang diharapkan untuk DIY dan non-DIY
         const expectedColumnsDIY = [
-            'Nama Penyuluh', 'Kode Desa', 'Kode Kios Pengecer', 'Nama Kios Pengecer', 'Nama Desa', 'Nama Poktan', 'Nama Petani',
+            'Nama Penyuluh', 'Kode Desa', 'Kode Kios Pengecer', 'Nama Kios Pengecer', 'Gapoktan', 'Nama Poktan', 'Nama Petani',
             'KTP', 'Tempat Lahir', 'Tanggal Lahir', 'Nama Ibu Kandung', 'Alamat', 'Subsektor',
             'Komoditas MT1', 'Luas Lahan (Ha) MT1', 'Pupuk Urea (Kg) MT1', 'Pupuk NPK (Kg) MT1',
             'Pupuk NPK Formula (Kg) MT1', 'Pupuk Organik (Kg) MT1', 'Komoditas MT2',
@@ -120,39 +120,39 @@ exports.uploadErdkk = async (req, res) => {
             }
 
             const parseExcelNumber = (value) => {
-  if (value === null || value === undefined) return 0;
-  
-  // Jika sudah number, langsung kembalikan
-  if (typeof value === 'number') return value;
-  
-  // Handle string
-  if (typeof value === 'string') {
-    // Bersihkan spasi dan karakter non-numeric
-    let cleaned = value.trim().replace(/[^\d,.-]/g, '');
-    
-    // Ganti koma dengan titik untuk decimal
-    cleaned = cleaned.replace(',', '.');
-    
-    // Parse ke float
-    const parsed = parseFloat(cleaned);
-    
-    return isNaN(parsed) ? 0 : parsed;
-  }
-  
-  return 0;
-};
+                if (value === null || value === undefined) return 0;
 
-// Gunakan dalam perhitungan:
-const getCellValue = (cell) => {
-  return parseExcelNumber(row.getCell(cell).value);
-};
+                // Jika sudah number, langsung kembalikan
+                if (typeof value === 'number') return value;
+
+                // Handle string
+                if (typeof value === 'string') {
+                    // Bersihkan spasi dan karakter non-numeric
+                    let cleaned = value.trim().replace(/[^\d,.-]/g, '');
+
+                    // Ganti koma dengan titik untuk decimal
+                    cleaned = cleaned.replace(',', '.');
+
+                    // Parse ke float
+                    const parsed = parseFloat(cleaned);
+
+                    return isNaN(parsed) ? 0 : parsed;
+                }
+
+                return 0;
+            };
+
+            // Gunakan dalam perhitungan:
+            const getCellValue = (cell) => {
+                return parseExcelNumber(row.getCell(cell).value);
+            };
 
 
             // Hitung total pupuk
             const totalUrea = getCellValue(16 + shift) + getCellValue(22 + shift) + getCellValue(28 + shift);
-const totalNpk = getCellValue(17 + shift) + getCellValue(23 + shift) + getCellValue(29 + shift);
-const totalNpkFormula = getCellValue(18 + shift) + getCellValue(24 + shift) + getCellValue(30 + shift);
-const totalOrganik = getCellValue(19 + shift) + getCellValue(25 + shift) + getCellValue(31 + shift);
+            const totalNpk = getCellValue(17 + shift) + getCellValue(23 + shift) + getCellValue(29 + shift);
+            const totalNpkFormula = getCellValue(18 + shift) + getCellValue(24 + shift) + getCellValue(30 + shift);
+            const totalOrganik = getCellValue(19 + shift) + getCellValue(25 + shift) + getCellValue(31 + shift);
 
 
             // Gabungkan baris duplikat di Excel
