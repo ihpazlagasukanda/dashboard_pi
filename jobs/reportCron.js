@@ -4,19 +4,30 @@ const { generateAllReports, generateReport } = require('../services/reportGenera
 
 const baseDir = path.join(__dirname, '../temp_exports');
 
-// ========== MANUAL RUN ==========
 // (async () => {
-//     const kabupaten = 'BOYOLALI';
 //     const tahun = 2025;
+//     const kabupatenList = [
+//         'SRAGEN', 'BOYOLALI', 'KLATEN', 'WONOGIRI', 'SUKOHARJO',
+//         'KARANGANYAR', 'MAGELANG', 'KOTA MAGELANG', 'KOTA SURAKARTA',
+//         'KULON PROGO', 'SLEMAN', 'BANTUL', 'GUNUNG KIDUL', 'KOTA YOGYAKARTA'
+//     ];
 
-//     try {
-//         console.log(`[MANUAL] Generate report untuk ${kabupaten} - ${tahun}`);
-//         await generateReport(kabupaten, tahun, baseDir);
-//         console.log('[MANUAL] Report selesai dibuat.');
-//     } catch (error) {
-//         console.error('[MANUAL ERROR] Gagal generate report:', error);
+//     for (const kabupaten of kabupatenList) {
+//         try {
+//             console.log(`[MANUAL] Mulai generate report untuk ${kabupaten} - ${tahun}`);
+//             await generateReport(kabupaten, tahun, baseDir);
+//             console.log(`[MANUAL] Selesai generate report untuk ${kabupaten}`);
+//         } catch (error) {
+//             console.error(`[MANUAL ERROR] Gagal generate report untuk ${kabupaten}:`, error);
+//         }
+
+//         // Opsional: Delay kecil untuk bantu pelepasan memori antar proses
+//         await new Promise(resolve => setTimeout(resolve, 1000)); // 1 detik
 //     }
+
+//     console.log('[MANUAL] Semua laporan selesai diproses.');
 // })();
+
 
 // ========== CRON JOB ==========
 console.log('[INIT] Cron job siap...');

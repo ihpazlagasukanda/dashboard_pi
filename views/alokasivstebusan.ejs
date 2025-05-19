@@ -115,6 +115,42 @@
                       <option value="GUNUNG KIDUL">GUNUNG KIDUL</option>
                       </select>
                     </div>
+                    <br>
+                    <p class="text-info">Filter periode hanya untuk view, tidak bisa download sesuai periode</p>
+                    <div class="grid grid-cols-3 items-center gap-2">
+                <label class="text-sm font-medium text-gray-700">Periode Bulan:</label>
+                <select id="periode-bulan-awal" class="border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
+                  <option value="">Bulan Awal</option>
+                  <option value="01">Januari</option>
+                  <option value="02">Februari</option>
+                  <option value="03">Maret</option>
+                  <option value="04">April</option>
+                  <option value="05">Mei</option>
+                  <option value="06">Juni</option>
+                  <option value="07">Juli</option>
+                  <option value="08">Agustus</option>
+                  <option value="09">September</option>
+                  <option value="10">Oktober</option>
+                  <option value="11">November</option>
+                  <option value="12">Desember</option>
+                </select>
+                <span class="text-center">-</span>
+                <select id="periode-bulan-akhir" class="border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
+                  <option value="">Bulan Akhir</option>
+                  <option value="01">Januari</option>
+                  <option value="02">Februari</option>
+                  <option value="03">Maret</option>
+                  <option value="04">April</option>
+                  <option value="05">Mei</option>
+                  <option value="06">Juni</option>
+                  <option value="07">Juli</option>
+                  <option value="08">Agustus</option>
+                  <option value="09">September</option>
+                  <option value="10">Oktober</option>
+                  <option value="11">November</option>
+                  <option value="12">Desember</option>
+                </select>
+              </div>
         
                     <!-- Kecamatan -->
                     <!-- <div class="grid grid-cols-2 items-center gap-2">
@@ -358,8 +394,15 @@
                     type: "GET",
                     data: function (d) {
                         d.kabupaten = $('#kabupatenSelect').val();
-                        d.kecamatan = $('#kecamatanSelect').val();
                         d.tahun = $('#tahunSelect').val();
+                        const bulanAwal = $('#periode-bulan-awal').val();
+                        const bulanAkhir = $('#periode-bulan-akhir').val();
+
+                        // Kirim jika keduanya terisi
+                        if (bulanAwal && bulanAkhir) {
+                            d.bulan_awal = parseInt(bulanAwal);
+                            d.bulan_akhir = parseInt(bulanAkhir);
+                        }
                     }
                 },
                 columns: [
@@ -434,13 +477,15 @@
             });
 
             function fetchSummaryData() {
-                   const filters = {
-                        kabupaten: $('#kabupatenSelect').val(),
-                        kecamatan: $('#kecamatanSelect').val(),
-                        tahun: $('#tahunSelect').val()
-                    };
-    
-                if (!filters.kabupaten || !filters.tahun) return; 
+    const filters = {
+        kabupaten: $('#kabupatenSelect').val(),
+        kecamatan: $('#kecamatanSelect').val(),
+        tahun: $('#tahunSelect').val(),
+        bulan_awal: $('#periode-bulan-awal').val(),  // ex: "01"
+        bulan_akhir: $('#periode-bulan-akhir').val() // ex: "05"
+    };
+
+    if (!filters.kabupaten || !filters.tahun) return;
 
                 $.ajax({
                     url: "/api/petani-summary",
@@ -531,10 +576,9 @@
                 });
             }
 
-            $('#kabupatenSelect, #tahunSelect, #kecamatanSelect').on('change', function () {
+            $('#kabupatenSelect, #tahunSelect, #kecamatanSelect, #periode-bulan-awal, #periode-bulan-akhir').on('change', function () {
                 let kabupaten = $('#kabupatenSelect').val();
                 let tahun = $('#tahunSelect').val();
-                let kecamatan = $('#kecamatanSelect').val();
 
                if (kabupaten && tahun) {
                     $.when(table.draw()).then(function() {

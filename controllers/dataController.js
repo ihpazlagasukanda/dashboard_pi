@@ -1457,7 +1457,15 @@ exports.downloadSummaryPupuk = async (req, res) => {
 
 exports.alokasiVsTebusan = async (req, res) => {
     try {
-        const { start, length, draw, kabupaten, kecamatan, tahun } = req.query;
+        const { start, length, draw, kabupaten, tahun, bulan_awal, bulan_akhir } = req.query;
+
+        const bulanIndex = {
+            jan: 1, feb: 2, mar: 3, apr: 4, mei: 5, jun: 6,
+            jul: 7, agu: 8, sep: 9, okt: 10, nov: 11, des: 12
+        };
+        const urutanBulan = Object.keys(bulanIndex);
+        const batasAwal = bulan_awal ? parseInt(bulan_awal) : 1;
+        const batasAkhir = bulan_akhir ? parseInt(bulan_akhir) : 12;
 
         // Query utama untuk mengambil data
         let query = `
@@ -1473,70 +1481,22 @@ exports.alokasiVsTebusan = async (req, res) => {
                 e.npk, 
                 e.npk_formula, 
                 e.organik,
-                -- Data tebusan total
                 COALESCE(v.tebus_urea, 0) AS tebus_urea,
                 COALESCE(v.tebus_npk, 0) AS tebus_npk,
                 COALESCE(v.tebus_npk_formula, 0) AS tebus_npk_formula,
                 COALESCE(v.tebus_organik, 0) AS tebus_organik,
-                
-                -- Perhitungan sisa
                 (e.urea - COALESCE(v.tebus_urea, 0)) AS sisa_urea,
                 (e.npk - COALESCE(v.tebus_npk, 0)) AS sisa_npk,
                 (e.npk_formula - COALESCE(v.tebus_npk_formula, 0)) AS sisa_npk_formula,
                 (e.organik - COALESCE(v.tebus_organik, 0)) AS sisa_organik,
 
                 -- Data tebusan per bulan
-                COALESCE(t.jan_urea, 0) AS jan_urea,
-                COALESCE(t.feb_urea, 0) AS feb_urea,
-                COALESCE(t.mar_urea, 0) AS mar_urea,
-                COALESCE(t.apr_urea, 0) AS apr_urea,
-                COALESCE(t.mei_urea, 0) AS mei_urea,
-                COALESCE(t.jun_urea, 0) AS jun_urea,
-                COALESCE(t.jul_urea, 0) AS jul_urea,
-                COALESCE(t.agu_urea, 0) AS agu_urea,
-                COALESCE(t.sep_urea, 0) AS sep_urea,
-                COALESCE(t.okt_urea, 0) AS okt_urea,
-                COALESCE(t.nov_urea, 0) AS nov_urea,
-                COALESCE(t.des_urea, 0) AS des_urea,
-
-                COALESCE(t.jan_npk, 0) AS jan_npk,
-                COALESCE(t.feb_npk, 0) AS feb_npk,
-                COALESCE(t.mar_npk, 0) AS mar_npk,
-                COALESCE(t.apr_npk, 0) AS apr_npk,
-                COALESCE(t.mei_npk, 0) AS mei_npk,
-                COALESCE(t.jun_npk, 0) AS jun_npk,
-                COALESCE(t.jul_npk, 0) AS jul_npk,
-                COALESCE(t.agu_npk, 0) AS agu_npk,
-                COALESCE(t.sep_npk, 0) AS sep_npk,
-                COALESCE(t.okt_npk, 0) AS okt_npk,
-                COALESCE(t.nov_npk, 0) AS nov_npk,
-                COALESCE(t.des_npk, 0) AS des_npk,
-
-                COALESCE(t.jan_npk_formula, 0) AS jan_npk_formula,
-                COALESCE(t.feb_npk_formula, 0) AS feb_npk_formula,
-                COALESCE(t.mar_npk_formula, 0) AS mar_npk_formula,
-                COALESCE(t.apr_npk_formula, 0) AS apr_npk_formula,
-                COALESCE(t.mei_npk_formula, 0) AS mei_npk_formula,
-                COALESCE(t.jun_npk_formula, 0) AS jun_npk_formula,
-                COALESCE(t.jul_npk_formula, 0) AS jul_npk_formula,
-                COALESCE(t.agu_npk_formula, 0) AS agu_npk_formula,
-                COALESCE(t.sep_npk_formula, 0) AS sep_npk_formula,
-                COALESCE(t.okt_npk_formula, 0) AS okt_npk_formula,
-                COALESCE(t.nov_npk_formula, 0) AS nov_npk_formula,
-                COALESCE(t.des_npk_formula, 0) AS des_npk_formula,
-
-                COALESCE(t.jan_organik, 0) AS jan_organik,
-                COALESCE(t.feb_organik, 0) AS feb_organik,
-                COALESCE(t.mar_organik, 0) AS mar_organik,
-                COALESCE(t.apr_organik, 0) AS apr_organik,
-                COALESCE(t.mei_organik, 0) AS mei_organik,
-                COALESCE(t.jun_organik, 0) AS jun_organik,
-                COALESCE(t.jul_organik, 0) AS jul_organik,
-                COALESCE(t.agu_organik, 0) AS agu_organik,
-                COALESCE(t.sep_organik, 0) AS sep_organik,
-                COALESCE(t.okt_organik, 0) AS okt_organik,
-                COALESCE(t.nov_organik, 0) AS nov_organik,
-                COALESCE(t.des_organik, 0) AS des_organik
+                ${urutanBulan.map(bulan => `
+                    COALESCE(t.${bulan}_urea, 0) AS ${bulan}_urea,
+                    COALESCE(t.${bulan}_npk, 0) AS ${bulan}_npk,
+                    COALESCE(t.${bulan}_npk_formula, 0) AS ${bulan}_npk_formula,
+                    COALESCE(t.${bulan}_organik, 0) AS ${bulan}_organik
+                `).join(',')}
             FROM erdkk e
             LEFT JOIN verval_summary v 
                 ON e.nik = v.nik
@@ -1560,13 +1520,14 @@ exports.alokasiVsTebusan = async (req, res) => {
                 ON e.nik = v.nik
                 AND e.kabupaten = v.kabupaten
                 AND e.tahun = v.tahun
+                AND e.kecamatan = v.kecamatan
+                AND e.kode_kios = v.kode_kios
             WHERE 1=1
         `;
 
         let params = [];
         let countParams = [];
 
-        // Tambahkan filter Kabupaten
         if (kabupaten) {
             query += " AND e.kabupaten = ?";
             countQuery += " AND e.kabupaten = ?";
@@ -1574,14 +1535,13 @@ exports.alokasiVsTebusan = async (req, res) => {
             countParams.push(kabupaten);
         }
 
-        if (kecamatan) {
-            query += " AND e.kecamatan = ?";
-            countQuery += "AND e.kecamatan = ?";
-            params.push(kecamatan);
-            countParams.push(kecamatan);
-        }
+        // if (kecamatan) {
+        //     query += " AND e.kecamatan = ?";
+        //     countQuery += " AND e.kecamatan = ?";
+        //     params.push(kecamatan);
+        //     countParams.push(kecamatan);
+        // }
 
-        // Tambahkan filter Tahun
         if (tahun) {
             query += " AND e.tahun = ?";
             countQuery += " AND e.tahun = ?";
@@ -1600,18 +1560,34 @@ exports.alokasiVsTebusan = async (req, res) => {
         const [[{ total: recordsFiltered }]] = await db.query(countQuery, countParams);
         const [[{ total: recordsTotal }]] = await db.query("SELECT COUNT(*) AS total FROM erdkk");
 
+        // Hapus kolom bulan di luar rentang
+        const filteredData = data.map(row => {
+            const newRow = { ...row };
+            urutanBulan.forEach(bulan => {
+                const index = bulanIndex[bulan];
+                if (index < batasAwal || index > batasAkhir) {
+                    delete newRow[`${bulan}_urea`];
+                    delete newRow[`${bulan}_npk`];
+                    delete newRow[`${bulan}_npk_formula`];
+                    delete newRow[`${bulan}_organik`];
+                }
+            });
+            return newRow;
+        });
+
         // Kirim respons
         res.json({
             draw: draw ? parseInt(draw) : 1,
             recordsTotal: recordsTotal,
             recordsFiltered: recordsFiltered,
-            data: data
+            data: filteredData
         });
     } catch (error) {
         console.error("Error fetching data:", error);
         res.status(500).json({ error: "Terjadi kesalahan dalam mengambil data" });
     }
 };
+
 
 exports.getSalurKios = async (req, res) => {
     try {
@@ -1770,97 +1746,57 @@ exports.tebusanPerBulan = async (req, res) => {
 
 exports.getVervalSummary = async (req, res) => {
     try {
-        const { kabupaten, kecamatan, tahun } = req.query;
+        const { kabupaten, tahun, bulan_awal, bulan_akhir } = req.query;
+
+        // Map index bulan ke nama kolom di tabel
+        const bulanMap = [
+            'jan', 'feb', 'mar', 'apr', 'mei', 'jun',
+            'jul', 'agu', 'sep', 'okt', 'nov', 'des'
+        ];
+
+        const start = parseInt(bulan_awal || '1');
+        const end = parseInt(bulan_akhir || '12');
+
+        // Validasi range bulan
+        const bulanRange = bulanMap.slice(start - 1, end);
+
+        // Generator kolom SUM untuk setiap bulan dalam rentang
+        const bulanSumFields = bulanRange.map(prefix => `
+            SUM(COALESCE(t.${prefix}_urea, 0)) AS ${prefix}_tebus_urea,
+            SUM(COALESCE(t.${prefix}_npk, 0)) AS ${prefix}_tebus_npk,
+            SUM(COALESCE(t.${prefix}_npk_formula, 0)) AS ${prefix}_tebus_npk_formula,
+            SUM(COALESCE(t.${prefix}_organik, 0)) AS ${prefix}_tebus_organik
+        `).join(',\n');
 
         let query = `
             SELECT 
-            SUM(e.urea) AS total_urea,
-            SUM(e.npk) AS total_npk,
-            SUM(e.npk_formula) AS total_npk_formula,
-            SUM(e.organik) AS total_organik,
-            
-            SUM(e.urea - COALESCE(v.tebus_urea, 0)) AS sisa_urea,
-            SUM(e.npk - COALESCE(v.tebus_npk, 0)) AS sisa_npk,
-            SUM(e.npk_formula - COALESCE(v.tebus_npk_formula, 0)) AS sisa_npk_formula,
-            SUM(e.organik - COALESCE(v.tebus_organik, 0)) AS sisa_organik,
+                SUM(e.urea) AS total_urea,
+                SUM(e.npk) AS total_npk,
+                SUM(e.npk_formula) AS total_npk_formula,
+                SUM(e.organik) AS total_organik,
 
-            SUM(COALESCE(v.tebus_urea, 0)) AS total_tebus_urea,
-            SUM(COALESCE(v.tebus_npk, 0)) AS total_tebus_npk,
-            SUM(COALESCE(v.tebus_npk_formula, 0)) AS total_tebus_npk_formula,
-            SUM(COALESCE(v.tebus_organik, 0)) AS total_tebus_organik,
+                SUM(e.urea - COALESCE(v.tebus_urea, 0)) AS sisa_urea,
+                SUM(e.npk - COALESCE(v.tebus_npk, 0)) AS sisa_npk,
+                SUM(e.npk_formula - COALESCE(v.tebus_npk_formula, 0)) AS sisa_npk_formula,
+                SUM(e.organik - COALESCE(v.tebus_organik, 0)) AS sisa_organik,
 
-            -- Tebusan per bulan
-            SUM(COALESCE(t.jan_urea, 0)) AS jan_tebus_urea,
-            SUM(COALESCE(t.jan_npk, 0)) AS jan_tebus_npk,
-            SUM(COALESCE(t.jan_npk_formula, 0)) AS jan_tebus_npk_formula,
-            SUM(COALESCE(t.jan_organik, 0)) AS jan_tebus_organik,
+                SUM(COALESCE(v.tebus_urea, 0)) AS total_tebus_urea,
+                SUM(COALESCE(v.tebus_npk, 0)) AS total_tebus_npk,
+                SUM(COALESCE(v.tebus_npk_formula, 0)) AS total_tebus_npk_formula,
+                SUM(COALESCE(v.tebus_organik, 0)) AS total_tebus_organik,
 
-            SUM(COALESCE(t.feb_urea, 0)) AS feb_tebus_urea,
-            SUM(COALESCE(t.feb_npk, 0)) AS feb_tebus_npk,
-            SUM(COALESCE(t.feb_npk_formula, 0)) AS feb_tebus_npk_formula,
-            SUM(COALESCE(t.feb_organik, 0)) AS feb_tebus_organik,
-
-            SUM(COALESCE(t.mar_urea, 0)) AS mar_tebus_urea,
-            SUM(COALESCE(t.mar_npk, 0)) AS mar_tebus_npk,
-            SUM(COALESCE(t.mar_npk_formula, 0)) AS mar_tebus_npk_formula,
-            SUM(COALESCE(t.mar_organik, 0)) AS mar_tebus_organik,
-
-            SUM(COALESCE(t.apr_urea, 0)) AS apr_tebus_urea,
-            SUM(COALESCE(t.apr_npk, 0)) AS apr_tebus_npk,
-            SUM(COALESCE(t.apr_npk_formula, 0)) AS apr_tebus_npk_formula,
-            SUM(COALESCE(t.apr_organik, 0)) AS apr_tebus_organik,
-
-            SUM(COALESCE(t.mei_urea, 0)) AS mei_tebus_urea,
-            SUM(COALESCE(t.mei_npk, 0)) AS mei_tebus_npk,
-            SUM(COALESCE(t.mei_npk_formula, 0)) AS mei_tebus_npk_formula,
-            SUM(COALESCE(t.mei_organik, 0)) AS mei_tebus_organik,
-
-            SUM(COALESCE(t.jun_urea, 0)) AS jun_tebus_urea,
-            SUM(COALESCE(t.jun_npk, 0)) AS jun_tebus_npk,
-            SUM(COALESCE(t.jun_npk_formula, 0)) AS jun_tebus_npk_formula,
-            SUM(COALESCE(t.jun_organik, 0)) AS jun_tebus_organik,
-
-            SUM(COALESCE(t.jul_urea, 0)) AS jul_tebus_urea,
-            SUM(COALESCE(t.jul_npk, 0)) AS jul_tebus_npk,
-            SUM(COALESCE(t.jul_npk_formula, 0)) AS jul_tebus_npk_formula,
-            SUM(COALESCE(t.jul_organik, 0)) AS jul_tebus_organik,
-
-            SUM(COALESCE(t.agu_urea, 0)) AS agu_tebus_urea,
-            SUM(COALESCE(t.agu_npk, 0)) AS agu_tebus_npk,
-            SUM(COALESCE(t.agu_npk_formula, 0)) AS agu_tebus_npk_formula,
-            SUM(COALESCE(t.agu_organik, 0)) AS agu_tebus_organik,
-
-            SUM(COALESCE(t.sep_urea, 0)) AS sep_tebus_urea,
-            SUM(COALESCE(t.sep_npk, 0)) AS sep_tebus_npk,
-            SUM(COALESCE(t.sep_npk_formula, 0)) AS sep_tebus_npk_formula,
-            SUM(COALESCE(t.sep_organik, 0)) AS sep_tebus_organik,
-
-            SUM(COALESCE(t.okt_urea, 0)) AS okt_tebus_urea,
-            SUM(COALESCE(t.okt_npk, 0)) AS okt_tebus_npk,
-            SUM(COALESCE(t.okt_npk_formula, 0)) AS okt_tebus_npk_formula,
-            SUM(COALESCE(t.okt_organik, 0)) AS okt_tebus_organik,
-
-            SUM(COALESCE(t.nov_urea, 0)) AS nov_tebus_urea,
-            SUM(COALESCE(t.nov_npk, 0)) AS nov_tebus_npk,
-            SUM(COALESCE(t.nov_npk_formula, 0)) AS nov_tebus_npk_formula,
-            SUM(COALESCE(t.nov_organik, 0)) AS nov_tebus_organik,
-
-            SUM(COALESCE(t.des_urea, 0)) AS des_tebus_urea,
-            SUM(COALESCE(t.des_npk, 0)) AS des_tebus_npk,
-            SUM(COALESCE(t.des_npk_formula, 0)) AS des_tebus_npk_formula,
-            SUM(COALESCE(t.des_organik, 0)) AS des_tebus_organik
-
-        FROM erdkk e
-        LEFT JOIN verval_summary v 
-            ON e.nik = v.nik 
-            AND e.kabupaten = v.kabupaten
-            AND e.tahun = v.tahun
-            AND e.kecamatan = v.kecamatan
-        LEFT JOIN tebusan_per_bulan t
-            ON e.nik = t.nik
-            AND e.kabupaten = t.kabupaten
-            AND e.tahun = t.tahun
-            AND e.kecamatan = t.kecamatan
+                ${bulanSumFields}
+            FROM erdkk e
+            LEFT JOIN verval_summary v 
+                ON e.nik = v.nik 
+                AND e.kabupaten = v.kabupaten
+                AND e.tahun = v.tahun
+                AND e.kecamatan = v.kecamatan
+            LEFT JOIN tebusan_per_bulan t
+                ON e.nik = t.nik
+                AND e.kabupaten = t.kabupaten
+                AND e.tahun = t.tahun
+                AND e.kecamatan = t.kecamatan
             WHERE 1=1
         `;
 
@@ -1870,10 +1806,10 @@ exports.getVervalSummary = async (req, res) => {
             params.push(kabupaten);
         }
 
-        if (kecamatan) {
-            query += " AND e.kecamatan = ?";
-            params.push(kecamatan);
-        }
+        // if (kecamatan) {
+        //     query += " AND e.kecamatan = ?";
+        //     params.push(kecamatan);
+        // }
 
         if (tahun) {
             query += " AND e.tahun = ?";
@@ -1882,7 +1818,6 @@ exports.getVervalSummary = async (req, res) => {
 
         const [summary] = await db.query(query, params);
 
-        // Debugging: Cek hasil query sebelum dikirim
         console.log("Summary Data:", summary);
 
         res.json({ sum: summary[0] || {} });
@@ -1891,6 +1826,7 @@ exports.getVervalSummary = async (req, res) => {
         res.status(500).json({ error: "Terjadi kesalahan dalam mengambil summary" });
     }
 };
+
 
 
 // exports.downloadPetaniSummary = async (req, res) => {
