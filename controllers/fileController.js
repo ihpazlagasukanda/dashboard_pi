@@ -56,7 +56,7 @@ const processExcelFile = async (file, metodePenebusan) => {
     const expectedColumnsIpubers = ['No', 'Kabupaten', 'Kecamatan', 'Kode Kios', 'Nama Kios', 'Kode TRX', 'No Transaksi', 'NIK', 'Nama Petani', 'Urea', 'NPK', 'SP36', 'ZA', 'NPK Formula', 'Organik', 'Organik Cair', 'Keterangan', 'Tanggal Tebus', 'Tanggal Entri', 'Tanggal Update', 'Tipe Tebus', 'NIK Perwakilan', 'Url Bukti', 'Status'];
 
     // Validasi header
-    const headerRow = metodePenebusan === 'ipubers' ? 1 : 2;
+    const headerRow = metodePenebusan === 'ipubers' ? 1 : 1;
     const rowValues = worksheet.getRow(headerRow).values;
     if (rowValues[0] === undefined) rowValues.shift();
     const actualColumns = rowValues.map(cell => cell ? cell.toString().trim() : "");
