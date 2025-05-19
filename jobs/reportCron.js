@@ -5,18 +5,18 @@ const { generateAllReports, generateReport } = require('../services/reportGenera
 const baseDir = path.join(__dirname, '../temp_exports');
 
 // ========== MANUAL RUN ==========
-(async () => {
-    const kabupaten = 'BOYOLALI';
-    const tahun = 2025;
+// (async () => {
+//     const kabupaten = 'BOYOLALI';
+//     const tahun = 2025;
 
-    try {
-        console.log(`[MANUAL] Generate report untuk ${kabupaten} - ${tahun}`);
-        await generateReport(kabupaten, tahun, baseDir);
-        console.log('[MANUAL] Report selesai dibuat.');
-    } catch (error) {
-        console.error('[MANUAL ERROR] Gagal generate report:', error);
-    }
-})();
+//     try {
+//         console.log(`[MANUAL] Generate report untuk ${kabupaten} - ${tahun}`);
+//         await generateReport(kabupaten, tahun, baseDir);
+//         console.log('[MANUAL] Report selesai dibuat.');
+//     } catch (error) {
+//         console.error('[MANUAL ERROR] Gagal generate report:', error);
+//     }
+// })();
 
 // ========== CRON JOB ==========
 console.log('[INIT] Cron job siap...');
