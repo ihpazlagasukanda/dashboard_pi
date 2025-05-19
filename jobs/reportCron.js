@@ -4,27 +4,27 @@ const { generateAllReports, generateReport } = require('../services/reportGenera
 
 const baseDir = path.join(__dirname, '../temp_exports');
 
-(async () => {
-    const tahun = 2025;
-    const kabupatenList = [
-        'SLEMAN'
-    ];
+// (async () => {
+//     const tahun = 2025;
+//     const kabupatenList = [
+//         'SLEMAN'
+//     ];
 
-    for (const kabupaten of kabupatenList) {
-        try {
-            console.log(`[MANUAL] Mulai generate report untuk ${kabupaten} - ${tahun}`);
-            await generateReport(kabupaten, tahun, baseDir);
-            console.log(`[MANUAL] Selesai generate report untuk ${kabupaten}`);
-        } catch (error) {
-            console.error(`[MANUAL ERROR] Gagal generate report untuk ${kabupaten}:`, error);
-        }
+//     for (const kabupaten of kabupatenList) {
+//         try {
+//             console.log(`[MANUAL] Mulai generate report untuk ${kabupaten} - ${tahun}`);
+//             await generateReport(kabupaten, tahun, baseDir);
+//             console.log(`[MANUAL] Selesai generate report untuk ${kabupaten}`);
+//         } catch (error) {
+//             console.error(`[MANUAL ERROR] Gagal generate report untuk ${kabupaten}:`, error);
+//         }
 
-        // Opsional: Delay kecil untuk bantu pelepasan memori antar proses
-        await new Promise(resolve => setTimeout(resolve, 1000)); // 1 detik
-    }
+//         // Opsional: Delay kecil untuk bantu pelepasan memori antar proses
+//         await new Promise(resolve => setTimeout(resolve, 1000)); // 1 detik
+//     }
 
-    console.log('[MANUAL] Semua laporan selesai diproses.');
-})();
+//     console.log('[MANUAL] Semua laporan selesai diproses.');
+// })();
 
 
 // ========== CRON JOB ==========
