@@ -73,8 +73,8 @@ const processExcelFile = async (file, metodePenebusan) => {
 
     return rows.map((row) => {
         let tanggalTebus, tanggalExcel;
-        //    const kodeTransaksi = metodePenebusan === 'ipubers' ? row.getCell(7).text : generateKodeTransaksi();
-        const kodeTransaksi = metodePenebusan === 'ipubers' ? row.getCell(4).text : generateKodeTransaksi();
+        const kodeTransaksi = metodePenebusan === 'ipubers' ? row.getCell(7).text : generateKodeTransaksi();
+        // const kodeTransaksi = metodePenebusan === 'ipubers' ? row.getCell(4).text : generateKodeTransaksi();
         if (metodePenebusan === 'ipubers') {
             tanggalExcel = row.getCell(18).text;
             // tanggalExcel = row.getCell(16).text;
