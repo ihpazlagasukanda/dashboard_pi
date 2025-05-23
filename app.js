@@ -11,6 +11,7 @@ const wcmRoutes = require("./routes/wcmRoutes");
 const outRouter = require("./routes/outRoutes");
 const skRoutes = require("./routes/skRoutes");
 const triggerCron = require("./routes/triggerCron");
+const uploadPenyaluranDoRoutes = require("./routes/penyaluranDoRoutes");
 require('dotenv').config();
 
 const app = express();
@@ -78,6 +79,10 @@ app.get('/upload-wcm', authMiddleware, requireLevel(2), (req, res) => {
     res.render('upload-wcm', { user: req.user });
 });
 
+app.get('/upload-penyalurando', authMiddleware, requireLevel(2), (req, res) => {
+    res.render('upload-penyaluranDo', { user: req.user });
+});
+
 app.get('/upload-skbupati', authMiddleware, requireLevel(2), (req, res) => {
     res.render('upload-skBupati', { user: req.user });
 });
@@ -127,6 +132,7 @@ app.use('/api/data', authMiddleware, erdkkRoutes);
 app.use('/api/data', authMiddleware, wcmRoutes);
 app.use('/api/data', authMiddleware, skRoutes);
 app.use('/trigger', authMiddleware, triggerCron);
+app.use('/api/data', authMiddleware, uploadPenyaluranDoRoutes);
 app.use(authRoutes);  // Pastikan authRoutes ada
 app.use('/upload', outRouter);  // Route untuk upload
 
