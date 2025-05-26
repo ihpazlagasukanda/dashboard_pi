@@ -4044,6 +4044,111 @@ exports.downloadWcm = async (req, res) => {
     }
 };
 
+exports.getPenyaluranDo = async (req, res) => {
+    try {
+        // Mendapatkan parameter dari query string
+        const { start, length, draw, produk, tahun, bulan, provinsi, kabupaten } = req.query;
+
+        // Menyiapkan query dasar
+        let query = `
+            SELECT 
+                produsen,
+                nomor_ff,
+                kode_distributor,
+                distributor,
+                tipe_penyaluran,
+                nama_order,
+                nomor_so,
+                kode_provinsi,
+                provinsi,
+                kode_kabupaten,
+                kabupaten,
+                kode_kecamatan,
+                kecamatan,
+                kode_kios,
+                nama_kios,
+                tanggal_penyaluran,
+                produk,
+                qty,
+                status_ff,
+                status
+            FROM penyaluran_do
+            WHERE 1=1
+        `;
+
+        // Menyiapkan parameter untuk query
+        const params = [];
+
+        // Filter berdasarkan produk jika ada
+        if (produk) {
+            query += ` AND produk = ?`;
+            params.push(produk);
+        }
+
+        // Filter berdasarkan tahun jika ada
+        if (tahun) {
+            query += ` AND YEAR(tanggal_penyaluran) = ?`;
+            params.push(tahun);
+        }
+
+        // Filter berdasarkan bulan jika ada
+        if (bulan) {
+            query += ` AND MONTH(tanggal_penyaluran) = ?`;
+            params.push(bulan);
+        }
+
+        // Filter berdasarkan provinsi jika ada
+        if (provinsi) {
+            query += ` AND provinsi = ?`;
+            params.push(provinsi);
+        }
+
+        // Filter berdasarkan kabupaten jika ada
+        if (kabupaten) {
+            query += ` AND kabupaten = ?`;
+            params.push(kabupaten);
+        }
+
+        // Query untuk mendapatkan total data tanpa filter
+        const countQuery = `SELECT COUNT(*) as total FROM penyaluran_do`;
+        const [totalResult] = await db.query(countQuery);
+        const totalRecords = totalResult[0].total;
+
+        // Query untuk mendapatkan total data dengan filter
+        const filteredCountQuery = query.replace(/SELECT.*FROM/, 'SELECT COUNT(*) as filtered FROM');
+        const [filteredResult] = await db.query(filteredCountQuery, params);
+        const filteredRecords = filteredResult[0].filtered;
+
+        // Menambahkan sorting dan pagination
+        query += ` ORDER BY tanggal_penyaluran DESC LIMIT ?, ?`;
+        params.push(parseInt(start), parseInt(length));
+
+        // Menjalankan query utama
+        const [data] = await db.query(query, params);
+
+        // Format tanggal sebelum dikirim ke client
+        const formattedData = data.map(item => ({
+            ...item,
+            tanggal_penyaluran: item.tanggal_penyaluran ? new Date(item.tanggal_penyaluran).toISOString().split('T')[0] : null
+        }));
+
+        // Mengirim response dalam format yang dibutuhkan DataTables
+        res.json({
+            draw: parseInt(draw),
+            recordsTotal: totalRecords,
+            recordsFiltered: filteredRecords,
+            data: formattedData
+        });
+
+    } catch (error) {
+        console.error('Error saat mengambil data penyaluran DO:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Terjadi kesalahan saat mengambil data penyaluran DO'
+        });
+    }
+};
+
 exports.downloadWcmF5 = async (req, res) => {
     try {
         const { produk, tahun, provinsi, kabupaten } = req.query;

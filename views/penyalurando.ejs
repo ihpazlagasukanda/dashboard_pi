@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <%- include('./partials/head'); %>
+  </head>
+  <body>
+    <div class="wrapper">
+      <%- include('./partials/header'); %>
+
+      <div class="container">
+        <div class="page-inner">
+          <div class="page-header">
+            <h3 class="fw-bold mb-3">Penyaluran DO</h3>
+            <ul class="breadcrumbs mb-3">
+              <li class="nav-home">
+                <a href="/">
+                  <i class="icon-home"></i>
+                </a>
+              </li>
+              <li class="separator">
+                <i class="icon-arrow-right"></i>
+              </li>
+              <li class="nav-item">
+                <a href="/salurkios">Data</a>
+              </li>
+              <li class="separator">
+                <i class="icon-arrow-right"></i>
+              </li>
+              <li class="nav-item">
+                <a href="/salurkios">Data WCM</a>
+              </li>
+            </ul>
+          </div>
+
+          <div
+            class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4"
+          >
+            <div>
+              <p class="op-7 mb-2">
+                Untuk Menampilkan Data Sesuai, Harap Pilih
+              </p>
+            </div>
+            <div class="ms-md-auto py-2 py-md-0">
+              <button id="download-excel" class="btn btn-primary btn-round">
+                Download
+              </button>
+              <div
+                id="loading-spinner"
+                class="hidden fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center"
+              >
+                <div
+                  class="bg-white p-5 rounded-lg flex items-center space-x-3"
+                >
+                  <div
+                    class="animate-spin h-8 w-8 border-t-4 border-blue-600 border-solid rounded-full"
+                  ></div>
+                  <span class="text-lg font-semibold"
+                    >Mengunduh data, harap tunggu...</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5"
+          >
+            <div class="grid grid-cols-2 items-center gap-2">
+              <label for="tahunSelect" class="text-sm font-medium text-gray-700"
+                >Tahun</label
+              >
+              <select
+                id="tahunSelect"
+                class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
+              >
+                <option value="">Semua Tahun</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 items-center gap-2">
+              <label for="bulanSelect" class="text-sm font-medium text-gray-700"
+                >Bulan</label
+              >
+              <select
+                id="bulanSelect"
+                class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
+              >
+                <option value="">Semua Bulan</option>
+                <option value="1">Januari</option>
+                <option value="2">Februari</option>
+                <option value="3">Maret</option>
+                <option value="4">April</option>
+                <option value="5">Mei</option>
+                <option value="6">Juni</option>
+                <option value="7">Juli</option>
+                <option value="8">Agustus</option>
+                <option value="9">September</option>
+                <option value="10">Oktober</option>
+                <option value="11">November</option>
+                <option value="12">Desember</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 items-center gap-2">
+              <label
+                for="provinsiSelect"
+                class="text-sm font-medium text-gray-700"
+                >Provinsi</label
+              >
+              <select
+                id="provinsiSelect"
+                class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
+              >
+              <option value="">Semua provinsi</option>
+              <option value="DI YOGYAKARTA">DI YOGYAKARTA</option>
+              <option value="JAWA TENGAH">JAWA TENGAH</option>
+              </select>
+            </div>
+
+            
+            <!-- Kabupaten -->
+            <div class="grid grid-cols-2 items-center gap-2">
+              <label for="kabupatenSelect" class="text-sm font-medium text-gray-700">Kabupaten</label>
+              <select id="kabupatenSelect" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
+                  <option value="">Semua Kabupaten</option>
+                  <option value="BOYOLALI">BOYOLALI</option>
+                  <option value="SRAGEN">SRAGEN</option>
+                  <option value="KOTA SURAKARTA">KOTA SURAKARTA</option>
+                  <option value="KOTA MAGELANG">KOTA MAGELANG</option>
+                  <option value="MAGELANG">MAGELANG</option>
+                  <option value="SUKOHARJO">SUKOHARJO</option>
+                  <option value="KLATEN">KLATEN</option>
+                  <option value="WONOGIRI">WONOGIRI</option>
+                  <option value="KARANGANYAR">KARANGANYAR</option>
+                  <option value="BANTUL">BANTUL</option>
+                  <option value="KOTA YOGYAKARTA">KOTA YOGYAKARTA</option>
+                  <option value="SLEMAN">SLEMAN</option>
+                  <option value="KULON PROGO">KULON PROGO</option>
+                  <option value="GUNUNG KIDUL">GUNUNG KIDUL</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 items-center gap-2">
+              <label
+                for="produkSelect"
+                class="text-sm font-medium text-gray-700"
+                >Produk</label
+              >
+              <select
+                id="produkSelect"
+                class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
+              >
+              <option value="">Semua Produk</option>
+              <option value="UREA">UREA</option>
+              <option value="NPK">NPK</option>
+              <option value="ORGANIK">ORGANIK</option>
+              <option value="NPK KAKAO">NPK KAKAO</option>
+              </select>
+            </div>
+
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-head-row">
+                    <div class="card-title">Data WCM</div>
+                      <div class="card-tools">
+                      </div>
+                    </div>
+                  </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table id="multi-filter-select" class="table">
+                      <thead>
+                        <tr>
+                          <th>Produsen</th>
+                          <th>Nomor F5/F6</th>
+                          <th>ID Distributor</th>
+                          <th>Nama Distributor</th>
+                          <th>Tipe Penyaluran</th>
+                          <th>Nama Order</th>
+                          <th>Nomor SO</th>
+                          <th>Kode Provinsi</th>
+                          <th>Provinsi</th>
+                          <th>Kode Kabupaten</th>
+                          <th>Kabupaten</th>
+                          <th>Kode Kecamatan</th>
+                          <th>Kecamatan</th>
+                          <th>Kode Retail</th>
+                          <th>Nama Retail</th>
+                          <th>Tanggal Penyaluran</th>
+                          <th>Produk</th>
+                          <th>Qty</th>
+                          <th>Status F5/F6</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tfoot>
+                      </tfoot>
+
+                      <tbody id="dataTable">
+                        <!-- Data akan dimasukkan melalui JavaScript -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <%- include('./partials/footer'); %>
+    </div>
+    <!--   Core JS Files   -->
+    <script src="./assets/js/core/jquery-3.7.1.min.js"></script>
+    <script src="./assets/js/core/popper.min.js"></script>
+    <script src="./assets/js/core/bootstrap.min.js"></script>
+
+    <!-- jQuery Scrollbar -->
+    <script src="./assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
+    <!-- Datatables -->
+    <script src="./assets/js/plugin/datatables/datatables.min.js"></script>
+    <!-- Kaiadmin JS -->
+    <script src="./assets/js/kaiadmin.min.js"></script>
+    <!-- Kaiadmin DEMO methods, don't include it in your project! -->
+    <script src="./assets/js/setting-demo2.js"></script>
+
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <script>
+      $(document).ready(function () {
+        let table = $("#multi-filter-select").DataTable({
+          processing: true,
+          serverSide: true,
+          deferLoading: 0, // Jangan langsung load data
+          ajax: {
+            url: "/api/data/penyaluran_do",
+            type: "GET",
+            data: function (d) {
+              d.produk = $("#produkSelect").val();
+              d.bulan = $("#bulanSelect").val();
+              d.tahun = $("#tahunSelect").val();
+              d.kabupaten = $("#kabupatenSelect").val();
+              d.provinsi = $("#provinsiSelect").val();
+            },
+        
+          },
+          columns: [
+            { data: "produsen" },
+            { data: "nomor_ff" },
+            { data: "kode_distributor" },
+            { data: "distributor" },
+            { data: "tipe_penyaluran" },
+            { data: "nama_order" },
+            { data: "nomor_so" },
+            { data: "kode_provinsi" },
+            { data: "provinsi" },
+            { data: "kode_kabupaten" },
+            { data: "kabupaten" },
+            { data: "kode_kecamatan" },
+            { data: "kecamatan" },
+            { data: "kode_kios" },
+            { data: "nama_kios" },
+            { 
+              data: "tanggal_penyaluran",
+              render: function(data) {
+                return data ? new Date(data).toLocaleDateString('id-ID') : '';
+              }
+            },
+            { data: "produk" },
+            { data: "qty" },
+            { data: "status_ff" },
+            { data: "status" }
+          ],
+          order: [[14, 'desc']], // Default sort by tanggal_penyaluran descending
+          language: {
+            processing: "Memproses...",
+            lengthMenu: "Tampilkan _MENU_ data per halaman",
+            zeroRecords: "Tidak ada data yang ditemukan",
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+            infoFiltered: "(disaring dari _MAX_ total data)",
+            search: "Cari:",
+            paginate: {
+              first: "Pertama",
+              last: "Terakhir",
+              next: "Selanjutnya",
+              previous: "Sebelumnya"
+            }
+          }
+        });
+
+        // Event handler untuk filter
+        $("#produkSelect, #tahunSelect, #bulanSelect, #kabupatenSelect, #provinsiSelect").on("change", function () {
+          table.draw();
+        });
+
+        // Download data dalam format Excel dengan filter yang diterapkan
+        $("#download-excel").click(function () {
+          let params = {
+            produk: $("#produkSelect").val() || "",
+            tahun: $("#tahunSelect").val() || "",
+            bulan: $("#bulanSelect").val() || "",
+            kabupaten: $("#kabupatenSelect").val() || "",
+            provinsi: $("#provinsiSelect").val() || ""
+          };
+          
+          // Tampilkan loading spinner
+          $("#loading-spinner").removeClass("hidden");
+          
+          window.location.href = `/api/download/penyaluran_do?` + $.param(params);
+          
+          // Sembunyikan loading spinner setelah 3 detik (fallback jika redirect tidak bekerja)
+          setTimeout(function() {
+            $("#loading-spinner").addClass("hidden");
+          }, 3000);
+        });
+        
+        // Sembunyikan loading spinner ketika halaman selesai dimuat
+        $(window).on('load', function() {
+          $("#loading-spinner").addClass("hidden");
+        });
+      });
+    </script>
+  </body>
+</html>

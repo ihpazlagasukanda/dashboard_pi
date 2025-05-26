@@ -116,6 +116,10 @@ app.get('/wcmvsverval', authMiddleware, (req, res) => {
     res.render('wcmvsverval', { user: req.user });
 });
 
+app.get('/penyalurando', authMiddleware, (req, res) => {
+    res.render('penyalurando', { user: req.user });
+});
+
 // app.get('/visualisasi', authMiddleware, (req, res) => {
 //     res.render('visualisasi', { user: req.user });
 // });
@@ -140,7 +144,7 @@ app.use(express.json({ limit: '50mb' })); // Sesuaikan ukuran jika perlu
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Jalankan server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

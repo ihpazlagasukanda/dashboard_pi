@@ -114,9 +114,11 @@ router.get('/data/download', dataController.exportExcel);
 router.get('/data/wcm', dataController.getWcm);
 router.get('/download/wcm', dataController.downloadWcm);
 router.get('/data/wcmvsverval', dataController.wcmVsVerval);
+router.get('/data/penyaluran_do', dataController.getPenyaluranDo);
 router.get('/download/wcmf5', dataController.downloadWcmF5);
 router.get('/download/wcmvsverval', dataController.exportExcelWcmVsVerval);
 router.get('/download/summary-pupuk', dataController.downloadSummaryPupuk);
+
 
 // Endpoint untuk last updated
 router.get('/lastupdated/global', dataController.getLastUpdatedGlobal);
