@@ -144,7 +144,7 @@ app.use(express.json({ limit: '50mb' })); // Sesuaikan ukuran jika perlu
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Jalankan server
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
