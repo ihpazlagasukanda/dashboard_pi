@@ -347,19 +347,19 @@
 
     // Process totals data
     function processTotals(totals) {
-        console.debug("Processing totals data...");
-        const processed = {};
-        
-        Object.keys(totals).forEach(key => {
-            console.debug(`Processing key: ${key}, value:`, totals[key]);
-            const values = totals[key].split('.00').filter(v => v);
-            const sum = values.reduce((acc, val) => acc + parseFloat(val || 0), 0);
-            processed[key] = sum;
-        });
+    console.debug("Processing totals data...");
+    const processed = {};
+    
+    Object.keys(totals).forEach(key => {
+        console.debug(`Processing key: ${key}, value:`, totals[key]);
+        const value = parseFloat(totals[key]) || 0;
+        processed[key] = value;
+    });
 
-        console.debug("Processed totals:", processed);
-        return processed;
-    }
+    console.debug("Processed totals:", processed);
+    return processed;
+}
+
 
     // Update table with processed data
     function updateTable(data, totals) {
