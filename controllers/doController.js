@@ -140,7 +140,14 @@ exports.uploadPenyaluranDo = async (req, res) => {
             }
 
             const key = `${data.produsen}-${data.nomor_ff}-${data.kode_distributor}-${data.kode_provinsi}-${data.kode_kabupaten}-${data.kode_kecamatan}-${data.produk}-${data.kode_kios}-${data.tanggal_penyaluran}`;
-            PenyaluranDoDataMap.set(key, data);
+            // Jika sudah ada data dengan key yang sama, jumlahkan qty-nya
+            if (PenyaluranDoDataMap.has(key)) {
+                const existingData = PenyaluranDoDataMap.get(key);
+                existingData.qty += data.qty; // Jumlahkan qty
+                PenyaluranDoDataMap.set(key, existingData);
+            } else {
+                PenyaluranDoDataMap.set(key, data);
+            }
         });
 
         // Cek apakah data Penyaluran DO untuk tahun dan bulan sudah ada
