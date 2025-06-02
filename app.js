@@ -116,7 +116,7 @@ app.get('/wcmvsverval', authMiddleware, (req, res) => {
     res.render('wcmvsverval', { user: req.user });
 });
 
-app.get('/penyalurando', authMiddleware, (req, res) => {
+app.get('/penyalurando', authMiddleware, requireLevel(2), (req, res) => {
     res.render('penyalurando', { user: req.user });
 });
 
