@@ -7,7 +7,20 @@ const baseDir = path.join(__dirname, '../temp_exports');
 // (async () => {
 //     const tahun = 2025;
 //     const kabupatenList = [
-//         'SLEMAN'
+//         'KOTA YOGYAKARTA',
+//         'SLEMAN',
+//         'BANTUL',
+//         'GUNUNG KIDUL',
+//         'KULON PROGO',
+//         'SRAGEN',
+//         'BOYOLALI',
+//         'KLATEN',
+//         'KOTA MAGELANG',
+//         'MAGELANG',
+//         'WONOGIRI',
+//         'KARANGANYAR',
+//         'KOTA SURAKARTA',
+//         'SUKOHARJO'
 //     ];
 
 //     for (const kabupaten of kabupatenList) {
@@ -19,8 +32,8 @@ const baseDir = path.join(__dirname, '../temp_exports');
 //             console.error(`[MANUAL ERROR] Gagal generate report untuk ${kabupaten}:`, error);
 //         }
 
-//         // Opsional: Delay kecil untuk bantu pelepasan memori antar proses
-//         await new Promise(resolve => setTimeout(resolve, 1000)); // 1 detik
+
+//         await new Promise(resolve => setTimeout(resolve, 1000)); 
 //     }
 
 //     console.log('[MANUAL] Semua laporan selesai diproses.');
