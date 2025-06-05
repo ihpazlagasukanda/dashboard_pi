@@ -6,6 +6,7 @@ const path = require('path');
 const midController = require('../controllers/midController');
 const desaController = require("../controllers/desaController");
 const mainMidController = require("../controllers/mainMidController");
+const masterMidController = require("../controllers/masterMidController");
 
 // Konfigurasi multer
 const storage = multer.memoryStorage();
@@ -55,5 +56,7 @@ router.post('/upload-mid', uploadMiddleware, mainMidController.uploadMid);
 
 // Endpoint untuk upload Desa
 router.post("/upload-desa", uploadMiddleware, desaController.uploadDesa);
+
+router.post("/upload-mid-2025", uploadMiddleware, masterMidController.uploadMid);
 
 module.exports = router;

@@ -112,6 +112,7 @@ router.get('/data/download', dataController.exportExcel);
 
 
 router.get('/data/wcm', dataController.getWcm);
+router.get('/data/wcmf5', dataController.getWcmF5);
 router.get('/download/wcm', dataController.downloadWcm);
 router.get('/data/wcmvsverval', dataController.wcmVsVerval);
 router.get('/data/penyaluran_do', dataController.getPenyaluranDo);

@@ -170,11 +170,13 @@ const processExcelFile = async (file, metodePenebusan) => {
 const getKodeKiosMappings = async () => {
     const [allMainMID] = await db.query('SELECT mid, kabupaten, kecamatan, nama_kios, kode_kios FROM main_mid');
     const [allMasterMID] = await db.query('SELECT mid, kode_kios FROM master_mid');
+    const [masterMID2025] = await db.query('SELECT mid, kode_kios FROM master_mid_2025');
 
     const mappings = {
         midMap: new Map(),
         kabKecNamaMap: new Map(),
-        masterMidMap: new Map()
+        masterMidMap: new Map(),
+        mid2025Map: new Map()
     };
 
     allMainMID.forEach(({ mid, kabupaten, kecamatan, nama_kios, kode_kios }) => {
@@ -194,6 +196,10 @@ const getKodeKiosMappings = async () => {
         mappings.masterMidMap.set(cleanText(mid), kode_kios);
     });
 
+    masterMID2025.forEach(({ mid, kode_kios }) => {
+        mappings.mid2025Map.set(cleanText(mid), kode_kios);
+    });
+
     return mappings;
 };
 
@@ -203,7 +209,7 @@ const determineKodeKios = (rowData, mappings) => {
         return rowData.kodeKios || '-';
     }
 
-    const { midMap, kabKecNamaMap, masterMidMap } = mappings;
+    const { midMap, kabKecNamaMap, masterMidMap, mid2025Map } = mappings;
     const cleanMid = cleanText(rowData.mid);
     const cleanKab = cleanText(rowData.kabupaten);
     const cleanKec = cleanText(rowData.kecamatan);
@@ -225,6 +231,10 @@ const determineKodeKios = (rowData, mappings) => {
     // 3. Coba match dengan MID saja (master_mid)
     if (masterMidMap.has(cleanMid)) {
         return masterMidMap.get(cleanMid);
+    }
+
+    if (mid2025Map.has(cleanMid)) {
+        return mid2025Map.get(cleanMid);
     }
 
     return rowData.kodeKios || '-';
