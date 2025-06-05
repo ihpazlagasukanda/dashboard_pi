@@ -15,7 +15,7 @@ const baseDir = path.join(__dirname, '../temp_exports');
         // 'SRAGEN',
         // 'BOYOLALI',
         // 'KLATEN',
-        'KOTA MAGELANG'
+        // 'KOTA MAGELANG',
         // 'MAGELANG',
         // 'WONOGIRI',
         // 'KARANGANYAR',
