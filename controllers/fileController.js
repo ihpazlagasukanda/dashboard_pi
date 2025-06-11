@@ -179,6 +179,14 @@ const getKodeKiosMappings = async () => {
         mid2025Map: new Map()
     };
 
+    allMasterMID.forEach(({ mid, kode_kios }) => {
+        mappings.masterMidMap.set(cleanText(mid), kode_kios);
+    });
+
+    masterMID2025.forEach(({ mid, kode_kios }) => {
+        mappings.mid2025Map.set(cleanText(mid), kode_kios);
+    });
+
     allMainMID.forEach(({ mid, kabupaten, kecamatan, nama_kios, kode_kios }) => {
         const normKabupaten = cleanText(kabupaten);
         const normKecamatan = cleanText(kecamatan);
@@ -190,14 +198,6 @@ const getKodeKiosMappings = async () => {
         if (nama_kios) {
             mappings.kabKecNamaMap.set(`${normKabupaten}-${normKecamatan}-${normNamaKios}`, kode_kios);
         }
-    });
-
-    allMasterMID.forEach(({ mid, kode_kios }) => {
-        mappings.masterMidMap.set(cleanText(mid), kode_kios);
-    });
-
-    masterMID2025.forEach(({ mid, kode_kios }) => {
-        mappings.mid2025Map.set(cleanText(mid), kode_kios);
     });
 
     return mappings;
@@ -215,6 +215,11 @@ const determineKodeKios = (rowData, mappings) => {
     const cleanKec = cleanText(rowData.kecamatan);
     const cleanNama = cleanNamaKios(rowData.namaKios);
 
+
+    if (mid2025Map.has(cleanMid)) {
+        return mid2025Map.get(cleanMid);
+    }
+
     // 1. Coba match dengan MID + Kabupaten
     const midKabKey = `${cleanMid}-${cleanKab}`;
     if (midMap.has(midKabKey)) {
@@ -222,19 +227,15 @@ const determineKodeKios = (rowData, mappings) => {
         if (kode && kode !== '-') return kode;
     }
 
-    // 2. Coba match dengan Kab+Kec+Nama
-    const kabKecNamaKey = `${cleanKab}-${cleanKec}-${cleanNama}`;
-    if (kabKecNamaMap.has(kabKecNamaKey)) {
-        return kabKecNamaMap.get(kabKecNamaKey);
-    }
-
     // 3. Coba match dengan MID saja (master_mid)
     if (masterMidMap.has(cleanMid)) {
         return masterMidMap.get(cleanMid);
     }
 
-    if (mid2025Map.has(cleanMid)) {
-        return mid2025Map.get(cleanMid);
+    // 2. Coba match dengan Kab+Kec+Nama
+    const kabKecNamaKey = `${cleanKab}-${cleanKec}-${cleanNama}`;
+    if (kabKecNamaMap.has(kabKecNamaKey)) {
+        return kabKecNamaMap.get(kabKecNamaKey);
     }
 
     return rowData.kodeKios || '-';
