@@ -808,43 +808,73 @@ exports.getSum = async (req, res) => {
 
 exports.exportExcel = async (req, res) => {
     try {
-        const { kabupaten, kecamatan, metode_penebusan, tanggal_tebus, bulan_awal, bulan_akhir } = req.query;
-        let query = "SELECT * FROM verval WHERE 1=1";
-        let params = [];
+        const { kabupaten, kecamatan, metode_penebusan, tahun, bulan, bulan_awal, bulan_akhir } = req.query;
 
-        if (kabupaten) {
-            query += " AND kabupaten = ?";
-            params.push(kabupaten);
-        }
-        if (kecamatan) {
-            query += " AND kecamatan = ?";
-            params.push(kecamatan);
-        }
-        if (metode_penebusan) {
-            query += " AND metode_penebusan = ?";
-            params.push(metode_penebusan);
-        }
-        if (tanggal_tebus) {
-            query += " AND DATE_FORMAT(tanggal_tebus, '%Y-%m') = ?";
-            params.push(tanggal_tebus);
-        }
-        if (bulan_awal && bulan_akhir) {
-            query += " AND tanggal_tebus BETWEEN ? AND ?";
-            params.push(bulan_awal, bulan_akhir);
-        }
+        // 1. Gunakan cursor/pagination untuk data besar
+        const pageSize = 50000; // Sesuaikan dengan kapasitas server
+        let currentPage = 0;
+        let allRows = [];
 
-        // Ambil data dari database
-        const [rows] = await db.query(query, params);
+        // 2. Query dengan limit dan offset
+        const fetchData = async (page) => {
+            let query = `
+                SELECT 
+                    kabupaten, kecamatan, poktan, kode_kios, nik, nama_petani,
+                    tanggal_tebus, urea, npk, sp36, za, npk_formula,
+                    organik, organik_cair, kakao, status
+                FROM verval WHERE 1=1
+            `;
 
-        if (rows.length === 0) {
-            return res.status(404).json({ error: "Data tidak ditemukan" });
-        }
+            let params = [];
 
-        // Buat workbook dan worksheet Excel
-        const workbook = new ExcelJS.Workbook();
+            // Filter conditions
+            if (kabupaten) {
+                query += " AND kabupaten = ?";
+                params.push(kabupaten);
+            }
+            if (kecamatan) {
+                query += " AND kecamatan = ?";
+                params.push(kecamatan);
+            }
+            if (metode_penebusan) {
+                query += " AND metode_penebusan = ?";
+                params.push(metode_penebusan);
+            }
+            if (tahun) {
+                query += " AND YEAR(tanggal_tebus) = ?";
+                params.push(tahun);
+            }
+            if (bulan) {
+                query += " AND (tanggal_tebus) = ?";
+                params.push(tanggal_tebus);
+            }
+            if (bulan_awal && bulan_akhir) {
+                query += " AND tanggal_tebus BETWEEN ? AND ?";
+                params.push(bulan_awal, bulan_akhir);
+            }
+
+            // Pagination
+            query += ` LIMIT ? OFFSET ?`;
+            params.push(pageSize, page * pageSize);
+
+            const [rows] = await db.query(query, params);
+            return rows;
+        };
+
+        // 3. Set headers sebelum mulai proses
+        res.setHeader('Content-Disposition', 'attachment; filename="verval_data.xlsx"');
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        // 4. Buat workbook dengan streaming
+        const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+            stream: res,
+            useStyles: true,
+            useSharedStrings: true
+        });
+
         const worksheet = workbook.addWorksheet('Data Verval');
 
-        // 🔹 **Tentukan Header Kolom (Tanpa id & metode_penebusan)**
+        // 5. Definisikan kolom
         worksheet.columns = [
             { header: "No", key: "no", width: 5 },
             { header: "Kabupaten", key: "kabupaten", width: 20 },
@@ -853,55 +883,75 @@ exports.exportExcel = async (req, res) => {
             { header: "Kode Kios", key: "kode_kios", width: 15 },
             { header: "NIK", key: "nik", width: 20 },
             { header: "Nama Petani", key: "nama_petani", width: 25 },
-            { header: "Tanggal Tebus", key: "tanggal_tebus", width: 15 },
-            { header: "Urea", key: "urea", width: 10 },
-            { header: "NPK", key: "npk", width: 10 },
-            { header: "SP36", key: "sp36", width: 10 },
-            { header: "ZA", key: "za", width: 10 },
-            { header: "NPK Formula", key: "npk_formula", width: 15 },
-            { header: "Organik", key: "organik", width: 10 },
-            { header: "Organik Cair", key: "organik_cair", width: 15 },
-            { header: "Kakao", key: "kakao", width: 10 },
+            { header: "Tanggal Tebus", key: "tanggal_tebus", width: 15, style: { numFmt: 'yyyy-mm-dd' } },
+            { header: "Urea", key: "urea", width: 10, style: { numFmt: '#,##0' } },
+            { header: "NPK", key: "npk", width: 10, style: { numFmt: '#,##0' } },
+            { header: "SP36", key: "sp36", width: 10, style: { numFmt: '#,##0' } },
+            { header: "ZA", key: "za", width: 10, style: { numFmt: '#,##0' } },
+            { header: "NPK Formula", key: "npk_formula", width: 15, style: { numFmt: '#,##0' } },
+            { header: "Organik", key: "organik", width: 10, style: { numFmt: '#,##0' } },
+            { header: "Organik Cair", key: "organik_cair", width: 15, style: { numFmt: '#,##0' } },
+            { header: "Kakao", key: "kakao", width: 10, style: { numFmt: '#,##0' } },
             { header: "Status", key: "status", width: 15 }
         ];
 
-        // 🔹 **Tambahkan Data ke Excel (Tanpa id & metode_penebusan)**
-        let totalUrea = 0, totalNpk = 0, totalSp36 = 0, totalZa = 0, totalNpkFormula = 0, totalOrganik = 0, totalOrganikCair = 0, totalKakao = 0;
+        // 6. Variabel untuk total
+        let totalUrea = 0, totalNpk = 0, totalSp36 = 0, totalZa = 0,
+            totalNpkFormula = 0, totalOrganik = 0, totalOrganikCair = 0, totalKakao = 0;
+        let rowCount = 0;
 
-        rows.forEach((row, index) => {
-            worksheet.addRow({
-                no: index + 1,
-                kabupaten: row.kabupaten,
-                kecamatan: row.kecamatan,
-                poktan: row.poktan,
-                kode_kios: row.kode_kios,
-                nik: row.nik,
-                nama_petani: row.nama_petani,
-                tanggal_tebus: row.tanggal_tebus,
-                urea: row.urea || 0,
-                npk: row.npk || 0,
-                sp36: row.sp36 || 0,
-                za: row.za || 0,
-                npk_formula: row.npk_formula || 0,
-                organik: row.organik || 0,
-                organik_cair: row.organik_cair || 0,
-                kakao: row.kakao || 0,
-                status: row.status
-            });
+        // 7. Proses data per halaman
+        do {
+            const rows = await fetchData(currentPage);
+            if (rows.length === 0 && currentPage === 0) {
+                return res.status(404).json({ error: "Data tidak ditemukan" });
+            }
 
-            // 🔹 **Hitung Total untuk Baris Akhir**
-            totalUrea += row.urea || 0;
-            totalNpk += row.npk || 0;
-            totalSp36 += row.sp36 || 0;
-            totalZa += row.za || 0;
-            totalNpkFormula += row.npk_formula || 0;
-            totalOrganik += row.organik || 0;
-            totalOrganikCair += row.organik_cair || 0;
-            totalKakao += row.kakao || 0;
-        });
+            for (const row of rows) {
+                rowCount++;
 
-        // 🔹 **Tambahkan Baris Total**
-        worksheet.addRow({
+                worksheet.addRow({
+                    no: rowCount,
+                    kabupaten: row.kabupaten,
+                    kecamatan: row.kecamatan,
+                    poktan: row.poktan,
+                    kode_kios: row.kode_kios,
+                    nik: row.nik,
+                    nama_petani: row.nama_petani,
+                    tanggal_tebus: row.tanggal_tebus,
+                    urea: row.urea || 0,
+                    npk: row.npk || 0,
+                    sp36: row.sp36 || 0,
+                    za: row.za || 0,
+                    npk_formula: row.npk_formula || 0,
+                    organik: row.organik || 0,
+                    organik_cair: row.organik_cair || 0,
+                    kakao: row.kakao || 0,
+                    status: row.status
+                }).commit(); // Langsung commit setiap baris
+
+                // Hitung total
+                totalUrea += row.urea || 0;
+                totalNpk += row.npk || 0;
+                totalSp36 += row.sp36 || 0;
+                totalZa += row.za || 0;
+                totalNpkFormula += row.npk_formula || 0;
+                totalOrganik += row.organik || 0;
+                totalOrganikCair += row.organik_cair || 0;
+                totalKakao += row.kakao || 0;
+            }
+
+            currentPage++;
+
+            // Beri jeda untuk menghindari blocking event loop
+            if (rows.length > 0) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+        } while (allRows.length === pageSize); // Lanjutkan sampai data habis
+
+        // 8. Tambahkan baris total
+        const totalsRow = worksheet.addRow({
             no: "TOTAL",
             kabupaten: "",
             kecamatan: "",
@@ -919,23 +969,29 @@ exports.exportExcel = async (req, res) => {
             organik_cair: totalOrganikCair,
             kakao: totalKakao,
             status: ""
-        }).eachCell((cell, colNumber) => {
-            if (colNumber > 6) { // Hanya styling bagian total pupuk
-                cell.font = { bold: true };
-                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFF00' } }; // Warna kuning
-            }
         });
 
-        // Set header sebelum mengirim file
-        res.setHeader('Content-Disposition', 'attachment; filename="verval_data.xlsx"');
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        totalsRow.eachCell((cell, colNumber) => {
+            if (colNumber > 7) {
+                cell.font = { bold: true };
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFFF00' }
+                };
+            }
+        });
+        totalsRow.commit();
 
-        // Kirim file Excel ke response
-        await workbook.xlsx.write(res);
-        res.end();
+        // 9. Finalisasi
+        worksheet.commit();
+        await workbook.commit();
+
     } catch (error) {
         console.error("Error exporting Excel:", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        if (!res.headersSent) {
+            res.status(500).json({ error: "Internal Server Error" });
+        }
     }
 };
 
