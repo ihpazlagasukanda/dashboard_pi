@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <%- include('./partials/head'); %>
+  <style>
+    .drill-down { cursor: pointer; color: #1a73e8; text-decoration: underline; }
+    .drill-down:hover { color: #0d47a1; }
+    .breadcrumb-item { display: inline-block; margin-right: 5px; }
+    .breadcrumb-item:after { content: '>'; margin-left: 5px; color: #666; }
+    .breadcrumb-item:last-child:after { content: ''; }
+    .loading-spinner {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+    .spinner-content {
+      background: white;
+      padding: 20px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+    }
+    .empty-message { text-align: center; padding: 20px; color: #666; font-style: italic; }
+    .table-loading { opacity: 0.5; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <%- include('./partials/header'); %>
+
+    <div class="container">
+      <div class="page-inner">
+        <div class="page-header">
+          <h3 class="fw-bold mb-3">Rekap Jumlah Total Petani</h3>
+          <div id="breadcrumb" class="mb-3">
+            <span class="breadcrumb-item"><a href="#" class="reset-drill">Semua Provinsi</a></span>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
+          <div>
+            <p class="op-7 mb-2">Untuk Menampilkan Data Sesuai, Harap Pilih Tahun</p>
+          </div>
+          <div class="ms-md-auto py-2 py-md-0">
+            <button id="download-excel" class="btn btn-primary btn-round" disabled>Download Excel</button>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-3">
+            <label for="filter-tahun" class="form-label">Tahun</label>
+            <select id="filter-tahun" class="form-control">
+              <option value="">Pilih Tahun</option>
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+            </select>
+          </div>
+        </div>
+<!-- Last Updated Text -->
+<p id="lastUpdatedGlobal" class="text-end fst-italic text-muted small mb-1" style="cursor:pointer;" data-bs-toggle="modal" data-bs-target="#modalLastUpdated">
+    Realisasi Terakhir: ...
+  </p>
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card">
+              <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                  <h4 class="card-title">Rekap Jumlah Petani</h4>
+                  <div id="summary-total" class="text-muted">Total Data: <span id="total-count">0</span></div>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive">
+                  <table id="summary-table" class="table table-striped">
+                    <thead class="thead-light">
+                      <tr>
+                        <th>Wilayah</th>  
+                        <th colspan="4" class="text-center">Jumlah Total Petani</th>
+                        <th colspan="4" class="text-center">Jumlah Total Petani Tebus</th>
+                      </tr>
+                      <tr>
+                        <th></th>
+                        <th>Urea</th>
+                        <th>NPK</th>
+                        <th>NPK Formula</th>
+                        <th>Organik</th>
+                        <th>Urea</th>
+                        <th>NPK</th>
+                        <th>NPK Formula</th>
+                        <th>Organik</th>
+                      </tr>
+                    </thead>
+                    <tbody></tbody>
+                    <tfoot>
+                      <tr class="table-primary">
+                        <th>Total</th>
+                        <th id="sum-urea-alokasi">0</th>
+                        <th id="sum-npk-alokasi">0</th>
+                        <th id="sum-npk-formula-alokasi">0</th>
+                        <th id="sum-organik-alokasi">0</th>
+                        <th id="sum-urea-realisasi">0</th>
+                        <th id="sum-npk-realisasi">0</th>
+                        <th id="sum-npk-formula-realisasi">0</th>
+                        <th id="sum-organik-realisasi">0</th>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <div id="loading-spinner" class="loading-spinner">
+    <div class="spinner-content">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <span class="ms-3">Memuat data...</span>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalLastUpdated" tabindex="-1" aria-labelledby="modalLastUpdatedLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalLastUpdatedLabel">Last Updated per Kabupaten</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body" id="kabupatenLastUpdateList">
+          <div class="text-center text-muted">Memuat data...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%- include('./partials/footer'); %>
+</div>
+
+  <!-- Core JS Files -->
+  <script src="./assets/js/core/jquery-3.7.1.min.js"></script>
+  <script src="./assets/js/core/popper.min.js"></script>
+  <script src="./assets/js/core/bootstrap.min.js"></script>
+  <!-- Datatables -->
+  <script src="./assets/js/plugin/datatables/datatables.min.js"></script>
+
+  <!-- Kaiadmin JS -->
+  <script src="./assets/js/kaiadmin.min.js"></script>
+
+  <!-- Kaiadmin DEMO methods, don't include it in your project! -->
+  <script src="./assets/js/setting-demo.js"></script>
+  <script src="./assets/js/demo.js"></script>
+
+  <script src="./assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
+
+  <script>
+  $(document).ready(function() {
+    const DEBUG = true;
+    console.debug("Initializing application...");
+
+    // State management
+    const state = {
+        level: 'provinsi',
+        provinsi: null,
+        kabupaten: null,
+        tahun: null
+    };
+
+    // Declare table variable at the top level
+    let table;
+
+    // Initialize DataTable
+    function initDataTable() {
+        console.debug("Initializing DataTable...");
+        
+        if ($.fn.DataTable.isDataTable('#summary-table')) {
+            $('#summary-table').DataTable().destroy(true);
+            $('#summary-table tbody').empty();
+        }
+
+        table = $('#summary-table').DataTable({
+            paging: false,
+            searching: false,
+            info: false,
+            ordering: false,
+            autoWidth: false,
+            dom: 't',
+            columns: [
+                { 
+                    data: 'wilayah',
+                    render: function(data, type) {
+                        if (type === 'display') {
+                            return `<span class="drill-down">${data}</span>`;
+                        }
+                        return data;
+                    }
+                },
+                { 
+                    data: 'alokasi_urea', 
+                    className: 'text-end',
+                    render: function(data, type) {
+                        if (type === 'display' && data !== null && !isNaN(data)) {
+                            const num = parseFloat(data);
+                            return Number.isInteger(num) ? num.toLocaleString('id-ID') : num.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+                        }
+                        return data || '-';
+                    }
+                },
+                { 
+                    data: 'alokasi_npk', 
+                    className: 'text-end',
+                    render: function(data, type) {
+                        if (type === 'display' && data !== null && !isNaN(data)) {
+                            const num = parseFloat(data);
+                            return Number.isInteger(num) ? num.toLocaleString('id-ID') : num.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+                        }
+                        return data || '-';
+                    }
+                },
+                { 
+                    data: 'alokasi_npk_formula', 
+                    className: 'text-end',
+                    render: function(data, type) {
+                        if (type === 'display' && data !== null && !isNaN(data)) {
+                            const num = parseFloat(data);
+                            return Number.isInteger(num) ? num.toLocaleString('id-ID') : num.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+                        }
+                        return data || '-';
+                    }
+                },
+                { 
+                    data: 'alokasi_organik', 
+                    className: 'text-end',
+                    render: function(data, type) {
+                        if (type === 'display' && data !== null && !isNaN(data)) {
+                            const num = parseFloat(data);
+                            return Number.isInteger(num) ? num.toLocaleString('id-ID') : num.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+                        }
+                        return data || '-';
+                    }
+                },
+                { 
+                    data: 'realisasi_urea', 
+                    className: 'text-end',
+                    render: function(data, type, row) {
+                        if (type === 'display') {
+                            const realisasi = parseFloat(data) || 0;
+                            const alokasi = parseFloat(row.alokasi_urea) || 0;
+                            const percentage = alokasi > 0 ? (realisasi / alokasi * 100) : 0;
+                            const formattedRealisasi = Number.isInteger(realisasi) 
+                                ? realisasi.toLocaleString('id-ID') 
+                                : realisasi.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+                            return `${formattedRealisasi} (${percentage.toFixed(2)}%)`;
+                        }
+                        return data;
+                    }
+                },
+                { 
+                    data: 'realisasi_npk', 
+                    className: 'text-end',
+                    render: function(data, type, row) {
+                        if (type === 'display') {
+                            const realisasi = parseFloat(data) || 0;
+                            const alokasi = parseFloat(row.alokasi_npk) || 0;
+                            const percentage = alokasi > 0 ? (realisasi / alokasi * 100) : 0;
+                            const formattedRealisasi = Number.isInteger(realisasi) 
+                                ? realisasi.toLocaleString('id-ID') 
+                                : realisasi.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+                            return `${formattedRealisasi} (${percentage.toFixed(2)}%)`;
+                        }
+                        return data;
+                    }
+                },
+                { 
+                    data: 'realisasi_npk_formula', 
+                    className: 'text-end',
+                    render: function(data, type, row) {
+                        if (type === 'display') {
+                            const realisasi = parseFloat(data) || 0;
+                            const alokasi = parseFloat(row.alokasi_npk_formula) || 0;
+                            const percentage = alokasi > 0 ? (realisasi / alokasi * 100) : 0;
+                            const formattedRealisasi = Number.isInteger(realisasi) 
+                                ? realisasi.toLocaleString('id-ID') 
+                                : realisasi.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+                            return `${formattedRealisasi} (${percentage.toFixed(2)}%)`;
+                        }
+                        return data;
+                    }
+                },
+                { 
+                    data: 'realisasi_organik', 
+                    className: 'text-end',
+                    render: function(data, type, row) {
+                        if (type === 'display') {
+                            const realisasi = parseFloat(data) || 0;
+                            const alokasi = parseFloat(row.alokasi_organik) || 0;
+                            const percentage = alokasi > 0 ? (realisasi / alokasi * 100) : 0;
+                            const formattedRealisasi = Number.isInteger(realisasi) 
+                                ? realisasi.toLocaleString('id-ID') 
+                                : realisasi.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+                            return `${formattedRealisasi} (${percentage.toFixed(2)}%)`;
+                        }
+                        return data;
+                    }
+                }
+            ],
+            initComplete: function() {
+                console.debug("DataTable initialized");
+                $('#summary-table tbody').html(
+                    '<tr><td colspan="9" class="empty-message">Silakan pilih tahun untuk melihat data</td></tr>'
+                );
+            }
+        });
+
+        return table;
+    }
+
+    // Initialize the DataTable
+    table = initDataTable();
+
+    // Process API response data
+    function processApiData(data) {
+        console.debug("Processing API data...");
+        return data.map(item => {
+            return {
+                wilayah: item.wilayah || '-',
+                alokasi_urea: parseFloat(item.alokasi_urea) || 0,
+                alokasi_npk: parseFloat(item.alokasi_npk) || 0,
+                alokasi_npk_formula: parseFloat(item.alokasi_npk_formula) || 0,
+                alokasi_organik: parseFloat(item.alokasi_organik) || 0,
+                realisasi_urea: parseFloat(item.realisasi_urea) || 0,
+                realisasi_npk: parseFloat(item.realisasi_npk) || 0,
+                realisasi_npk_formula: parseFloat(item.realisasi_npk_formula) || 0,
+                realisasi_organik: parseFloat(item.realisasi_organik) || 0
+            };
+        });
+    }
+
+    // Process totals data
+    function processTotals(totals) {
+    console.debug("Processing totals data...");
+    const processed = {};
+    
+    Object.keys(totals).forEach(key => {
+        console.debug(`Processing key: ${key}, value:`, totals[key]);
+        const value = parseFloat(totals[key]) || 0;
+        processed[key] = value;
+    });
+
+    console.debug("Processed totals:", processed);
+    return processed;
+}
+
+
+    // Update table with processed data
+    function updateTable(data, totals) {
+        try {
+            table.clear();
+            
+            if (data && data.length > 0) {
+                const processedData = processApiData(data);
+                table.rows.add(processedData).draw();
+                $('#total-count').text(processedData.length);
+                
+                if (totals) {
+                    const processedTotals = processTotals(totals);
+                    updateTotals(processedTotals);
+                }
+            } else {
+                showEmptyState("Tidak ada data ditemukan");
+            }
+        } catch (e) {
+            console.error("Error updating table:", e);
+            showError("Gagal menampilkan data");
+        }
+    }
+
+    // Update totals display
+    function updateTotals(totals) {
+        Object.entries(totals).forEach(([key, value]) => {
+            const elementId = `sum-${key.replace(/_/g, '-')}`;
+            const numValue = parseFloat(value) || 0;
+            $(`#${elementId}`).text(
+                Number.isInteger(numValue) 
+                    ? numValue.toLocaleString('id-ID') 
+                    : numValue.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')
+            );
+        });
+    }
+
+    // Load data function
+    function loadData() {
+        const tahun = $('#filter-tahun').val();
+        console.debug("loadData triggered for year:", tahun);
+        
+        if (!tahun) {
+            console.debug("No year selected, showing empty state");
+            showEmptyState("Silakan pilih tahun untuk melihat data");
+            $('#download-excel').prop('disabled', true);
+            return;
+        }
+
+        state.tahun = tahun;
+        showLoading();
+
+        const params = {
+            tahun,
+            ...(state.provinsi && { provinsi: state.provinsi }),
+            ...(state.kabupaten && { kabupaten: state.kabupaten })
+        };
+
+        console.debug("Request parameters:", params);
+
+        $.ajax({
+            url: '/api/rekap/petani',
+            method: 'GET',
+            dataType: 'json',
+            data: params,
+            success: function(response) {
+                console.debug("API response received:", response);
+                
+                if (response && response.level) {
+                    if (response.data && response.data.length > 0) {
+                        console.debug("Received", response.data.length, "data items");
+                        updateTable(response.data, response.totals);
+                        updateBreadcrumb();
+                        $('#download-excel').prop('disabled', false);
+                    } else {
+                        console.debug("No data received from API");
+                        showEmptyState("Tidak ada data ditemukan");
+                    }
+                } else {
+                    const errorMsg = "Format response tidak valid";
+                    console.error("API Error:", errorMsg);
+                    showError(errorMsg);
+                }
+            },
+            error: function(xhr, status, error) {
+                const errorMsg = `AJAX Error: ${status} - ${error}`;
+                console.error(errorMsg, xhr);
+                showError("Gagal terhubung ke server. Silakan coba lagi.");
+            },
+            complete: function() {
+                hideLoading();
+            }
+        });
+    }
+
+    // Show empty state
+    function showEmptyState(message) {
+        console.debug("Showing empty state:", message);
+        $('#summary-table tbody').html(
+            `<tr><td colspan="9" class="empty-message">${message}</td></tr>`
+        );
+        resetTotals();
+    }
+
+    // Reset totals
+    function resetTotals() {
+        console.debug("Resetting totals");
+        $('[id^="sum-"]').text('0');
+        $('#total-count').text('0');
+    }
+
+    // Show loading spinner
+    function showLoading() {
+        console.debug("Showing loading spinner");
+        $('#loading-spinner').show();
+        $('#summary-table').addClass('table-loading');
+    }
+
+    // Hide loading spinner
+    function hideLoading() {
+        console.debug("Hiding loading spinner");
+        $('#loading-spinner').hide();
+        $('#summary-table').removeClass('table-loading');
+    }
+
+    // Show error message
+    function showError(message) {
+        console.error("Showing error:", message);
+        alert(message);
+        showEmptyState("Terjadi kesalahan saat memuat data");
+    }
+
+    // Update breadcrumb
+    function updateBreadcrumb() {
+        console.debug("Updating breadcrumb");
+        let html = '<span class="breadcrumb-item"><a href="#" class="reset-drill">Semua Provinsi</a></span>';
+        
+        if (state.provinsi) {
+            html += `<span class="breadcrumb-item"><a href="#" class="drill-provinsi">${state.provinsi}</a></span>`;
+        }
+        
+        if (state.kabupaten) {
+            html += `<span class="breadcrumb-item">${state.kabupaten}</span>`;
+        }
+        
+        $('#breadcrumb').html(html);
+    }
+
+    // Handle drill down
+    function handleDrillDown(wilayah) {
+        console.debug("Drill down to:", wilayah);
+        if (state.level === 'provinsi') {
+            state.level = 'kabupaten';
+            state.provinsi = wilayah;
+        } else if (state.level === 'kabupaten') {
+            state.level = 'kecamatan';
+            state.kabupaten = wilayah;
+        }
+        loadData();
+    }
+
+    // Reset drill down
+    function resetDrillDown() {
+        console.debug("Resetting drill down");
+        state.level = 'provinsi';
+        state.provinsi = null;
+        state.kabupaten = null;
+        loadData();
+    }
+
+    // Event listeners
+    $('#filter-tahun').on('change', loadData);
+    
+    $(document).on('click', '.drill-down', function() {
+        const wilayah = $(this).text();
+        handleDrillDown(wilayah);
+    });
+    
+    $(document).on('click', '.reset-drill', function(e) {
+        e.preventDefault();
+        resetDrillDown();
+    });
+    
+    $(document).on('click', '.drill-provinsi', function(e) {
+        e.preventDefault();
+        state.level = 'kabupaten';
+        state.kabupaten = null;
+        loadData();
+    });
+
+    async function loadLastUpdatedGlobal() {
+        try {
+          const res = await fetch('/api/lastupdated/global');
+          const data = await res.json();
+    
+          if (data.lastUpdated) {
+            const date = new Date(data.lastUpdated);
+            const formatter = new Intl.DateTimeFormat('id-ID', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            });
+            document.getElementById('lastUpdatedGlobal').innerText =
+              'Last updated: ' + formatter.format(date);
+          } else {
+            document.getElementById('lastUpdatedGlobal').innerText =
+              'Last updated: tidak tersedia';
+          }
+        } catch (err) {
+          document.getElementById('lastUpdatedGlobal').innerText =
+            'Last updated: gagal memuat';
+          console.error(err);
+        }
+      }
+
+      // === LAST UPDATED PER KABUPATEN ===
+document.getElementById('lastUpdatedGlobal').addEventListener('click', async () => {
+    const container = document.getElementById('kabupatenLastUpdateList');
+    container.innerHTML = '<div class="text-center text-muted">Loading...</div>';
+
+    try {
+        const res = await fetch('/api/lastupdated/kabupaten');
+        const data = await res.json();
+
+        if (!data.length) {
+            container.innerHTML = '<div class="text-center text-danger">Tidak ada data ditemukan.</div>';
+            return;
+        }
+
+        // Create a formatter instance
+        const formatter = new Intl.DateTimeFormat('id-ID', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        container.innerHTML = '';
+        data.forEach(item => {
+            const date = new Date(item.lastUpdated);
+            const div = document.createElement('div');
+            div.className = 'mb-1';
+            div.innerHTML = `<strong>${item.kabupaten}</strong>: ${formatter.format(date)}`;
+            container.appendChild(div);
+        });
+
+        const modal = new bootstrap.Modal(document.getElementById("modalLastUpdated"));
+        modal.show();
+    } catch (err) {
+        container.innerHTML = '<div class="text-danger">Gagal memuat data.</div>';
+        console.error(err);
+    }
+});
+
+// Pastikan modal-backdrop dihilangkan saat ditutup
+$('#modalLastUpdated, #modalPetunjuk').on('hidden.bs.modal', function () {
+        $('body').removeClass('modal-open');
+        $('.modal-backdrop').remove();
+    });
+      loadLastUpdatedGlobal();
+
+    // Download Excel
+    $('#download-excel').click(function() {
+        if (!state.tahun) {
+            alert('Silakan pilih tahun terlebih dahulu');
+            return;
+        }
+        
+        let url = `/api/download/rekap-petani?tahun=${state.tahun}`;
+        
+        if (state.provinsi) {
+            url += `&provinsi=${encodeURIComponent(state.provinsi)}`;
+        }
+        if (state.kabupaten) {
+            url += `&kabupaten=${encodeURIComponent(state.kabupaten)}`;
+        }
+        
+        console.debug("Downloading Excel from:", url);
+        window.location.href = url;
+    });
+
+    console.debug("Application initialization complete");
+});
+  </script>
+</body>
+</html>

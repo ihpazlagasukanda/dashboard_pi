@@ -112,6 +112,10 @@ app.get('/sum', authMiddleware, (req, res) => {
     res.render('sum', { user: req.user });
 });
 
+app.get('/rekap-petani', authMiddleware, (req, res) => {
+    res.render('rekap-petani', { user: req.user });
+});
+
 app.get('/wcmvsverval', authMiddleware, (req, res) => {
     res.render('wcmvsverval', { user: req.user });
 });

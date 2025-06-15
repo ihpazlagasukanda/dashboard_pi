@@ -91,6 +91,8 @@ router.get('/data/jumlah-petani', dataController.getJumlahPetani);
 router.get('/alokasivstebus', dataController.alokasiVsTebusan);
 
 router.get('/summary/pupuk', dataController.summaryPupuk);
+router.get('/rekap/petani', dataController.rekapPetani);
+
 
 router.get('/petani-summary', dataController.getVervalSummary);
 
@@ -119,6 +121,7 @@ router.get('/data/penyaluran_do', dataController.getPenyaluranDo);
 router.get('/download/wcmf5', dataController.downloadWcmF5);
 router.get('/download/wcmvsverval', dataController.exportExcelWcmVsVerval);
 router.get('/download/summary-pupuk', dataController.downloadSummaryPupuk);
+router.get('/download/rekap-petani', dataController.downloadRekapPetani);
 
 
 // Endpoint untuk last updated
