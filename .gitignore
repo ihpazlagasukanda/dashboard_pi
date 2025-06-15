@@ -4,4 +4,4 @@ logs/
 *.log
 backup.sql
 example.env
-temp_exports
+temp_exports/
