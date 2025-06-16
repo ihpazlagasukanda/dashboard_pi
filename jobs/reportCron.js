@@ -42,7 +42,7 @@ const baseDir = path.join(__dirname, '../temp_exports');
 // (async () => {
 //     const tahun = 2025;
 //     const kabupatenList = [
-//         'GUNUNG KIDUL'
+//         'BOYOLALI'
 //     ];
 
 //     for (const kabupaten of kabupatenList) {

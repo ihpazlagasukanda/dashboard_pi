@@ -845,11 +845,11 @@ exports.exportExcel = async (req, res) => {
                 params.push(tahun);
             }
             if (bulan) {
-                query += " AND (tanggal_tebus) = ?";
-                params.push(tanggal_tebus);
+                query += " AND MONTH(tanggal_tebus) = ?";
+                params.push(bulan);
             }
             if (bulan_awal && bulan_akhir) {
-                query += " AND tanggal_tebus BETWEEN ? AND ?";
+                query += " AND MONTH(tanggal_tebus) BETWEEN ? AND ?";
                 params.push(bulan_awal, bulan_akhir);
             }
 
@@ -1739,10 +1739,10 @@ exports.downloadRekapPetani = async (req, res) => {
         const realisasiQuery = `
             SELECT 
                 ${selectField.replace(/e\./g, "")} AS wilayah,
-                SUM(tebus_urea) AS realisasi_urea,
-                SUM(tebus_npk) AS realisasi_npk,
-                SUM(tebus_npk_formula) AS realisasi_npk_formula,
-                SUM(tebus_organik) AS realisasi_organik
+                COUNT(DISTINCT CASE WHEN tebus_urea > 0 THEN nik END) AS realisasi_urea,
+                COUNT(DISTINCT CASE WHEN tebus_npk > 0 THEN nik END) AS realisasi_npk,
+                COUNT(DISTINCT CASE WHEN tebus_npk_formula > 0 THEN nik END) AS realisasi_npk_formula, 
+                COUNT(DISTINCT CASE WHEN tebus_organik > 0 THEN nik END) AS realisasi_organik
             FROM verval_summary
             ${whereClause.replace(/e\./g, "")}
             GROUP BY ${groupField}
