@@ -57,6 +57,7 @@ async function generateReport(kabupaten, tahun, baseDir) {
                 e.nik, 
                 e.nama_petani, 
                 e.kode_kios,
+                e.desa,
                 e.tahun, 
                 e.urea, 
                 e.npk, 
@@ -124,7 +125,7 @@ async function generateReport(kabupaten, tahun, baseDir) {
                 COALESCE(t.okt_organik, 0) AS okt_organik,
                 COALESCE(t.nov_organik, 0) AS nov_organik,
                 COALESCE(t.des_organik, 0) AS des_organik
-            FROM erdkk e FORCE INDEX (idx_erdkk_nik_kabupaten_tahun)
+            FROM erdkk e
             LEFT JOIN verval_summary v 
                 ON e.nik = v.nik
                 AND e.kabupaten = v.kabupaten
@@ -175,28 +176,29 @@ async function generateReport(kabupaten, tahun, baseDir) {
         // Merge cells untuk header utama
         worksheet.mergeCells('A1:A2'); // Kabupaten
         worksheet.mergeCells('B1:B2'); // Kecamatan
-        worksheet.mergeCells('C1:C2'); // NIK
-        worksheet.mergeCells('D1:D2'); // Nama Petani
-        worksheet.mergeCells('E1:E2'); // Kode Kios
-        worksheet.mergeCells('F1:I1'); // Alokasi
-        worksheet.mergeCells('J1:M1'); // Sisa
-        worksheet.mergeCells('N1:Q1'); // Tebusan
+        worksheet.mergeCells('C1:C2'); // Desa
+        worksheet.mergeCells('D1:D2'); // NIK
+        worksheet.mergeCells('E1:E2'); // Nama Petani
+        worksheet.mergeCells('F1:F2'); // Kode Kios
+        worksheet.mergeCells('G1:J1'); // Alokasi
+        worksheet.mergeCells('K1:N1'); // Sisa
+        worksheet.mergeCells('O1:R1'); // Tebusan
 
         // Merge cells untuk header bulan
-        const bulanHeaders = ['R1:U1', 'V1:Y1', 'Z1:AC1', 'AD1:AG1', 'AH1:AK1', 'AL1:AO1',
-            'AP1:AS1', 'AT1:AW1', 'AX1:AZ1', 'BA1:BD1', 'BE1:BH1', 'BI1:BL1'];
+        const bulanHeaders = ['S1:V1', 'W1:Z1', 'AA1:AD1', 'AE1:AH1', 'AI1:AL1', 'AM1:AP1',
+            'AQ1:AT1', 'AU1:AX1', 'AY1:BA1', 'BB1:BE1', 'BF1:BI1', 'BJ1:BM1'];
         const bulanNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
             'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
         bulanHeaders.forEach(range => worksheet.mergeCells(range));
 
         // Set value dan style untuk header utama
-        worksheet.getCell("F1").value = "Alokasi";
-        worksheet.getCell("J1").value = "Sisa";
-        worksheet.getCell("N1").value = "Tebusan";
+        worksheet.getCell("G1").value = "Alokasi";
+        worksheet.getCell("K1").value = "Sisa";
+        worksheet.getCell("O1").value = "Tebusan";
 
         // Style untuk header utama
-        ["F1", "J1", "N1"].forEach(cell => {
+        ["G1", "K1", "O1"].forEach(cell => {
             worksheet.getCell(cell).alignment = { horizontal: "center", vertical: "middle" };
             worksheet.getCell(cell).font = { bold: true, size: 12 };
             worksheet.getCell(cell).fill = {
@@ -221,7 +223,7 @@ async function generateReport(kabupaten, tahun, baseDir) {
 
         // Header kolom
         const subHeaders = [
-            'Kabupaten', 'Kecamatan', 'NIK', 'Nama Petani', 'Kode Kios',
+            'Kabupaten', 'Kecamatan', 'Desa', 'NIK', 'Nama Petani', 'Kode Kios',
             'Urea', 'NPK', 'NPK Formula', 'Organik', // Alokasi
             'Urea', 'NPK', 'NPK Formula', 'Organik', // Sisa
             'Urea', 'NPK', 'NPK Formula', 'Organik', // Tebusan
@@ -274,7 +276,7 @@ async function generateReport(kabupaten, tahun, baseDir) {
 
         // Tambahkan baris total kosong terlebih dahulu
         const totalRow = worksheet.addRow([
-            'TOTAL', '', '', '', '',
+            'TOTAL', '', '', '', '', '',
             totals.urea.toLocaleString(),
             totals.npk.toLocaleString(),
             totals.npk_formula.toLocaleString(),
@@ -375,6 +377,7 @@ async function generateReport(kabupaten, tahun, baseDir) {
                 const dataRow = worksheet.addRow([
                     row.kabupaten,
                     row.kecamatan,
+                    row.desa || '', // Tambahkan kolom desa
                     row.nik,
                     row.nama_petani,
                     row.kode_kios,
@@ -411,7 +414,7 @@ async function generateReport(kabupaten, tahun, baseDir) {
 
         // Tambahkan kembali baris total dengan data yang sudah dihitung
         const updatedTotalRow = worksheet.addRow([
-            'TOTAL', '', '', '', '',
+            'TOTAL', '', '', '', '', '',
             totals.urea.toLocaleString(),
             totals.npk.toLocaleString(),
             totals.npk_formula.toLocaleString(),
