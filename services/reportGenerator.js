@@ -186,7 +186,7 @@ async function generateReport(kabupaten, tahun, baseDir) {
 
         // Merge cells untuk header bulan
         const bulanHeaders = ['S1:V1', 'W1:Z1', 'AA1:AD1', 'AE1:AH1', 'AI1:AL1', 'AM1:AP1',
-            'AQ1:AT1', 'AU1:AX1', 'AY1:BA1', 'BB1:BE1', 'BF1:BI1', 'BJ1:BM1'];
+            'AQ1:AT1', 'AU1:AX1', 'AY1:BB1', 'BC1:BF1', 'BG1:BJ1', 'BK1:BN1'];
         const bulanNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
             'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
