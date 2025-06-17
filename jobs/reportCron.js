@@ -5,7 +5,7 @@ const { generateAllReports, generateReport } = require('../services/reportGenera
 const baseDir = path.join(__dirname, '../temp_exports');
 
 (async () => {
-    const tahun = [2024, 2025];
+    const tahun = 2025;
     const kabupatenList = [
         'KOTA YOGYAKARTA',
         'SLEMAN',
