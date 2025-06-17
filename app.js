@@ -87,6 +87,11 @@ app.get('/upload-skbupati', authMiddleware, requireLevel(2), (req, res) => {
     res.render('upload-skBupati', { user: req.user });
 });
 
+app.get('/upload-poktan', authMiddleware, requireLevel(2), (req, res) => {
+    res.render('upload-poktan', { user: req.user });
+});
+
+
 // Routes untuk halaman lain
 app.get('/erdkk', authMiddleware, (req, res) => {
     res.render('erdkk', { user: req.user });
