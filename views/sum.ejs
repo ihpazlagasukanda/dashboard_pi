@@ -63,6 +63,16 @@
             </select>
           </div>
         </div>
+        <div class="row mb-3">
+          <div class="col-md-3">
+            <label for="filter-sumber-alokasi" class="form-label">Jenis Alokasi</label>
+            <select id="filter-sumber-alokasi" class="form-control">
+              <option value="">Pilih Jenis Alokasi</option>
+              <option value="erdkk">E-Alokasi</option>
+              <option value="sk_bupati">SK Bupati</option>
+            </select>
+          </div>
+        </div>
 <!-- Last Updated Text -->
 <p id="lastUpdatedGlobal" class="text-end fst-italic text-muted small mb-1" style="cursor:pointer;" data-bs-toggle="modal" data-bs-target="#modalLastUpdated">
     Realisasi Terakhir: ...
@@ -172,7 +182,8 @@
         level: 'provinsi',
         provinsi: null,
         kabupaten: null,
-        tahun: null
+        tahun: null,
+        sumber_alokasi : null
     };
 
     // Declare table variable at the top level
@@ -316,7 +327,7 @@
             initComplete: function() {
                 console.debug("DataTable initialized");
                 $('#summary-table tbody').html(
-                    '<tr><td colspan="9" class="empty-message">Silakan pilih tahun untuk melihat data</td></tr>'
+                    '<tr><td colspan="9" class="empty-message">Silakan pilih tahun dan jenis alokasi untuk melihat data</td></tr>'
                 );
             }
         });
@@ -400,20 +411,23 @@
     // Load data function
     function loadData() {
         const tahun = $('#filter-tahun').val();
-        console.debug("loadData triggered for year:", tahun);
+        const sumber_alokasi = $('#filter-sumber-alokasi').val();
+        console.debug("loadData triggered for year and reference:", tahun, sumber_alokasi);
         
-        if (!tahun) {
+        if (!tahun || !sumber_alokasi) {
             console.debug("No year selected, showing empty state");
-            showEmptyState("Silakan pilih tahun untuk melihat data");
+            showEmptyState("Silakan pilih tahun dan sumber_alokasi untuk melihat data");
             $('#download-excel').prop('disabled', true);
             return;
         }
 
         state.tahun = tahun;
+        state.sumber_alokasi = sumber_alokasi;
         showLoading();
 
         const params = {
             tahun,
+            sumber_alokasi,
             ...(state.provinsi && { provinsi: state.provinsi }),
             ...(state.kabupaten && { kabupaten: state.kabupaten })
         };
@@ -532,6 +546,8 @@
 
     // Event listeners
     $('#filter-tahun').on('change', loadData);
+    $('#filter-sumber-alokasi').on('change', loadData);
+
     
     $(document).on('click', '.drill-down', function() {
         const wilayah = $(this).text();
@@ -635,6 +651,10 @@ $('#modalLastUpdated, #modalPetunjuk').on('hidden.bs.modal', function () {
         if (state.kabupaten) {
             url += `&kabupaten=${encodeURIComponent(state.kabupaten)}`;
         }
+
+        if (state.sumber_alokasi) {
+    url += `&sumber_alokasi=${encodeURIComponent(state.sumber_alokasi)}`;
+}
         
         console.debug("Downloading Excel from:", url);
         window.location.href = url;

@@ -1041,7 +1041,7 @@ exports.getJumlahPetani = async (req, res) => {
 
 exports.summaryPupuk = async (req, res) => {
     try {
-        const { provinsi, kabupaten, tahun } = req.query;
+        const { provinsi, kabupaten, tahun, sumber_alokasi = "erdkk" } = req.query;
 
         if (!tahun) {
             return res.json({
@@ -1096,18 +1096,33 @@ exports.summaryPupuk = async (req, res) => {
             groupField = "kecamatan";
         }
 
+        let alokasiQuery = "";
         // Query alokasi
-        const alokasiQuery = `
-            SELECT 
-                ${selectField} AS wilayah,
-                SUM(urea) AS alokasi_urea,
-                SUM(npk) AS alokasi_npk,
-                SUM(npk_formula) AS alokasi_npk_formula,
-                SUM(organik) AS alokasi_organik
-            FROM erdkk
-            ${whereClause}
-            GROUP BY ${groupField}
-        `;
+        if (sumber_alokasi === "sk_bupati") {
+            alokasiQuery = `
+        SELECT 
+            ${selectField} AS wilayah,
+            SUM(CASE WHEN produk = 'urea' THEN alokasi ELSE 0 END) AS alokasi_urea,
+            SUM(CASE WHEN produk = 'npk' THEN alokasi ELSE 0 END) AS alokasi_npk,
+            SUM(CASE WHEN produk = 'npk_formula' THEN alokasi ELSE 0 END) AS alokasi_npk_formula,
+            SUM(CASE WHEN produk = 'organik' THEN alokasi ELSE 0 END) AS alokasi_organik
+        FROM sk_bupati
+        ${whereClause}
+        GROUP BY ${groupField}
+    `;
+        } else {
+            alokasiQuery = `
+        SELECT 
+            ${selectField} AS wilayah,
+            SUM(urea) AS alokasi_urea,
+            SUM(npk) AS alokasi_npk,
+            SUM(npk_formula) AS alokasi_npk_formula,
+            SUM(organik) AS alokasi_organik
+        FROM erdkk
+        ${whereClause}
+        GROUP BY ${groupField}
+    `;
+        }
 
         // Query realisasi
         const realisasiQuery = `
@@ -1208,7 +1223,7 @@ exports.summaryPupuk = async (req, res) => {
 // Download sum.ejs
 exports.downloadSummaryPupuk = async (req, res) => {
     try {
-        const { provinsi, kabupaten, tahun } = req.query;
+        const { provinsi, kabupaten, tahun, sumber_alokasi = "erdkk" } = req.query;
 
         if (!tahun) {
             return res.status(400).json({ message: "Parameter tahun diperlukan" });
@@ -1250,18 +1265,33 @@ exports.downloadSummaryPupuk = async (req, res) => {
             groupField = "kecamatan";
         }
 
+        let alokasiQuery = "";
         // Query alokasi
-        const alokasiQuery = `
-            SELECT 
-                ${selectField} AS wilayah,
-                SUM(urea) AS alokasi_urea,
-                SUM(npk) AS alokasi_npk,
-                SUM(npk_formula) AS alokasi_npk_formula,
-                SUM(organik) AS alokasi_organik
-            FROM erdkk
-            ${whereClause}
-            GROUP BY ${groupField}
-        `;
+        if (sumber_alokasi === "sk_bupati") {
+            alokasiQuery = `
+        SELECT 
+            ${selectField} AS wilayah,
+            SUM(CASE WHEN produk = 'urea' THEN alokasi ELSE 0 END) AS alokasi_urea,
+            SUM(CASE WHEN produk = 'npk' THEN alokasi ELSE 0 END) AS alokasi_npk,
+            SUM(CASE WHEN produk = 'npk_formula' THEN alokasi ELSE 0 END) AS alokasi_npk_formula,
+            SUM(CASE WHEN produk = 'organik' THEN alokasi ELSE 0 END) AS alokasi_organik
+        FROM sk_bupati
+        ${whereClause}
+        GROUP BY ${groupField}
+    `;
+        } else {
+            alokasiQuery = `
+        SELECT 
+            ${selectField} AS wilayah,
+            SUM(urea) AS alokasi_urea,
+            SUM(npk) AS alokasi_npk,
+            SUM(npk_formula) AS alokasi_npk_formula,
+            SUM(organik) AS alokasi_organik
+        FROM erdkk
+        ${whereClause}
+        GROUP BY ${groupField}
+    `;
+        }
 
         // Query realisasi
         const realisasiQuery = `
