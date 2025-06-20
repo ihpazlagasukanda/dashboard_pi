@@ -2963,13 +2963,22 @@ exports.downloadSalur = async (req, res) => {
 
 exports.wcmVsVerval = async (req, res) => {
     try {
-        const { tahun, bulan, produk, kabupaten, status = 'ALL', start = 0, length = 10, draw = 1 } = req.query;
+        const {
+            tahun,
+            bulan,
+            produk,
+            kabupaten,
+            status = 'ALL',
+            start = 0,
+            length = 10,
+            draw = 1
+        } = req.query;
 
         const produkFilter = produk && produk !== 'ALL' ? produk.toUpperCase() : 'ALL';
         const statusFilter = status.toUpperCase();
 
         const params = [];
-        let whereClauses = ['pdo.tahun = ?'];
+        const whereClauses = ['pdo.tahun = ?'];
         params.push(tahun);
 
         if (bulan && bulan !== 'ALL') {
@@ -2977,7 +2986,7 @@ exports.wcmVsVerval = async (req, res) => {
             params.push(bulan);
         }
 
-        if (produk && produk !== 'ALL') {
+        if (produkFilter !== 'ALL') {
             whereClauses.push('pdo.produk = ?');
             params.push(produkFilter);
         }
@@ -2987,161 +2996,155 @@ exports.wcmVsVerval = async (req, res) => {
             params.push(kabupaten);
         }
 
-        const whereSQL = whereClauses.length > 0 ? ' WHERE ' + whereClauses.join(' AND ') : '';
+        const whereSQL = whereClauses.length ? 'WHERE ' + whereClauses.join(' AND ') : '';
 
         const baseQuery = `
-           SELECT 
-    pdo.provinsi,
-    pdo.kabupaten, 
-    pdo.kecamatan,
-    pdo.kode_kios,
-    pdo.nama_kios, 
-    pdo.kode_distributor, 
-    pdo.distributor,  
-    pdo.tahun,
-    pdo.bulan,
-    pdo.produk,
+            WITH data_union AS (
+                SELECT 
+                    kode_kios,
+                    kecamatan,
+                    kabupaten,
+                    produk,
+                    kode_distributor,
+                    distributor,
+                    nama_kios,
+                    provinsi,
+                    MONTH(tanggal_penyaluran) AS bulan,
+                    YEAR(tanggal_penyaluran) AS tahun,
+                    SUM(qty) AS total_qty,
+                    0 AS is_from_stok
+                FROM penyaluran_do
+                GROUP BY 
+                    kode_kios, kecamatan, kabupaten, produk, kode_distributor,
+                    distributor, nama_kios, provinsi,
+                    MONTH(tanggal_penyaluran), YEAR(tanggal_penyaluran)
 
-    ROUND(COALESCE(prev.stok_akhir, 0) * 1000, 0) AS stok_awal_wcm,
+                UNION
 
-    ROUND(COALESCE(pdo.total_qty, 0) * 1000, 0) AS penebusan_wcm,
+                SELECT 
+                    kode_kios,
+                    kecamatan,
+                    kabupaten,
+                    produk,
+                    kode_distributor,
+                    distributor,
+                    nama_kios,
+                    provinsi,
+                    CASE WHEN bulan = 12 THEN 1 ELSE bulan + 1 END AS bulan,
+                    CASE WHEN bulan = 12 THEN tahun + 1 ELSE tahun END AS tahun,
+                    0 AS total_qty,
+                    1 AS is_from_stok
+                FROM wcm
+                WHERE stok_akhir > 0
+            )
 
-    ROUND(COALESCE(SUM(wcm.penyaluran), 0) * 1000, 0) AS penyaluran_wcm,
+            SELECT 
+                pdo.provinsi,
+                pdo.kabupaten,
+                pdo.kecamatan,
+                pdo.kode_kios,
+                pdo.nama_kios,
+                pdo.kode_distributor,
+                pdo.distributor,
+                pdo.tahun,
+                pdo.bulan,
+                pdo.produk,
 
-    ROUND(COALESCE(MAX(verval.total_penyaluran), 0), 0) AS penyaluran_verval,
+                ROUND(COALESCE(prev.stok_akhir, 0) * 1000, 0) AS stok_awal_wcm,
+                ROUND(SUM(pdo.total_qty) * 1000, 0) AS penebusan_wcm,
+                ROUND(COALESCE(SUM(wcm.penyaluran), 0) * 1000, 0) AS penyaluran_wcm,
+                ROUND(COALESCE(MAX(verval.total_penyaluran), 0), 0) AS penyaluran_verval,
 
-    ROUND(
-        (COALESCE(prev.stok_akhir, 0) * 1000 + COALESCE(pdo.total_qty, 0) * 1000 - COALESCE(MAX(verval.total_penyaluran), 0)),
-        0
-    ) AS stok_akhir_wcm,
+                ROUND(
+                    (COALESCE(prev.stok_akhir, 0) * 1000 + SUM(pdo.total_qty) * 1000 - COALESCE(MAX(verval.total_penyaluran), 0)),
+                    0
+                ) AS stok_akhir_wcm,
 
-    -- Status cocok atau tidak
-    ROUND(COALESCE(SUM(wcm.penyaluran), 0) * 1000, 0) - ROUND(COALESCE(MAX(verval.total_penyaluran), 0), 0) 
-    AS status_penyaluran
+                ROUND(COALESCE(SUM(wcm.penyaluran), 0) * 1000, 0) - ROUND(COALESCE(MAX(verval.total_penyaluran), 0), 0) 
+                AS status_penyaluran
 
-FROM (
+            FROM data_union pdo
 
-    SELECT 
-        kode_kios,
-        kecamatan,
-        kabupaten,
-        produk,
-        kode_distributor,
-        distributor,
-        nama_kios,
-        provinsi,
-        MONTH(tanggal_penyaluran) AS bulan,
-        YEAR(tanggal_penyaluran) AS tahun,
-        SUM(qty) AS total_qty
-    FROM penyaluran_do
-    GROUP BY 
-        kode_kios, kecamatan, kabupaten, produk, kode_distributor,
-        distributor, nama_kios, provinsi,
-        MONTH(tanggal_penyaluran), YEAR(tanggal_penyaluran)
-) AS pdo
+            LEFT JOIN wcm
+                ON wcm.kode_kios = pdo.kode_kios
+                AND wcm.kecamatan = pdo.kecamatan
+                AND wcm.kabupaten = pdo.kabupaten
+                AND wcm.produk = pdo.produk
+                AND wcm.kode_distributor = pdo.kode_distributor
+                AND wcm.bulan = pdo.bulan
+                AND wcm.tahun = pdo.tahun
 
--- JOIN ke WCM untuk ambil penyaluran dan nama-nama lainnya
-LEFT JOIN wcm
-    ON TRIM(UPPER(wcm.kode_kios)) = TRIM(UPPER(pdo.kode_kios))
-    AND TRIM(UPPER(wcm.kecamatan)) = TRIM(UPPER(pdo.kecamatan))
-    AND TRIM(UPPER(wcm.kabupaten)) = TRIM(UPPER(pdo.kabupaten))
-    AND TRIM(UPPER(wcm.produk)) = TRIM(UPPER(pdo.produk))
-    AND wcm.kode_distributor = pdo.kode_distributor
-    AND wcm.bulan = pdo.bulan
-    AND wcm.tahun = pdo.tahun
+            LEFT JOIN (
+                SELECT 
+                    kode_kios, kecamatan, kabupaten, produk, tahun, bulan, kode_distributor,
+                    SUM(stok_akhir) AS stok_akhir
+                FROM wcm
+                GROUP BY kode_kios, kecamatan, kabupaten, produk, tahun, bulan, kode_distributor
+            ) AS prev
+                ON pdo.kode_kios = prev.kode_kios
+                AND pdo.kecamatan = prev.kecamatan
+                AND pdo.kabupaten = prev.kabupaten
+                AND pdo.produk = prev.produk
+                AND pdo.kode_distributor = prev.kode_distributor
+                AND (
+                    (pdo.bulan = prev.bulan + 1 AND pdo.tahun = prev.tahun)
+                    OR (pdo.bulan = 1 AND prev.bulan = 12 AND pdo.tahun = prev.tahun + 1)
+                )
 
--- JOIN ke stok bulan sebelumnya
-LEFT JOIN (
-    SELECT 
-        kode_kios, kecamatan, kabupaten, produk, tahun, bulan, kode_distributor,
-        SUM(stok_akhir) AS stok_akhir
-    FROM wcm
-    GROUP BY kode_kios, kecamatan, kabupaten, produk, tahun, bulan, kode_distributor
-) AS prev
-    ON pdo.kode_kios = prev.kode_kios
-    AND pdo.kecamatan = prev.kecamatan
-    AND pdo.kabupaten = prev.kabupaten
-    AND pdo.produk = prev.produk
-    AND pdo.kode_distributor = prev.kode_distributor
-    AND (
-        (pdo.bulan = prev.bulan + 1 AND pdo.tahun = prev.tahun)
-        OR (pdo.bulan = 1 AND prev.bulan = 12 AND pdo.tahun = prev.tahun + 1)
-    )
+            LEFT JOIN (
+                SELECT 
+                    kode_kios,
+                    kecamatan,
+                    kabupaten,
+                    bulan,
+                    tahun,
+                    produk,
+                    SUM(penyaluran) AS total_penyaluran
+                FROM verval_f6
+                GROUP BY kode_kios, kecamatan, kabupaten, bulan, tahun, produk
+            ) AS verval
+                ON pdo.kode_kios = verval.kode_kios
+                AND pdo.kecamatan = verval.kecamatan
+                AND pdo.kabupaten = verval.kabupaten
+                AND pdo.bulan = verval.bulan
+                AND pdo.tahun = verval.tahun
+                AND pdo.produk = verval.produk
 
--- JOIN ke verval_f6
-LEFT JOIN (
-    SELECT 
-        kode_kios,
-        kecamatan,
-        kabupaten,
-        bulan,
-        tahun,
-        produk,
-        SUM(penyaluran) AS total_penyaluran
-    FROM verval_f6
-    GROUP BY kode_kios, kecamatan, kabupaten, bulan, tahun, produk
-) AS verval
-    ON TRIM(UPPER(pdo.kode_kios)) = TRIM(UPPER(verval.kode_kios))
-    AND TRIM(UPPER(pdo.kecamatan)) = TRIM(UPPER(verval.kecamatan))
-    AND TRIM(UPPER(pdo.kabupaten)) = TRIM(UPPER(verval.kabupaten))
-    AND pdo.bulan = verval.bulan
-    AND pdo.tahun = verval.tahun
-    AND TRIM(UPPER(pdo.produk)) = TRIM(UPPER(verval.produk))
+            ${whereSQL}
 
-${whereSQL}
+            GROUP BY 
+                pdo.provinsi,
+                pdo.kabupaten,
+                pdo.kecamatan,
+                pdo.kode_kios,
+                pdo.nama_kios,
+                pdo.kode_distributor,
+                pdo.distributor,
+                pdo.tahun,
+                pdo.bulan,
+                pdo.produk,
+                prev.stok_akhir
 
-GROUP BY 
-    pdo.provinsi,
-    pdo.kabupaten, 
-    pdo.kecamatan,
-    pdo.kode_kios,
-    pdo.nama_kios,
-    pdo.kode_distributor, 
-    pdo.distributor,
-    pdo.tahun,
-    pdo.bulan,
-    pdo.produk,
-    prev.stok_akhir,
-    pdo.total_qty
-    ORDER BY pdo.kode_kios
-    `;
+            ORDER BY pdo.kode_kios
+        `;
 
-        // Count total records tanpa filter status
         const countQuery = `SELECT COUNT(*) AS total FROM (${baseQuery}) AS count_table`;
         const [countResult] = await db.query(countQuery, params);
         const recordsTotal = countResult[0].total;
 
-        // Filter status jika bukan ALL
         let filteredQuery = baseQuery;
-        let filteredParams = [...params];
+        const filteredParams = [...params];
 
         if (statusFilter !== 'ALL') {
-            if (statusFilter === 'SESUAI') {
-                filteredQuery = `
-            SELECT * FROM (${baseQuery}) AS filtered_table
-            WHERE status_penyaluran = ?
-        `;
-                filteredParams.push(0);
-            } else {
-                filteredQuery = `
-            SELECT * FROM (${baseQuery}) AS filtered_table
-            WHERE status_penyaluran != ?
-        `;
-                filteredParams.push(0);
-            }
+            filteredQuery = `SELECT * FROM (${baseQuery}) AS filtered_table WHERE status_penyaluran ${statusFilter === 'SESUAI' ? '=' : '!='} ?`;
+            filteredParams.push(0);
         }
 
-
-        // Count records after filter
         const filteredCountQuery = `SELECT COUNT(*) AS total FROM (${filteredQuery}) AS count_filtered_table`;
         const [filteredCountResult] = await db.query(filteredCountQuery, filteredParams);
         const recordsFiltered = filteredCountResult[0].total;
 
-        // Apply pagination
-        const finalQuery = `
-            ${filteredQuery}
-            LIMIT ? OFFSET ?
-        `;
+        const finalQuery = `${filteredQuery} LIMIT ? OFFSET ?`;
         filteredParams.push(parseInt(length), parseInt(start));
 
         const [data] = await db.query(finalQuery, filteredParams);
@@ -3152,11 +3155,13 @@ GROUP BY
             recordsFiltered,
             data
         });
+
     } catch (error) {
         console.error('Error in wcmVsVerval:', error);
         res.status(500).json({ message: 'Terjadi kesalahan saat memproses data.', error: error.message });
     }
 };
+
 
 exports.exportExcelWcmVsVerval = async (req, res) => {
     try {
@@ -3192,121 +3197,133 @@ exports.exportExcelWcmVsVerval = async (req, res) => {
         const whereSQL = whereClauses.length > 0 ? ' WHERE ' + whereClauses.join(' AND ') : '';
 
         const baseQuery = `
-    SELECT 
-    pdo.provinsi,
-    pdo.kabupaten, 
-    pdo.kecamatan,
-    pdo.kode_kios,
-    pdo.nama_kios, 
-    pdo.kode_distributor, 
-    pdo.distributor,  
-    pdo.tahun,
-    pdo.bulan,
-    pdo.produk,
+     WITH data_union AS (
+                SELECT 
+                    kode_kios,
+                    kecamatan,
+                    kabupaten,
+                    produk,
+                    kode_distributor,
+                    distributor,
+                    nama_kios,
+                    provinsi,
+                    MONTH(tanggal_penyaluran) AS bulan,
+                    YEAR(tanggal_penyaluran) AS tahun,
+                    SUM(qty) AS total_qty,
+                    0 AS is_from_stok
+                FROM penyaluran_do
+                GROUP BY 
+                    kode_kios, kecamatan, kabupaten, produk, kode_distributor,
+                    distributor, nama_kios, provinsi,
+                    MONTH(tanggal_penyaluran), YEAR(tanggal_penyaluran)
 
-    ROUND(COALESCE(prev.stok_akhir, 0) * 1000, 0) AS stok_awal_wcm,
+                UNION
 
-    ROUND(COALESCE(pdo.total_qty, 0) * 1000, 0) AS penebusan_wcm,
+                SELECT 
+                    kode_kios,
+                    kecamatan,
+                    kabupaten,
+                    produk,
+                    kode_distributor,
+                    distributor,
+                    nama_kios,
+                    provinsi,
+                    CASE WHEN bulan = 12 THEN 1 ELSE bulan + 1 END AS bulan,
+                    CASE WHEN bulan = 12 THEN tahun + 1 ELSE tahun END AS tahun,
+                    0 AS total_qty,
+                    1 AS is_from_stok
+                FROM wcm
+                WHERE stok_akhir > 0
+            )
 
-    ROUND(COALESCE(SUM(wcm.penyaluran), 0) * 1000, 0) AS penyaluran_wcm,
+            SELECT 
+                pdo.provinsi,
+                pdo.kabupaten,
+                pdo.kecamatan,
+                pdo.kode_kios,
+                pdo.nama_kios,
+                pdo.kode_distributor,
+                pdo.distributor,
+                pdo.tahun,
+                pdo.bulan,
+                pdo.produk,
 
-    ROUND(COALESCE(MAX(verval.total_penyaluran), 0), 0) AS penyaluran_verval,
+                ROUND(COALESCE(prev.stok_akhir, 0) * 1000, 0) AS stok_awal_wcm,
+                ROUND(SUM(pdo.total_qty) * 1000, 0) AS penebusan_wcm,
+                ROUND(COALESCE(SUM(wcm.penyaluran), 0) * 1000, 0) AS penyaluran_wcm,
+                ROUND(COALESCE(MAX(verval.total_penyaluran), 0), 0) AS penyaluran_verval,
 
-    ROUND(
-        (COALESCE(prev.stok_akhir, 0) * 1000 + COALESCE(pdo.total_qty, 0) * 1000 - COALESCE(MAX(verval.total_penyaluran), 0)),
-        0
-    ) AS stok_akhir_wcm,
+                ROUND(
+                    (COALESCE(prev.stok_akhir, 0) * 1000 + SUM(pdo.total_qty) * 1000 - COALESCE(MAX(verval.total_penyaluran), 0)),
+                    0
+                ) AS stok_akhir_wcm,
 
-    -- Status cocok atau tidak
-    ROUND(COALESCE(SUM(wcm.penyaluran), 0) * 1000, 0) 
-    - ROUND(COALESCE(MAX(verval.total_penyaluran), 0), 0) 
-AS status_penyaluran
+                ROUND(COALESCE(SUM(wcm.penyaluran), 0) * 1000, 0) - ROUND(COALESCE(MAX(verval.total_penyaluran), 0), 0) 
+                AS status_penyaluran
 
-FROM (
+            FROM data_union pdo
 
-    SELECT 
-        kode_kios,
-        kecamatan,
-        kabupaten,
-        produk,
-        kode_distributor,
-        distributor,
-        nama_kios,
-        provinsi,
-        MONTH(tanggal_penyaluran) AS bulan,
-        YEAR(tanggal_penyaluran) AS tahun,
-        SUM(qty) AS total_qty
-    FROM penyaluran_do
-    GROUP BY 
-        kode_kios, kecamatan, kabupaten, produk, kode_distributor,
-        distributor, nama_kios, provinsi,
-        MONTH(tanggal_penyaluran), YEAR(tanggal_penyaluran)
-) AS pdo
+            LEFT JOIN wcm
+                ON wcm.kode_kios = pdo.kode_kios
+                AND wcm.kecamatan = pdo.kecamatan
+                AND wcm.kabupaten = pdo.kabupaten
+                AND wcm.produk = pdo.produk
+                AND wcm.kode_distributor = pdo.kode_distributor
+                AND wcm.bulan = pdo.bulan
+                AND wcm.tahun = pdo.tahun
 
--- JOIN ke WCM untuk ambil penyaluran dan nama-nama lainnya
-LEFT JOIN wcm
-    ON TRIM(UPPER(wcm.kode_kios)) = TRIM(UPPER(pdo.kode_kios))
-    AND TRIM(UPPER(wcm.kecamatan)) = TRIM(UPPER(pdo.kecamatan))
-    AND TRIM(UPPER(wcm.kabupaten)) = TRIM(UPPER(pdo.kabupaten))
-    AND TRIM(UPPER(wcm.produk)) = TRIM(UPPER(pdo.produk))
-    AND wcm.kode_distributor = pdo.kode_distributor
-    AND wcm.bulan = pdo.bulan
-    AND wcm.tahun = pdo.tahun
+            LEFT JOIN (
+                SELECT 
+                    kode_kios, kecamatan, kabupaten, produk, tahun, bulan, kode_distributor,
+                    SUM(stok_akhir) AS stok_akhir
+                FROM wcm
+                GROUP BY kode_kios, kecamatan, kabupaten, produk, tahun, bulan, kode_distributor
+            ) AS prev
+                ON pdo.kode_kios = prev.kode_kios
+                AND pdo.kecamatan = prev.kecamatan
+                AND pdo.kabupaten = prev.kabupaten
+                AND pdo.produk = prev.produk
+                AND pdo.kode_distributor = prev.kode_distributor
+                AND (
+                    (pdo.bulan = prev.bulan + 1 AND pdo.tahun = prev.tahun)
+                    OR (pdo.bulan = 1 AND prev.bulan = 12 AND pdo.tahun = prev.tahun + 1)
+                )
 
--- JOIN ke stok bulan sebelumnya
-LEFT JOIN (
-    SELECT 
-        kode_kios, kecamatan, kabupaten, produk, tahun, bulan, kode_distributor,
-        SUM(stok_akhir) AS stok_akhir
-    FROM wcm
-    GROUP BY kode_kios, kecamatan, kabupaten, produk, tahun, bulan, kode_distributor
-) AS prev
-    ON pdo.kode_kios = prev.kode_kios
-    AND pdo.kecamatan = prev.kecamatan
-    AND pdo.kabupaten = prev.kabupaten
-    AND pdo.produk = prev.produk
-    AND pdo.kode_distributor = prev.kode_distributor
-    AND (
-        (pdo.bulan = prev.bulan + 1 AND pdo.tahun = prev.tahun)
-        OR (pdo.bulan = 1 AND prev.bulan = 12 AND pdo.tahun = prev.tahun + 1)
-    )
+            LEFT JOIN (
+                SELECT 
+                    kode_kios,
+                    kecamatan,
+                    kabupaten,
+                    bulan,
+                    tahun,
+                    produk,
+                    SUM(penyaluran) AS total_penyaluran
+                FROM verval_f6
+                GROUP BY kode_kios, kecamatan, kabupaten, bulan, tahun, produk
+            ) AS verval
+                ON pdo.kode_kios = verval.kode_kios
+                AND pdo.kecamatan = verval.kecamatan
+                AND pdo.kabupaten = verval.kabupaten
+                AND pdo.bulan = verval.bulan
+                AND pdo.tahun = verval.tahun
+                AND pdo.produk = verval.produk
 
--- JOIN ke verval_f6
-LEFT JOIN (
-    SELECT 
-        kode_kios,
-        kecamatan,
-        kabupaten,
-        bulan,
-        tahun,
-        produk,
-        SUM(penyaluran) AS total_penyaluran
-    FROM verval_f6
-    GROUP BY kode_kios, kecamatan, kabupaten, bulan, tahun, produk
-) AS verval
-    ON TRIM(UPPER(pdo.kode_kios)) = TRIM(UPPER(verval.kode_kios))
-    AND TRIM(UPPER(pdo.kecamatan)) = TRIM(UPPER(verval.kecamatan))
-    AND TRIM(UPPER(pdo.kabupaten)) = TRIM(UPPER(verval.kabupaten))
-    AND pdo.bulan = verval.bulan
-    AND pdo.tahun = verval.tahun
-    AND TRIM(UPPER(pdo.produk)) = TRIM(UPPER(verval.produk))
+            ${whereSQL}
 
-${whereSQL}
+            GROUP BY 
+                pdo.provinsi,
+                pdo.kabupaten,
+                pdo.kecamatan,
+                pdo.kode_kios,
+                pdo.nama_kios,
+                pdo.kode_distributor,
+                pdo.distributor,
+                pdo.tahun,
+                pdo.bulan,
+                pdo.produk,
+                prev.stok_akhir
 
-GROUP BY 
-    pdo.provinsi,
-    pdo.kabupaten, 
-    pdo.kecamatan,
-    pdo.kode_kios,
-    pdo.nama_kios,
-    pdo.kode_distributor, 
-    pdo.distributor,
-    pdo.tahun,
-    pdo.bulan,
-    pdo.produk,
-    prev.stok_akhir,
-    pdo.total_qty
-    ORDER BY pdo.kabupaten, pdo.kecamatan, pdo.kode_kios
+            ORDER BY pdo.kode_kios
 `;
         // Filter status jika bukan ALL
         let finalQuery = baseQuery;
