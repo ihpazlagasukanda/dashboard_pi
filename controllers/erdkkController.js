@@ -110,7 +110,8 @@ exports.uploadErdkk = async (req, res) => {
             const kecamatan = kecMap[kodeDesa] || "Kecamatan Tidak Ditemukan";
             const kodeKios = row.getCell(3).value?.toString().trim() || "";
             const namaKios = row.getCell(4).value?.toString().trim() || "";
-            const nik = row.getCell(8).value?.toString().trim() || "";
+            const poktan = row.getCell(6).value?.toString().trim() || "";
+            const nik = row.getCell(8).value?.toString().replace(/`/g, "'").trim() || "";
             const namaPetani = row.getCell(7).value?.toString().trim() || "";
 
             // Skip baris jika data penting tidak ada
@@ -167,7 +168,7 @@ exports.uploadErdkk = async (req, res) => {
                 existingData[11] += totalOrganik;
             } else {
                 erdkkDataMap.set(key, [
-                    tahun, kabupaten, kecamatan, namaDesa, kodeKios, namaKios, nik, namaPetani,
+                    tahun, kabupaten, kecamatan, namaDesa, poktan, kodeKios, namaKios, nik, namaPetani,
                     totalUrea, totalNpk, totalNpkFormula, totalOrganik
                 ]);
             }
@@ -214,12 +215,12 @@ const simpanBatch = async (connection, data) => {
         // Siapkan nilai untuk query INSERT
         const values = data.map(row => [
             row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7],
-            row[8], row[9], row[10], row[11]
+            row[8], row[9], row[10], row[11], row[12]
         ]);
 
         // Masukkan data baru dengan ON DUPLICATE KEY UPDATE
         const [result] = await connection.query(
-            `INSERT INTO erdkk (tahun, kabupaten, kecamatan, desa, kode_kios, nama_kios, nik, nama_petani, urea, npk, npk_formula, organik)
+            `INSERT INTO erdkk (tahun, kabupaten, kecamatan, desa, poktan, kode_kios, nama_kios, nik, nama_petani, urea, npk, npk_formula, organik)
             VALUES ? 
             ON DUPLICATE KEY UPDATE 
             urea = VALUES(urea), 

@@ -1527,7 +1527,11 @@ exports.rekapPetani = async (req, res) => {
                     urea_alokasi: 0,
                     npk_alokasi: 0,
                     npk_formula_alokasi: 0,
-                    organik_alokasi: 0
+                    organik_alokasi: 0,
+                    urea_sisa: 0,
+                    npk_sisa: 0,
+                    npk_formula_sisa: 0,
+                    organik_sisa: 0
                 }
             });
         }
@@ -1616,7 +1620,11 @@ exports.rekapPetani = async (req, res) => {
                 realisasi_urea: 0,
                 realisasi_npk: 0,
                 realisasi_npk_formula: 0,
-                realisasi_organik: 0
+                realisasi_organik: 0,
+                sisa_urea: item.alokasi_urea || 0, // Initialize sisa with alokasi value
+                sisa_npk: item.alokasi_npk || 0,
+                sisa_npk_formula: item.alokasi_npk_formula || 0,
+                sisa_organik: item.alokasi_organik || 0
             };
         });
 
@@ -1631,13 +1639,23 @@ exports.rekapPetani = async (req, res) => {
                     realisasi_urea: item.realisasi_urea || 0,
                     realisasi_npk: item.realisasi_npk || 0,
                     realisasi_npk_formula: item.realisasi_npk_formula || 0,
-                    realisasi_organik: item.realisasi_organik || 0
+                    realisasi_organik: item.realisasi_organik || 0,
+                    sisa_urea: 0 - (item.realisasi_urea || 0), // If no alokasi, sisa is negative realisasi
+                    sisa_npk: 0 - (item.realisasi_npk || 0),
+                    sisa_npk_formula: 0 - (item.realisasi_npk_formula || 0),
+                    sisa_organik: 0 - (item.realisasi_organik || 0)
                 };
             } else {
                 mapData[item.wilayah].realisasi_urea = item.realisasi_urea || 0;
                 mapData[item.wilayah].realisasi_npk = item.realisasi_npk || 0;
                 mapData[item.wilayah].realisasi_npk_formula = item.realisasi_npk_formula || 0;
                 mapData[item.wilayah].realisasi_organik = item.realisasi_organik || 0;
+
+                // Calculate sisa (alokasi - realisasi)
+                mapData[item.wilayah].sisa_urea = mapData[item.wilayah].alokasi_urea - (item.realisasi_urea || 0);
+                mapData[item.wilayah].sisa_npk = mapData[item.wilayah].alokasi_npk - (item.realisasi_npk || 0);
+                mapData[item.wilayah].sisa_npk_formula = mapData[item.wilayah].alokasi_npk_formula - (item.realisasi_npk_formula || 0);
+                mapData[item.wilayah].sisa_organik = mapData[item.wilayah].alokasi_organik - (item.realisasi_organik || 0);
             }
         });
 
@@ -1650,7 +1668,11 @@ exports.rekapPetani = async (req, res) => {
             urea_alokasi: 0,
             npk_alokasi: 0,
             npk_formula_alokasi: 0,
-            organik_alokasi: 0
+            organik_alokasi: 0,
+            urea_sisa: 0,
+            npk_sisa: 0,
+            npk_formula_sisa: 0,
+            organik_sisa: 0
         };
 
         const finalData = Object.values(mapData).map(item => {
@@ -1662,6 +1684,10 @@ exports.rekapPetani = async (req, res) => {
             totals.npk_alokasi += item.alokasi_npk;
             totals.npk_formula_alokasi += item.alokasi_npk_formula;
             totals.organik_alokasi += item.alokasi_organik;
+            totals.urea_sisa += item.sisa_urea;
+            totals.npk_sisa += item.sisa_npk;
+            totals.npk_formula_sisa += item.sisa_npk_formula;
+            totals.organik_sisa += item.sisa_organik;
 
             return item;
         });
@@ -1770,7 +1796,11 @@ exports.downloadRekapPetani = async (req, res) => {
                 realisasi_urea: 0,
                 realisasi_npk: 0,
                 realisasi_npk_formula: 0,
-                realisasi_organik: 0
+                realisasi_organik: 0,
+                sisa_urea: item.alokasi_urea ? Math.floor(item.alokasi_urea) : 0, // Initialize sisa with alokasi value
+                sisa_npk: item.alokasi_npk ? Math.floor(item.alokasi_npk) : 0,
+                sisa_npk_formula: item.alokasi_npk_formula ? Math.floor(item.alokasi_npk_formula) : 0,
+                sisa_organik: item.alokasi_organik ? Math.floor(item.alokasi_organik) : 0
             };
         });
 
@@ -1785,13 +1815,28 @@ exports.downloadRekapPetani = async (req, res) => {
                     realisasi_urea: item.realisasi_urea ? Math.floor(item.realisasi_urea) : 0,
                     realisasi_npk: item.realisasi_npk ? Math.floor(item.realisasi_npk) : 0,
                     realisasi_npk_formula: item.realisasi_npk_formula ? Math.floor(item.realisasi_npk_formula) : 0,
-                    realisasi_organik: item.realisasi_organik ? Math.floor(item.realisasi_organik) : 0
+                    realisasi_organik: item.realisasi_organik ? Math.floor(item.realisasi_organik) : 0,
+                    sisa_urea: 0 - (item.realisasi_urea ? Math.floor(item.realisasi_urea) : 0), // If no alokasi, sisa is negative realisasi
+                    sisa_npk: 0 - (item.realisasi_npk ? Math.floor(item.realisasi_npk) : 0),
+                    sisa_npk_formula: 0 - (item.realisasi_npk_formula ? Math.floor(item.realisasi_npk_formula) : 0),
+                    sisa_organik: 0 - (item.realisasi_organik ? Math.floor(item.realisasi_organik) : 0)
                 };
             } else {
-                mapData[item.wilayah].realisasi_urea = item.realisasi_urea ? Math.floor(item.realisasi_urea) : 0;
-                mapData[item.wilayah].realisasi_npk = item.realisasi_npk ? Math.floor(item.realisasi_npk) : 0;
-                mapData[item.wilayah].realisasi_npk_formula = item.realisasi_npk_formula ? Math.floor(item.realisasi_npk_formula) : 0;
-                mapData[item.wilayah].realisasi_organik = item.realisasi_organik ? Math.floor(item.realisasi_organik) : 0;
+                const realUrea = item.realisasi_urea ? Math.floor(item.realisasi_urea) : 0;
+                const realNpk = item.realisasi_npk ? Math.floor(item.realisasi_npk) : 0;
+                const realNpkFormula = item.realisasi_npk_formula ? Math.floor(item.realisasi_npk_formula) : 0;
+                const realOrganik = item.realisasi_organik ? Math.floor(item.realisasi_organik) : 0;
+
+                mapData[item.wilayah].realisasi_urea = realUrea;
+                mapData[item.wilayah].realisasi_npk = realNpk;
+                mapData[item.wilayah].realisasi_npk_formula = realNpkFormula;
+                mapData[item.wilayah].realisasi_organik = realOrganik;
+
+                // Calculate sisa (alokasi - realisasi)
+                mapData[item.wilayah].sisa_urea = mapData[item.wilayah].alokasi_urea - realUrea;
+                mapData[item.wilayah].sisa_npk = mapData[item.wilayah].alokasi_npk - realNpk;
+                mapData[item.wilayah].sisa_npk_formula = mapData[item.wilayah].alokasi_npk_formula - realNpkFormula;
+                mapData[item.wilayah].sisa_organik = mapData[item.wilayah].alokasi_organik - realOrganik;
             }
         });
 
@@ -1804,7 +1849,15 @@ exports.downloadRekapPetani = async (req, res) => {
             urea_realisasi: realisasi.reduce((sum, item) => sum + (item.realisasi_urea || 0), 0),
             npk_realisasi: realisasi.reduce((sum, item) => sum + (item.realisasi_npk || 0), 0),
             npk_formula_realisasi: realisasi.reduce((sum, item) => sum + (item.realisasi_npk_formula || 0), 0),
-            organik_realisasi: realisasi.reduce((sum, item) => sum + (item.realisasi_organik || 0), 0)
+            organik_realisasi: realisasi.reduce((sum, item) => sum + (item.realisasi_organik || 0), 0),
+            urea_sisa: alokasi.reduce((sum, item) => sum + (item.alokasi_urea || 0), 0) -
+                realisasi.reduce((sum, item) => sum + (item.realisasi_urea || 0), 0),
+            npk_sisa: alokasi.reduce((sum, item) => sum + (item.alokasi_npk || 0), 0) -
+                realisasi.reduce((sum, item) => sum + (item.realisasi_npk || 0), 0),
+            npk_formula_sisa: alokasi.reduce((sum, item) => sum + (item.alokasi_npk_formula || 0), 0) -
+                realisasi.reduce((sum, item) => sum + (item.realisasi_npk_formula || 0), 0),
+            organik_sisa: alokasi.reduce((sum, item) => sum + (item.alokasi_organik || 0), 0) -
+                realisasi.reduce((sum, item) => sum + (item.realisasi_organik || 0), 0)
         };
 
         const finalData = Object.values(mapData).map(item => {
@@ -1817,7 +1870,11 @@ exports.downloadRekapPetani = async (req, res) => {
                 realisasi_urea: item.realisasi_urea || 0,
                 realisasi_npk: item.realisasi_npk || 0,
                 realisasi_npk_formula: item.realisasi_npk_formula || 0,
-                realisasi_organik: item.realisasi_organik || 0
+                realisasi_organik: item.realisasi_organik || 0,
+                sisa_urea: item.sisa_urea || 0,
+                sisa_npk: item.sisa_npk || 0,
+                sisa_npk_formula: item.sisa_npk_formula || 0,
+                sisa_organik: item.sisa_organik || 0
             };
         });
 
@@ -1829,12 +1886,12 @@ exports.downloadRekapPetani = async (req, res) => {
         const level = !provinsi ? "Provinsi" : !kabupaten ? "Kabupaten" : "Kecamatan";
 
         // Header worksheet
-        worksheet.mergeCells('A1:I1');
+        worksheet.mergeCells('A1:M1');
         worksheet.getCell('A1').value = `REKAPITULASI ALOKASI DAN REALISASI PUPUK TAHUN ${tahun}`;
         worksheet.getCell('A1').font = { bold: true, size: 14 };
         worksheet.getCell('A1').alignment = { horizontal: 'center' };
 
-        worksheet.mergeCells('A2:I2');
+        worksheet.mergeCells('A2:M2');
         worksheet.getCell('A2').value = `LEVEL: ${level}`;
         worksheet.getCell('A2').font = { bold: true };
         worksheet.getCell('A2').alignment = { horizontal: 'center' };
@@ -1854,6 +1911,11 @@ exports.downloadRekapPetani = async (req, res) => {
         worksheet.getCell('F3').value = 'TOTAL PETANI TEBUS';
         worksheet.getCell('F3').alignment = { horizontal: 'center' };
 
+        // Header Sisa Tebus
+        worksheet.mergeCells('J3:M3');
+        worksheet.getCell('J3').value = 'TOTAL SISA TEBUS';
+        worksheet.getCell('J3').alignment = { horizontal: 'center' };
+
         // Sub-header kolom
         worksheet.getCell('B4').value = 'UREA';
         worksheet.getCell('C4').value = 'NPK';
@@ -1863,9 +1925,13 @@ exports.downloadRekapPetani = async (req, res) => {
         worksheet.getCell('G4').value = 'NPK';
         worksheet.getCell('H4').value = 'NPK FORMULA';
         worksheet.getCell('I4').value = 'ORGANIK';
+        worksheet.getCell('J4').value = 'UREA';
+        worksheet.getCell('K4').value = 'NPK';
+        worksheet.getCell('L4').value = 'NPK FORMULA';
+        worksheet.getCell('M4').value = 'ORGANIK';
 
         // Styling header
-        ['A3', 'B3', 'F3'].forEach(cell => {
+        ['A3', 'B3', 'F3', 'J3'].forEach(cell => {
             worksheet.getCell(cell).font = { bold: true };
             worksheet.getCell(cell).fill = {
                 type: 'pattern',
@@ -1881,7 +1947,7 @@ exports.downloadRekapPetani = async (req, res) => {
         });
 
         // Styling sub-header
-        ['B4', 'C4', 'D4', 'E4', 'F4', 'G4', 'H4', 'I4'].forEach(cell => {
+        ['B4', 'C4', 'D4', 'E4', 'F4', 'G4', 'H4', 'I4', 'J4', 'K4', 'L4', 'M4'].forEach(cell => {
             worksheet.getCell(cell).font = { bold: true };
             worksheet.getCell(cell).alignment = { horizontal: 'center' };
             worksheet.getCell(cell).fill = {
@@ -1908,11 +1974,15 @@ exports.downloadRekapPetani = async (req, res) => {
                 item.realisasi_urea,
                 item.realisasi_npk,
                 item.realisasi_npk_formula,
-                item.realisasi_organik
+                item.realisasi_organik,
+                item.sisa_urea,
+                item.sisa_npk,
+                item.sisa_npk_formula,
+                item.sisa_organik
             ]);
 
             // Format angka
-            ['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'].forEach(col => {
+            ['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'].forEach(col => {
                 const cell = row.getCell(col);
                 cell.numFmt = '#,##0';
             });
@@ -1928,7 +1998,11 @@ exports.downloadRekapPetani = async (req, res) => {
             { formula: `SUM(F5:F${worksheet.rowCount})`, result: totals.urea_realisasi },
             { formula: `SUM(G5:G${worksheet.rowCount})`, result: totals.npk_realisasi },
             { formula: `SUM(H5:H${worksheet.rowCount})`, result: totals.npk_formula_realisasi },
-            { formula: `SUM(I5:I${worksheet.rowCount})`, result: totals.organik_realisasi }
+            { formula: `SUM(I5:I${worksheet.rowCount})`, result: totals.organik_realisasi },
+            { formula: `SUM(J5:J${worksheet.rowCount})`, result: totals.urea_sisa },
+            { formula: `SUM(K5:K${worksheet.rowCount})`, result: totals.npk_sisa },
+            { formula: `SUM(L5:L${worksheet.rowCount})`, result: totals.npk_formula_sisa },
+            { formula: `SUM(M5:M${worksheet.rowCount})`, result: totals.organik_sisa }
         ]);
 
         // Styling baris total
@@ -1940,10 +2014,10 @@ exports.downloadRekapPetani = async (req, res) => {
         };
 
         // Format angka di baris total
-        ['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'].forEach(col => {
+        ['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M'].forEach(col => {
             const cell = totalRow.getCell(col);
-            cell.numFmt = '#,##0.00'; // Format dengan 2 desimal
-            cell.value = {  // Pastikan nilai yang ditampilkan sesuai
+            cell.numFmt = '#,##0';
+            cell.value = {
                 formula: cell.formula,
                 result: cell.result
             };
@@ -1951,15 +2025,19 @@ exports.downloadRekapPetani = async (req, res) => {
 
         // Set lebar kolom
         worksheet.columns = [
-            { key: 'wilayah', width: 30 }, // Kolom Wilayah
-            { key: 'alokasi_urea', width: 15 },
-            { key: 'alokasi_npk', width: 15 },
-            { key: 'alokasi_npk_formula', width: 15 },
-            { key: 'alokasi_organik', width: 15 },
-            { key: 'realisasi_urea', width: 15 },
-            { key: 'realisasi_npk', width: 15 },
-            { key: 'realisasi_npk_formula', width: 15 },
-            { key: 'realisasi_organik', width: 15 }
+            { key: 'wilayah', width: 30 },
+            { key: 'alokasi_urea', width: 12 },
+            { key: 'alokasi_npk', width: 12 },
+            { key: 'alokasi_npk_formula', width: 12 },
+            { key: 'alokasi_organik', width: 12 },
+            { key: 'realisasi_urea', width: 12 },
+            { key: 'realisasi_npk', width: 12 },
+            { key: 'realisasi_npk_formula', width: 12 },
+            { key: 'realisasi_organik', width: 12 },
+            { key: 'sisa_urea', width: 12 },
+            { key: 'sisa_npk', width: 12 },
+            { key: 'sisa_npk_formula', width: 12 },
+            { key: 'sisa_organik', width: 12 }
         ];
 
         // Set response headers
@@ -2128,10 +2206,10 @@ exports.getSalurKios = async (req, res) => {
     kecamatan, 
     kode_kios,
     MIN(nama_kios) AS nama_kios,
-   SUM(urea) AS urea,
-   SUM(npk) AS npk,
-   SUM(npk_formula) AS npk_formula,
-   SUM(organik) AS organik,
+    SUM(urea) AS urea,
+    SUM(npk) AS npk,
+    SUM(npk_formula) AS npk_formula,
+    SUM(organik) AS organik,
 SUM(CASE WHEN MONTH(tanggal_tebus) = 1 THEN urea ELSE 0 END) AS jan_urea,
 SUM(CASE WHEN MONTH(tanggal_tebus) = 1 THEN npk ELSE 0 END) AS jan_npk,
 SUM(CASE WHEN MONTH(tanggal_tebus) = 1 THEN npk_formula ELSE 0 END) AS jan_npk_formula,

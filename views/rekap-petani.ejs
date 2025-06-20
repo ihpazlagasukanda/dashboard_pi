@@ -91,9 +91,14 @@
                         <th>Wilayah</th>  
                         <th colspan="4" class="text-center">Jumlah Total Petani</th>
                         <th colspan="4" class="text-center">Jumlah Total Petani Tebus</th>
+                        <th colspan="4" class="text-center">Jumlah Total Sisa Tebus</th>
                       </tr>
                       <tr>
                         <th></th>
+                        <th>Urea</th>
+                        <th>NPK</th>
+                        <th>NPK Formula</th>
+                        <th>Organik</th>
                         <th>Urea</th>
                         <th>NPK</th>
                         <th>NPK Formula</th>
@@ -116,6 +121,10 @@
                         <th id="sum-npk-realisasi">0</th>
                         <th id="sum-npk-formula-realisasi">0</th>
                         <th id="sum-organik-realisasi">0</th>
+                        <th id="sum-urea-sisa">0</th>
+                        <th id="sum-npk-sisa">0</th>
+                        <th id="sum-npk-formula-sisa">0</th>
+                        <th id="sum-organik-sisa">0</th>
                       </tr>
                     </tfoot>
                   </table>
@@ -318,6 +327,50 @@
                         }
                         return data;
                     }
+                },
+                { 
+                    data: 'sisa_urea', 
+                    className: 'text-end',
+                    render: function(data, type) {
+                        if (type === 'display' && data !== null && !isNaN(data)) {
+                            const num = parseFloat(data);
+                            return Number.isInteger(num) ? num.toLocaleString('id-ID') : num.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+                        }
+                        return data || '-';
+                    }
+                },
+                { 
+                    data: 'sisa_npk', 
+                    className: 'text-end',
+                    render: function(data, type) {
+                        if (type === 'display' && data !== null && !isNaN(data)) {
+                            const num = parseFloat(data);
+                            return Number.isInteger(num) ? num.toLocaleString('id-ID') : num.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+                        }
+                        return data || '-';
+                    }
+                },
+                { 
+                    data: 'sisa_npk_formula', 
+                    className: 'text-end',
+                    render: function(data, type) {
+                        if (type === 'display' && data !== null && !isNaN(data)) {
+                            const num = parseFloat(data);
+                            return Number.isInteger(num) ? num.toLocaleString('id-ID') : num.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+                        }
+                        return data || '-';
+                    }
+                },
+                { 
+                    data: 'sisa_organik', 
+                    className: 'text-end',
+                    render: function(data, type) {
+                        if (type === 'display' && data !== null && !isNaN(data)) {
+                            const num = parseFloat(data);
+                            return Number.isInteger(num) ? num.toLocaleString('id-ID') : num.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+                        }
+                        return data || '-';
+                    }
                 }
             ],
             initComplete: function() {
@@ -347,7 +400,11 @@
                 realisasi_urea: parseFloat(item.realisasi_urea) || 0,
                 realisasi_npk: parseFloat(item.realisasi_npk) || 0,
                 realisasi_npk_formula: parseFloat(item.realisasi_npk_formula) || 0,
-                realisasi_organik: parseFloat(item.realisasi_organik) || 0
+                realisasi_organik: parseFloat(item.realisasi_organik) || 0,
+                sisa_urea: parseFloat(item.sisa_urea) || 0,
+                sisa_npk: parseFloat(item.sisa_npk) || 0,
+                sisa_npk_formula: parseFloat(item.sisa_npk_formula) || 0,
+                sisa_organik: parseFloat(item.sisa_organik) || 0
             };
         });
     }
