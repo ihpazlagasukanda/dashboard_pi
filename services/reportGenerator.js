@@ -58,6 +58,7 @@ async function generateReport(kabupaten, tahun, baseDir) {
                 e.nama_petani, 
                 e.kode_kios,
                 e.desa,
+                e.poktan,
                 e.tahun, 
                 e.urea, 
                 e.npk, 
@@ -180,25 +181,26 @@ async function generateReport(kabupaten, tahun, baseDir) {
         worksheet.mergeCells('D1:D2'); // NIK
         worksheet.mergeCells('E1:E2'); // Nama Petani
         worksheet.mergeCells('F1:F2'); // Kode Kios
-        worksheet.mergeCells('G1:J1'); // Alokasi
-        worksheet.mergeCells('K1:N1'); // Sisa
-        worksheet.mergeCells('O1:R1'); // Tebusan
+        worksheet.mergeCells('G1:G2'); // Poktan
+        worksheet.mergeCells('H1:K1'); // Alokasi
+        worksheet.mergeCells('L1:O1'); // Sisa
+        worksheet.mergeCells('P1:S1'); // Tebusan
 
         // Merge cells untuk header bulan
-        const bulanHeaders = ['S1:V1', 'W1:Z1', 'AA1:AD1', 'AE1:AH1', 'AI1:AL1', 'AM1:AP1',
-            'AQ1:AT1', 'AU1:AX1', 'AY1:BB1', 'BC1:BF1', 'BG1:BJ1', 'BK1:BN1'];
+        const bulanHeaders = ['T1:W1', 'X1:AA1', 'AB1:AE1', 'AF1:AI1', 'AJ1:AM1', 'AN1:AQ1',
+            'AR1:AU1', 'AV1:AY1', 'AZ1:BC1', 'BD1:BG1', 'BH1:BK1', 'BL1:BO1'];
         const bulanNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
             'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
         bulanHeaders.forEach(range => worksheet.mergeCells(range));
 
         // Set value dan style untuk header utama
-        worksheet.getCell("G1").value = "Alokasi";
-        worksheet.getCell("K1").value = "Sisa";
-        worksheet.getCell("O1").value = "Tebusan";
+        worksheet.getCell("H1").value = "Alokasi";
+        worksheet.getCell("L1").value = "Sisa";
+        worksheet.getCell("P1").value = "Tebusan";
 
         // Style untuk header utama
-        ["G1", "K1", "O1"].forEach(cell => {
+        ["H1", "L1", "P1"].forEach(cell => {
             worksheet.getCell(cell).alignment = { horizontal: "center", vertical: "middle" };
             worksheet.getCell(cell).font = { bold: true, size: 12 };
             worksheet.getCell(cell).fill = {
@@ -223,7 +225,7 @@ async function generateReport(kabupaten, tahun, baseDir) {
 
         // Header kolom
         const subHeaders = [
-            'Kabupaten', 'Kecamatan', 'Desa', 'NIK', 'Nama Petani', 'Kode Kios',
+            'Kabupaten', 'Kecamatan', 'Desa', 'Nama Poktan', 'NIK', 'Nama Petani', 'Kode Kios',
             'Urea', 'NPK', 'NPK Formula', 'Organik', // Alokasi
             'Urea', 'NPK', 'NPK Formula', 'Organik', // Sisa
             'Urea', 'NPK', 'NPK Formula', 'Organik', // Tebusan
@@ -276,7 +278,7 @@ async function generateReport(kabupaten, tahun, baseDir) {
 
         // Tambahkan baris total kosong terlebih dahulu
         const totalRow = worksheet.addRow([
-            'TOTAL', '', '', '', '', '',
+            'TOTAL', '', '', '', '', '', '',
             totals.urea.toLocaleString(),
             totals.npk.toLocaleString(),
             totals.npk_formula.toLocaleString(),
@@ -378,6 +380,7 @@ async function generateReport(kabupaten, tahun, baseDir) {
                     row.kabupaten,
                     row.kecamatan,
                     row.desa || '', // Tambahkan kolom desa
+                    row.poktan || '', // Poktan
                     row.nik,
                     row.nama_petani,
                     row.kode_kios,
@@ -414,7 +417,7 @@ async function generateReport(kabupaten, tahun, baseDir) {
 
         // Tambahkan kembali baris total dengan data yang sudah dihitung
         const updatedTotalRow = worksheet.addRow([
-            'TOTAL', '', '', '', '', '',
+            'TOTAL', '', '', '', '', '', '',
             totals.urea.toLocaleString(),
             totals.npk.toLocaleString(),
             totals.npk_formula.toLocaleString(),

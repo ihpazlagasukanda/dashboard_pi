@@ -110,7 +110,7 @@ exports.uploadErdkk = async (req, res) => {
             const kecamatan = kecMap[kodeDesa] || "Kecamatan Tidak Ditemukan";
             const kodeKios = row.getCell(3).value?.toString().trim() || "";
             const namaKios = row.getCell(4).value?.toString().trim() || "";
-            const poktan = row.getCell(6).value?.toString().trim() || "";
+            const poktan = row.getCell(6).value?.toString().trim().toUpperCase() || "";
             const nik = row.getCell(8).value?.toString().replace(/`/g, "'").trim() || "";
             const namaPetani = row.getCell(7).value?.toString().trim() || "";
 

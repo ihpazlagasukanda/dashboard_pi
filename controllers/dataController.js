@@ -2083,6 +2083,7 @@ exports.alokasiVsTebusan = async (req, res) => {
                 e.nama_kios,
                 e.tahun,
                 e.desa, 
+                e.poktan,
                 e.urea, 
                 e.npk, 
                 e.npk_formula, 
