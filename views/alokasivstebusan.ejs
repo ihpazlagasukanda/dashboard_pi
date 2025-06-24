@@ -88,6 +88,7 @@
                       </select>
                     </div>
                     <!-- Kabupaten -->
+                     
                     <div class="grid grid-cols-2 items-center gap-2">
                       <label
                         for="kabupatenSelect"
@@ -98,7 +99,11 @@
                         id="kabupatenSelect"
                         class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
                       >
-                      <option value="">Semua Kabupaten</option>
+                       <% if (user.kabupaten && user.kabupaten !== 'ALL') { %>
+                      <option value="">Pilih Kabupaten</option>
+                      <option value="<%= user.kabupaten %>"><%= user.kabupaten %></option>
+                    <% } else { %>
+                      <option value="">Pilih Kabupaten</option>
                       <option value="BOYOLALI">BOYOLALI</option>
                       <option value="SRAGEN">SRAGEN</option>
                       <option value="KOTA SURAKARTA">KOTA SURAKARTA</option>
@@ -113,7 +118,8 @@
                       <option value="SLEMAN">SLEMAN</option>
                       <option value="KULON PROGO">KULON PROGO</option>
                       <option value="GUNUNG KIDUL">GUNUNG KIDUL</option>
-                      </select>
+                      <% } %>
+                      </select> 
                     </div>
                     <br>
                     <p class="text-info">Filter periode hanya untuk view, tidak bisa download sesuai periode</p>

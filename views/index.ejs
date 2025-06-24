@@ -43,22 +43,40 @@
                 </div>
 
                 <!-- Kabupaten Select -->
-                <div>
-                  <label
-                    for="provinsiSelect"
-                    class="text-sm font-medium text-gray-700"
-                    >Provinsi:</label
-                  >
-                  <select
-                    id="provinsiSelect"
-                    class="form-select"
-                    style="min-width: 180px"
-                  >
-                    <option value="">Pilih Provinsi</option>
-                    <option value="DIY">DI YOGYAKARTA</option>
-                    <option value="JAWA TENGAH">JAWA TENGAH</option>
-                  </select>
-                </div>
+                <%
+  // List kabupaten DIY (yang dianggap "JAWA TENGAH")
+  const kabupatenDIY = ["KOTA YOGYAKARTA", "BANTUL", "SLEMAN", "KULON PROGO", "GUNUNG KIDUL"];
+  
+  let provinsiOtomatis = "";
+  if (user.kabupaten && kabupatenDIY.includes(user.kabupaten)) {
+    provinsiOtomatis = "DIY";  // ✅ meskipun kabupatennya DIY
+  } else if (user.kabupaten) {
+    provinsiOtomatis = "JAWA TENGAH";  // default lain Jateng juga
+  }
+%>
+
+<div>
+  <label
+    for="provinsiSelect"
+    class="text-sm font-medium text-gray-700"
+    >Provinsi:</label
+  >
+  <select
+    id="provinsiSelect"
+    class="form-select"
+    style="min-width: 180px"
+  >
+    <% if (user.kabupaten) { %>
+      <option value="">Pilih Provinsi</option>
+      <option value="<%= provinsiOtomatis %>"><%= provinsiOtomatis %></option>
+    <% } else { %>
+      <option value="">Pilih Provinsi</option>
+      <option value="DIY">DI YOGYAKARTA</option>
+      <option value="JAWA TENGAH">JAWA TENGAH</option>
+    <% } %>
+  </select>
+</div>
+
                   <!-- Kabupaten Select -->
                   <div>
                     <label
@@ -71,6 +89,10 @@
                       class="form-select"
                       style="min-width: 180px"
                     >
+                    <% if (user.kabupaten && user.kabupaten !== 'ALL') { %>
+                      <option value="">Pilih Kabupaten</option>
+                      <option value="<%= user.kabupaten %>"><%= user.kabupaten %></option>
+                    <% } else { %>
                       <option value="">Pilih Kabupaten</option>
                       <option value="BOYOLALI">BOYOLALI</option>
                       <option value="SRAGEN">SRAGEN</option>
@@ -86,6 +108,7 @@
                       <option value="SLEMAN">SLEMAN</option>
                       <option value="KULON PROGO">KULON PROGO</option>
                       <option value="GUNUNG KIDUL">GUNUNG KIDUL</option>
+                      <% } %>
                     </select>
                   </div>
                   <!-- Kecamatan Select -->

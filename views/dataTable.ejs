@@ -78,7 +78,26 @@
               <div class="grid grid-cols-2 items-center gap-2">
                 <label for="filter-kabupaten" class="text-sm font-medium text-gray-700">Kabupaten</label>
                 <select id="filter-kabupaten" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
-                  <option value="">Semua Kabupaten</option>
+                  <% if (user.kabupaten && user.kabupaten !== 'ALL') { %>
+                      <option value="">Pilih Kabupaten</option>
+                      <option value="<%= user.kabupaten %>"><%= user.kabupaten %></option>
+                    <% } else { %>
+                  <option value="">Pilih Kabupaten</option>
+                                <option value="BOYOLALI">BOYOLALI</option>
+                                <option value="SRAGEN">SRAGEN</option>
+                                <option value="KOTA SURAKARTA">KOTA SURAKARTA</option>
+                                <option value="KOTA MAGELANG">KOTA MAGELANG</option>
+                                <option value="MAGELANG">MAGELANG</option>
+                                <option value="SUKOHARJO">SUKOHARJO</option>
+                                <option value="KLATEN">KLATEN</option>
+                                <option value="WONOGIRI">WONOGIRI</option>
+                                <option value="KARANGANYAR">KARANGANYAR</option>
+                                <option value="BANTUL">BANTUL</option>
+                                <option value="KOTA YOGYAKARTA">KOTA YOGYAKARTA</option>
+                                <option value="SLEMAN">SLEMAN</option>
+                                <option value="KULON PROGO">KULON PROGO</option>
+                                <option value="GUNUNG KIDUL">GUNUNG KIDUL</option>
+                  <% } %>
                 </select>
               </div>
             
@@ -86,7 +105,7 @@
               <div class="grid grid-cols-2 items-center gap-2">
                 <label for="filter-kecamatan" class="text-sm font-medium text-gray-700">Kecamatan</label>
                 <select id="filter-kecamatan" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
-                  <option value="">Semua Kecamatan</option>
+                  <option value="">Pilih Kecamatan</option>
                 </select>
               </div>
             
@@ -94,7 +113,7 @@
               <div class="grid grid-cols-2 items-center gap-2">
                 <label for="filter-metode-penebusan" class="text-sm font-medium text-gray-700">Metode Penebusan</label>
                 <select id="filter-metode-penebusan" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
-                  <option value="">Semua Metode</option>
+                  <option value="">Pilih Metode</option>
                 </select>
               </div>
             </div>
@@ -408,42 +427,42 @@
 
         // Fungsi untuk memuat data
         function loadData() {
-  const tahun = $('#filter-tahun').val();
-  const bulan = $('#filter-bulan').val();
-  const bulanAwal = $('#periode-bulan-awal').val();
-  const bulanAkhir = $('#periode-bulan-akhir').val();
+        const tahun = $('#filter-tahun').val();
+        const bulan = $('#filter-bulan').val();
+        const bulanAwal = $('#periode-bulan-awal').val();
+        const bulanAkhir = $('#periode-bulan-akhir').val();
 
-  const isPeriodeFilled = bulanAwal || bulanAkhir;
-  const isPeriodeComplete = bulanAwal && bulanAkhir;
+        const isPeriodeFilled = bulanAwal || bulanAkhir;
+        const isPeriodeComplete = bulanAwal && bulanAkhir;
 
-  // Wajib pilih tahun
-  if (!tahun) {
-    alert('Harap pilih tahun terlebih dahulu');
-    return;
-  }
+        // Wajib pilih tahun
+        if (!tahun) {
+          alert('Harap pilih tahun terlebih dahulu');
+          return;
+        }
 
-  // Kalau periode diisi sebagian, kasih peringatan
-  if (isPeriodeFilled && !isPeriodeComplete) {
-    alert('Harap lengkapi periode bulan (awal dan akhir)');
-    return;
-  }
+        // Kalau periode diisi sebagian, kasih peringatan
+        if (isPeriodeFilled && !isPeriodeComplete) {
+          alert('Harap lengkapi periode bulan (awal dan akhir)');
+          return;
+        }
 
-  // Kalau periode lengkap, validasi bulan awal <= akhir
-  if (isPeriodeComplete && bulanAwal > bulanAkhir) {
-    alert('Bulan awal tidak boleh lebih besar dari bulan akhir');
-    return;
-  }
+        // Kalau periode lengkap, validasi bulan awal <= akhir
+        if (isPeriodeComplete && bulanAwal > bulanAkhir) {
+          alert('Bulan awal tidak boleh lebih besar dari bulan akhir');
+          return;
+        }
 
-  // Load data
-  if (dataTable) {
-    isInitialLoad = false;
-    hasData = true;
-    $('#download-excel').prop('disabled', false);
-    dataTable.ajax.url('/api/data').load();
-    updateSum();
-    updateDataInfo();
-  }
-}
+        // Load data
+        if (dataTable) {
+          isInitialLoad = false;
+          hasData = true;
+          $('#download-excel').prop('disabled', false);
+          dataTable.ajax.url('/api/data').load();
+          updateSum();
+          updateDataInfo();
+        }
+        }
 
 
         // Fungsi untuk update info data
@@ -489,11 +508,11 @@
           }
 
           // Hapus params yang kosong
-  Object.keys(params).forEach(key => {
-    if (!params[key]) {
-      delete params[key];
-    }
-  });
+          Object.keys(params).forEach(key => {
+            if (!params[key]) {
+              delete params[key];
+            }
+          });
 
           $.ajax({
             url: '/api/data/sum',
@@ -589,42 +608,42 @@
         }
 
         // Load data filter options
-        function loadFilterOptions() {
+        // function loadFilterOptions() {
 
-          $.ajax({
-            url: '/api/filters',
-            type: 'GET',
-            success: function(data) {
-              // Isi dropdown kabupaten
-              const kabupatenSelect = $('#filter-kabupaten');
-              data.kabupaten.forEach(item => {
-                kabupatenSelect.append(`<option value="${item}">${item}</option>`);
-              });
+        //   $.ajax({
+        //     url: '/api/filters',
+        //     type: 'GET',
+        //     success: function(data) {
+        //       // Isi dropdown kabupaten
+        //       const kabupatenSelect = $('#filter-kabupaten');
+        //       data.kabupaten.forEach(item => {
+        //         kabupatenSelect.append(`<option value="${item}">${item}</option>`);
+        //       });
 
-              // Isi dropdown kecamatan
-              const kecamatanSelect = $('#filter-kecamatan');
-              data.kecamatan.forEach(item => {
-                kecamatanSelect.append(`<option value="${item}">${item}</option>`);
-              });
+        //       // Isi dropdown kecamatan
+        //       const kecamatanSelect = $('#filter-kecamatan');
+        //       data.kecamatan.forEach(item => {
+        //         kecamatanSelect.append(`<option value="${item}">${item}</option>`);
+        //       });
 
-              // Isi dropdown metode penebusan
-              const metodeSelect = $('#filter-metode-penebusan');
-              data.metode_penebusan.forEach(item => {
-                metodeSelect.append(`<option value="${item}">${item}</option>`);
-              });
+        //       // Isi dropdown metode penebusan
+        //       const metodeSelect = $('#filter-metode-penebusan');
+        //       data.metode_penebusan.forEach(item => {
+        //         metodeSelect.append(`<option value="${item}">${item}</option>`);
+        //       });
 
-              // Inisialisasi DataTable setelah filter dimuat
-              initializeDataTable();
-              setupFilterEvents();
-            },
-            error: function() {
-              alert('Gagal memuat opsi filter');
-            },
-            complete: function() {
-              hideProcessing();
-            }
-          });
-        }
+        //       // Inisialisasi DataTable setelah filter dimuat
+        //       initializeDataTable();
+        //       setupFilterEvents();
+        //     },
+        //     error: function() {
+        //       alert('Gagal memuat opsi filter');
+        //     },
+        //     complete: function() {
+        //       hideProcessing();
+        //     }
+        //   });
+        // }
 
         // Download Excel
         $('#download-excel').on('click', function() {

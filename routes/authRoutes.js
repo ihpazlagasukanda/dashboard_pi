@@ -45,7 +45,7 @@ router.post('/login', async (req, res) => {
         }
 
         // ✅ Tambahkan ID dan level ke token
-        const tokenPayload = { id: user.id, username: user.username, level: user.level };
+        const tokenPayload = { id: user.id, username: user.username, level: user.level, kabupaten: user.kabupaten };
         const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
         console.log("🔑 Token payload:", tokenPayload); // Debug log

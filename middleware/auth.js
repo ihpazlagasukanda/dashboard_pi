@@ -1,5 +1,5 @@
 // auth.js
-const jwt = require('jsonwebtoken');  // Hanya dideklarasikan sekali
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 module.exports = (req, res, next) => {
@@ -10,8 +10,9 @@ module.exports = (req, res, next) => {
         if (err) return res.redirect('/login');
 
         req.user = decoded;
-        res.locals.username = decoded.username;  // Simpan username ke res.locals
-        res.locals.userLevel = decoded.level;    // Simpan level ke res.locals
+        res.locals.username = decoded.username;
+        res.locals.userLevel = decoded.level;
+        res.locals.kabupaten = decoded.kabupaten; // tambahkan ini
         next();
     });
 };
