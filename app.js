@@ -10,6 +10,7 @@ const erdkkRoutes = require("./routes/erdkkRoutes");
 const wcmRoutes = require("./routes/wcmRoutes");
 const outRouter = require("./routes/outRoutes");
 const skRoutes = require("./routes/skRoutes");
+const deleteRoutes = require("./routes/deleteRoutes");
 const triggerCron = require("./routes/triggerCron");
 const uploadPenyaluranDoRoutes = require("./routes/penyaluranDoRoutes");
 require('dotenv').config();
@@ -91,6 +92,14 @@ app.get('/upload-poktan', authMiddleware, requireLevel(2), (req, res) => {
     res.render('upload-poktan', { user: req.user });
 });
 
+app.get('/paduanupload', authMiddleware, requireLevel(2), (req, res) => {
+    res.render('paduanupload', { user: req.user });
+});
+
+app.get('/manualymachine', authMiddleware, requireLevel(2), (req, res) => {
+    res.render('manualymachine', { user: req.user });
+});
+
 
 // Routes untuk halaman lain
 app.get('/erdkk', authMiddleware, (req, res) => {
@@ -148,6 +157,7 @@ app.use('/trigger', authMiddleware, triggerCron);
 app.use('/api/data', authMiddleware, uploadPenyaluranDoRoutes);
 app.use(authRoutes);  // Pastikan authRoutes ada
 app.use('/upload', outRouter);  // Route untuk upload
+app.use('/delete', authMiddleware, deleteRoutes);
 
 app.use(express.json({ limit: '50mb' })); // Sesuaikan ukuran jika perlu
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));

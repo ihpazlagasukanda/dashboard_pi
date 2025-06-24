@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <%- include('./partials/head'); %>
+    <style>
+      .tab-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .tab-buttons button {
+        padding: 10px 20px;
+        border: none;
+        background-color: #f1f1f1;
+        cursor: pointer;
+        font-weight: bold;
+        border-radius: 5px;
+      }
+
+      .tab-buttons button.active {
+        background-color: #007bff;
+        color: white;
+      }
+
+      .tab-content {
+        display: none;
+        padding: 20px;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <%- include('./partials/header'); %>
+
+      <div class="container">
+        <div class="page-inner">
+          <div class="pt-2 pb-4">
+            <h3 class="fw-bold mb-3">Buku Panduan</h3>
+            <p>Silakan pilih salah satu panduan upload di bawah ini:</p>
+          </div>
+
+          <!-- Tombol Tab -->
+          <div class="tab-buttons">
+            <button class="tab-btn active" data-target="verval">Panduan Verval</button>
+            <button class="tab-btn" data-target="erdkk">Panduan ERDKK</button>
+            <button class="tab-btn" data-target="do">Panduan Penyaluran DO</button>
+            <button class="tab-btn" data-target="wcm">Panduan WCM</button>
+          </div>
+
+          <!-- Konten Panduan -->
+          <div id="verval" class="tab-content active">
+            <h5>Panduan Upload Verval</h5>
+            <ol>
+              <li>Hapus data verval bulan berjalan atau sesuai bulan file ingin diupload. anda bisa menghapus
+                data melalui laman ini. <a href="/mesinmanual">manualy machine</a>
+              </li>
+              <li>Setelah hapus data yang sesuai, upload file dengan memilih ingin file ipubers atau file kartan.
+                File bisa diupload lebih dari 1 (Max 10) tapi harus semua sesuai dengan jenis file(ipubers atau kartan). 
+                <span class="text-danger">Pastikan file kartan atau ipubers sesuai format khususnya tanggal</span>
+                Contoh : <img src="./assets/img/uploadverval.png" alt="" width="40%">
+              </li>
+              
+              <li>Setelah yakin sudah sesuai maka klik tombol upload dan tunggu hingga selesai. <div class="text-danger">jika gagal atau undefined periksa kembali filenya apakah sudah sesuai</div></li>
+              <!-- <li>Kolom wajib: <code>nik</code>, <code>nama</code>, <code>desa</code>, <code>status</code></li> -->
+            </ol>
+          </div>
+
+          <div id="erdkk" class="tab-content">
+            <h5>Panduan Upload ERDKK</h5>
+            <ol>
+              <li>Format file Excel (.xlsx) sesuai template</li>
+              <li>Sebelum upload periksa Kolom wajib apakah sudah terisi semua</li>
+              <li>Masuk ke menu upload erdkk. Masukkan tahun dan kabupaten yang ingin diupload
+                Contoh:<img src="./assets/img/uploaderdkk.png" alt="" width="40%">
+              </li>
+              <li>Setelah yakin sudah sesuai maka klik tombol upload dan tunggu hingga selesai. <div class="text-danger">jika gagal atau undefined periksa kembali filenya apakah sudah sesuai</div></li>
+              <li class="text-info">Jika kondisi anda update erdkk lama maka abaikan jika muncul notifikasi file tersebut sudah ada dan klik OK</li>
+            </ol>
+          </div>
+
+          <div id="do" class="tab-content">
+            <h5>Panduan Upload Penyaluran DO (PKP)</h5>
+            <ol>
+              <li>Pertama-tama ubah terlebih dahulu file asli berbentuk .xls menjadi .xlsx</li>
+              <li>Hapus data penyaluran bulan berjalan atau sesuai bulan file ingin diupload. anda bisa menghapus
+                data melalui laman ini. <a href="/mesinmanual">manualy machine</a>
+              </li>
+              <li>Setelah hapus data yang sesuai, masukkan tahun dan bulan sesuai file yang akan diupload.
+                <span class="text-danger">Pastikan file sesuai format saat download dan sudah diubah ke xlsx</span>
+                Contoh : <img src="./assets/img/uploadpkp.png" alt="" width="40%">
+              </li>
+              <li>Setelah yakin sudah sesuai maka klik tombol upload dan tunggu hingga selesai. <div class="text-danger">jika gagal atau undefined periksa kembali filenya apakah sudah sesuai</div></li>
+              <!-- <li>Kolom wajib: <code>nik</code>, <code>nama</code>, <code>desa</code>, <code>status</code></li> -->
+            </ol>
+          </div>
+
+          <div id="wcm" class="tab-content">
+            <h5>Panduan Upload WCM (F6)</h5>
+            <ul>
+              <li>File Excel (.xlsx)</li>
+              <li>Kolom wajib: <code>kode_kios</code>, <code>bulan</code>, <code>stok_awal</code>, <code>stok_akhir</code>, <code>penebusan</code></li>
+              <li>Upload melalui menu <strong>Upload WCM</strong></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <%- include('./partials/footer'); %>
+    </div>
+
+    <!-- Core JS -->
+    <script src="./assets/js/core/jquery-3.7.1.min.js"></script>
+    <script src="./assets/js/core/bootstrap.min.js"></script>
+
+    <script>
+      // Script Tab Logic
+      $('.tab-btn').on('click', function () {
+        $('.tab-btn').removeClass('active');
+        $(this).addClass('active');
+
+        const target = $(this).data('target');
+        $('.tab-content').removeClass('active');
+        $('#' + target).addClass('active');
+      });
+    </script>
+  </body>
+</html>
