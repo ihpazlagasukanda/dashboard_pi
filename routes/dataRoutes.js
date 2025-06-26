@@ -124,6 +124,9 @@ router.get('/download/summary-pupuk', dataController.downloadSummaryPupuk);
 router.get('/download/rekap-petani', dataController.downloadRekapPetani);
 
 
+router.get('/download/poktanbelumterdaftar', dataController.downloadPoktan);
+
+
 // Endpoint untuk last updated
 router.get('/lastupdated/global', dataController.getLastUpdatedGlobal);
 router.get('/lastupdated/kabupaten', dataController.getLastUpdatedPerKabupaten);

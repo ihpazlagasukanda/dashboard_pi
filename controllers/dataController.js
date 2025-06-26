@@ -4489,3 +4489,141 @@ exports.getLastUpdatedPerKabupaten = async (req, res) => {
         res.status(500).send('Terjadi kesalahan server');
     }
 };
+
+// rekap poktan
+
+exports.downloadPoktan = async (req, res) => {
+    try {
+        const { kabupaten } = req.query;
+
+        //     let query = `
+        //         SELECT DISTINCT
+        //             e.kabupaten,
+        //             e.kecamatan,
+        //             e.desa,
+        //             e.kode_kios,
+        //             e.nama_kios,
+        //             e.poktan, 
+        //             p.nomor_hp
+        //         FROM 
+        //             erdkk e
+        //         LEFT JOIN 
+        //             poktan p ON TRIM(LOWER(e.poktan)) = TRIM(LOWER(p.poktan))
+        //             AND e.kabupaten = p.kabupaten
+        //             AND e.kecamatan = p.kecamatan
+        //             AND e.desa = p.desa
+        //             AND e.kode_kios = p.kode_kios
+        //         WHERE 
+        //             e.tahun = 2025
+        //             AND (
+        //                 p.poktan IS NULL 
+        //                 OR p.nomor_hp IS NULL 
+        //                 OR TRIM(p.nomor_hp) = ''
+        //             ) AND e.kabupaten IN (
+        //     'SLEMAN', 
+        //     'KOTA YOGYAKARTA', 
+        //     'BANTUL', 
+        //     'KULON PROGO', 
+        //     'GUNUNG KIDUL'
+        // )
+        //     `;
+
+
+        let query = `
+                SELECT DISTINCT
+                    e.kabupaten,
+                    e.kecamatan,
+                    e.desa,
+                    e.kode_kios,
+                    e.nama_kios,
+                    e.poktan, 
+                    p.nomor_hp
+                FROM 
+                    erdkk e
+                LEFT JOIN 
+                    poktan p ON TRIM(LOWER(e.poktan)) = TRIM(LOWER(p.poktan))
+                    AND e.kabupaten = p.kabupaten
+                    AND e.kecamatan = p.kecamatan
+                    AND e.desa = p.desa
+                    AND e.kode_kios = p.kode_kios
+                WHERE 
+                    e.tahun = 2025
+                AND e.kabupaten IN (
+            'SLEMAN'
+        )
+            `;
+
+        // let query = `
+        //     SELECT * FROM poktan WHERE nomor_hp IS NULL OR nomor_hp = ''
+        // `;
+
+
+
+        let params = [];
+
+        if (kabupaten) {
+            query += " AND e.kabupaten = ?";
+            params.push(kabupaten);
+        }
+
+        query += " ORDER BY kabupaten, kecamatan ASC";
+
+        const [data] = await db.query(query, params);
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("poktan");
+
+        const borderStyle = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            bottom: { style: "thin" },
+            right: { style: "thin" },
+        };
+
+        // Tambahkan header
+        worksheet.addRow(["KABUPATEN", "KECAMATAN", "KODE DESA", "DESA", "KODE KIOS", "NAMA KIOS", "NAMA POKTAN", "NAMA KETUA POKTAN", "NO HP POKTAN"]);
+
+        // Atur lebar kolom
+        worksheet.columns = [
+            { key: "kabupaten", width: 20 },
+            { key: "kecamatan", width: 20 },
+            { key: "kode_desa", width: 15 },
+            { key: "desa", width: 20 },
+            { key: "kode_kios", width: 15 },
+            { key: "nama_kios", width: 25 },
+            { key: "poktan", width: 25 },
+            { key: "nama_ketua", width: 25 },
+            { key: "nomor_hp", width: 20 },
+        ];
+
+        data.forEach((row) => {
+            const addedRow = worksheet.addRow([
+                row.kabupaten,
+                row.kecamatan,
+                "",
+                row.desa,
+                row.kode_kios || "",
+                row.nama_kios || "",
+                row.poktan,
+                "", // nama ketua poktan (kosong untuk saat ini)
+                row.nomor_hp || "", // nomor HP poktan (kosong untuk saat ini)
+            ]);
+            addedRow.eachCell((cell) => {
+                cell.border = borderStyle;
+                cell.alignment = { horizontal: "center", vertical: "middle" };
+            });
+        });
+
+        res.setHeader(
+            "Content-Type",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
+        res.setHeader("Content-Disposition", "attachment; filename=poktan_kosong.xlsx");
+        await workbook.xlsx.write(res);
+        res.end();
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Terjadi kesalahan dalam mengunduh data" });
+    }
+};
+

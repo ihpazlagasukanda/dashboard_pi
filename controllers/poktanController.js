@@ -72,7 +72,7 @@ exports.uploadPoktan = async (req, res) => {
                 desa: row.getCell(4).value || "",
                 kode_kios: row.getCell(5).value || "",
                 nama_kios: row.getCell(6).value || "",
-                poktan: row.getCell(7).value || "",
+                poktan: (row.getCell(7).value || "").toString().toUpperCase(),
                 ketua_poktan: row.getCell(8).value || "",
                 nomor_hp: row.getCell(9).result?.toString().trim() || row.getCell(9).text?.toString().trim() || "",
 
