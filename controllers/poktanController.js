@@ -22,7 +22,7 @@ exports.uploadPoktan = async (req, res) => {
     if (!kabupaten) {
         return res.status(400).json({
             success: false,
-            message: "Tahun dan bulan wajib diisi."
+            message: "Kabupaten wajib diisi."
         });
     }
 

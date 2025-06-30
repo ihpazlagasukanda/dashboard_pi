@@ -4548,9 +4548,6 @@ exports.downloadPoktan = async (req, res) => {
                     AND e.kode_kios = p.kode_kios
                 WHERE 
                     e.tahun = 2025
-                AND e.kabupaten IN (
-            'SLEMAN'
-        )
             `;
 
         // let query = `
