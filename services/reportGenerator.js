@@ -25,7 +25,13 @@ async function generateAllReports() {
             'WONOGIRI',
             'KARANGANYAR',
             'KOTA SURAKARTA',
-            'SUKOHARJO'
+            'SUKOHARJO',
+            'JEPARA',
+            'REMBANG',
+            'PATI',
+            'KUDUS',
+            'GROBOGAN',
+            'BLORA'
         ];
 
         const tahunList = [2025];
