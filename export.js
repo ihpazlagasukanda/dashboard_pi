@@ -57,7 +57,7 @@ async function exportExcel() {
   SUM(COALESCE(v.npk_formula, 0)) AS total_npk_formula,
 
 
-  -- oRGANIK per bulan
+  -- ORGANIK per bulan
   SUM(CASE WHEN MONTH(v.tanggal_tebus) = 1 THEN COALESCE(v.organik, 0) ELSE 0 END) AS organik_jan,
   SUM(CASE WHEN MONTH(v.tanggal_tebus) = 2 THEN COALESCE(v.organik, 0) ELSE 0 END) AS organik_feb,
   SUM(CASE WHEN MONTH(v.tanggal_tebus) = 3 THEN COALESCE(v.organik, 0) ELSE 0 END) AS organik_mar,
@@ -75,16 +75,15 @@ FROM erdkk e
 LEFT JOIN verval v
   ON e.nik = v.nik
 AND YEAR(v.tanggal_tebus) = 2025
-  AND v.kabupaten = 'KOTA MAGELANG'
-  AND v.nama_kios = 'TANI MAKMUR KOTA'
+  AND v.kabupaten = 'BOYOLALI'
+  AND v.kode_kios = 'RT0000093261'
 
 WHERE e.tahun = 2025
-  AND e.kabupaten = 'KOTA MAGELANG'
-  AND e.nama_kios = 'TANI MAKMUR KOTA'
+  AND e.kabupaten = 'BOYOLALI'
+  AND e.kode_kios = 'RT0000093261'
 
 GROUP BY e.nik, e.nama_petani
 ORDER BY e.nama_petani;
-
   `;
 
     try {

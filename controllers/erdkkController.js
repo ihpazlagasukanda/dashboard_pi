@@ -95,8 +95,8 @@ exports.uploadErdkk = async (req, res) => {
         const [kecRows] = await db.execute("SELECT kode_desa, kecamatan FROM desa");
         const kecMap = Object.fromEntries(kecRows.map(row => [row.kode_desa, row.kecamatan]));
 
-        const [desaRows] = await db.execute("SELECT kode_desa, kelurahan FROM desa");
-        const desaMap = Object.fromEntries(desaRows.map(row => [row.kode_desa, row.kelurahan]));
+        const [desaRows] = await db.execute("SELECT kode_desa, desa FROM desa");
+        const desaMap = Object.fromEntries(desaRows.map(row => [row.kode_desa, row.desa]));
 
         // Proses data Excel
         let erdkkDataMap = new Map(); // Untuk menggabungkan baris duplikat

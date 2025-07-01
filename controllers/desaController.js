@@ -26,19 +26,19 @@ exports.uploadDesa = async (req, res) => {
             const kabupaten = row.getCell(2).text.trim();
             const kecamatan = row.getCell(3).text.trim();
             const kodeDesa = row.getCell(4).text.trim();
-            const kelurahan = row.getCell(5).text.trim();
+            const desa = row.getCell(5).text.trim();
             const idPoktan = row.getCell(6).text.trim() || null; // Bisa NULL
             const namaPoktan = row.getCell(7).text.trim();
             const namaKios = row.getCell(8).text.trim();
             const pihcKode = row.getCell(9).text.trim() || null; // Bisa NULL
 
             // 🔹 Validasi: Jika data utama kosong, skip baris ini
-            if (!provinsi || !kabupaten || !kecamatan || !kodeDesa || !kelurahan) {
+            if (!provinsi || !kabupaten || !kecamatan || !kodeDesa || !desa) {
                 console.log(`❌ Data tidak valid di baris ${rowNumber}, dilewati.`);
                 return;
             }
 
-            desaData.push([provinsi, kabupaten, kecamatan, kodeDesa, kelurahan, idPoktan, namaPoktan, namaKios, pihcKode]);
+            desaData.push([provinsi, kabupaten, kecamatan, kodeDesa, desa, idPoktan, namaPoktan, namaKios, pihcKode]);
         });
 
         if (desaData.length === 0) {
@@ -47,10 +47,10 @@ exports.uploadDesa = async (req, res) => {
 
         // 🔹 3. Simpan ke database dengan ON DUPLICATE KEY UPDATE
         const sql = `
-            INSERT INTO desa (provinsi, kabupaten, kecamatan, kode_desa, kelurahan, id_poktan, nama_poktan, nama_kios, pihc_kode)
+            INSERT INTO desa (provinsi, kabupaten, kecamatan, kode_desa, desa, id_poktan, nama_poktan, nama_kios, pihc_kode)
             VALUES ? 
             ON DUPLICATE KEY UPDATE 
-            kelurahan = VALUES(kelurahan),
+            desa = VALUES(desa),
             id_poktan = VALUES(id_poktan),
             nama_poktan = VALUES(nama_poktan),
             nama_kios = VALUES(nama_kios),

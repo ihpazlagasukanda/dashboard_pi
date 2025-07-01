@@ -64,11 +64,18 @@
               <option value="KLATEN">KLATEN</option>
               <option value="WONOGIRI">WONOGIRI</option>
               <option value="KARANGANYAR">KARANGANYAR</option>
+              <option value="BLORA">BLORA</option>
+              <option value="GROBOGAN">GROBOGAN</option>
+              <option value="JEPARA">JEPARA</option>
+              <option value="KUDUS">KUDUS</option>
+              <option value="PATI">PATI</option>
+              <option value="REMBANG">REMBANG</option>
               <option value="BANTUL">BANTUL</option>
               <option value="KOTA YOGYAKARTA">KOTA YOGYAKARTA</option>
               <option value="SLEMAN">SLEMAN</option>
               <option value="KULON PROGO">KULON PROGO</option>
               <option value="GUNUNG KIDUL">GUNUNG KIDUL</option>
+
                                               </select>
                                           </div>
                                       </div>
@@ -418,32 +425,32 @@
       
           // Fetch Kabupaten
           let kabupatenDropdown = document.getElementById("kabupaten");
-          if (kabupatenDropdown) {
-              fetch("/api/filters")
-                  .then(response => response.json())
-                  .then(data => {
-                      if (data && data.kabupaten && Array.isArray(data.kabupaten)) {
-                          let existingValues = new Set();
-                          kabupatenDropdown.innerHTML = '<option value="">Pilih Kabupaten</option>';
+          // if (kabupatenDropdown) {
+          //     fetch("/api/filters")
+          //         .then(response => response.json())
+          //         .then(data => {
+          //             if (data && data.kabupaten && Array.isArray(data.kabupaten)) {
+          //                 let existingValues = new Set();
+          //                 kabupatenDropdown.innerHTML = '<option value="">Pilih Kabupaten</option>';
       
-                          data.kabupaten.forEach(kab => {
-                              if (kab && !existingValues.has(kab)) {
-                                  existingValues.add(kab);
-                                  let option = document.createElement("option");
-                                  option.value = kab;
-                                  option.textContent = kab;
-                                  kabupatenDropdown.appendChild(option);
-                              }
-                          });
-                      } else {
-                          throw new Error("Data kabupaten tidak valid.");
-                      }
-                  })
-                  .catch(error => {
-                      console.error("Error fetching Kabupaten:", error);
-                      kabupatenDropdown.innerHTML = '<option value="">Gagal memuat data</option>';
-                  });
-          }
+          //                 data.kabupaten.forEach(kab => {
+          //                     if (kab && !existingValues.has(kab)) {
+          //                         existingValues.add(kab);
+          //                         let option = document.createElement("option");
+          //                         option.value = kab;
+          //                         option.textContent = kab;
+          //                         kabupatenDropdown.appendChild(option);
+          //                     }
+          //                 });
+          //             } else {
+          //                 throw new Error("Data kabupaten tidak valid.");
+          //             }
+          //         })
+          //         .catch(error => {
+          //             console.error("Error fetching Kabupaten:", error);
+          //             kabupatenDropdown.innerHTML = '<option value="">Gagal memuat data</option>';
+          //         });
+          // }
       
           // Upload File
           let uploadForm = document.getElementById("uploadForm");
