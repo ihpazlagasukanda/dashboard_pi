@@ -73,28 +73,53 @@ const processExcelFile = async (file, metodePenebusan) => {
 
     return rows.map((row) => {
         let tanggalTebus, tanggalExcel;
-        const kodeTransaksi = metodePenebusan === 'ipubers' ? row.getCell(7).text : generateKodeTransaksi();
-        // const kodeTransaksi = metodePenebusan === 'ipubers' ? row.getCell(4).text : generateKodeTransaksi();
-        if (metodePenebusan === 'ipubers') {
-            tanggalExcel = row.getCell(18).text;
-            // tanggalExcel = row.getCell(16).text;
-        } else if (metodePenebusan === 'kartan') {
-            tanggalExcel = row.getCell(15).text;
+const kodeTransaksi = metodePenebusan === 'ipubers' ? row.getCell(7).text : generateKodeTransaksi();
+
+if (metodePenebusan === 'ipubers') {
+    tanggalExcel = row.getCell(18).text;
+} else if (metodePenebusan === 'kartan') {
+    tanggalExcel = row.getCell(15).text;
+}
+
+// Fungsi bantu untuk parse tanggal acak
+function parseTanggalAcak(tanggal) {
+    if (!tanggal || typeof tanggal !== 'string') return null;
+
+    // Hapus spasi ekstra dan normalisasi separator ke "/"
+    const cleaned = tanggal.trim().replace(/\s+/g, '').replace(/[-.]/g, '/');
+
+    // Coba parse dengan format D/M/YYYY atau DD/MM/YYYY
+    const parts = cleaned.split('/');
+    if (parts.length === 3) {
+        let [d, m, y] = parts;
+
+        // Jika tahun hanya 2 digit
+        if (y.length === 2) {
+            y = parseInt(y) > 50 ? '19' + y : '20' + y;
         }
 
-        // Format tanggal (dipertahankan sama seperti aslinya)
-        if (tanggalExcel && (tanggalExcel instanceof Date || !isNaN(Date.parse(tanggalExcel)))) {
-            const dateObj = new Date(tanggalExcel);
-            const year = dateObj.getFullYear();
-            const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-            const day = dateObj.getDate().toString().padStart(2, '0');
-            tanggalTebus = `${year}/${month}/${day}`;
-        } else if (typeof tanggalExcel === 'string' && tanggalExcel.includes('/')) {
-            const parts = tanggalExcel.split('/');
-            if (parts.length === 3) {
-                tanggalTebus = `${parts[2]}/${parts[1]}/${parts[0]}`;
-            }
-        }
+        // Tambahkan padding nol
+        d = d.padStart(2, '0');
+        m = m.padStart(2, '0');
+
+        return `${y}/${m}/${d}`;
+    }
+
+    return null;
+}
+
+// Format tanggal (dipertahankan dalam format YYYY/MM/DD)
+if (tanggalExcel instanceof Date || !isNaN(Date.parse(tanggalExcel))) {
+    const dateObj = new Date(tanggalExcel);
+    const year = dateObj.getFullYear();
+    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+    const day = dateObj.getDate().toString().padStart(2, '0');
+    tanggalTebus = `${year}/${month}/${day}`;
+} else if (typeof tanggalExcel === 'string') {
+    const parsed = parseTanggalAcak(tanggalExcel);
+    if (parsed) tanggalTebus = parsed;
+}
+
 
         if (metodePenebusan === 'ipubers') {
             return {
