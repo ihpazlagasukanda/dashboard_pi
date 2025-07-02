@@ -120,8 +120,9 @@ exports.uploadSkBupati = async (req, res) => {
         for (const data of skBupatiMap.values()) {
             await connection.execute(
                 `INSERT INTO sk_bupati 
-                (tahun, kabupaten, kode_distributor, distributor, kode_kecamatan, kecamatan, produk, alokasi) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    (tahun, kabupaten, kode_distributor, distributor, kode_kecamatan, kecamatan, produk, alokasi) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE alokasi = VALUES(alokasi)`,
                 [
                     data.tahun,
                     data.kabupaten,
