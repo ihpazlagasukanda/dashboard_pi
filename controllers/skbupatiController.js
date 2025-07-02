@@ -122,7 +122,15 @@ exports.uploadSkBupati = async (req, res) => {
                 `INSERT INTO sk_bupati 
     (tahun, kabupaten, kode_distributor, distributor, kode_kecamatan, kecamatan, produk, alokasi) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ON DUPLICATE KEY UPDATE alokasi = VALUES(alokasi)`,
+    ON DUPLICATE KEY UPDATE 
+    tahun = VALUES(tahun),
+    kabupaten = VALUES(kabupaten),
+    kode_distributor = VALUES(kode_distributor),
+    distributor = VALUES(distributor),
+    kode_kecamatan = VALUES(kode_kecamatan),
+    kecamatan = VALUES(kecamatan),
+    produk = VALUES(produk),
+    alokasi = VALUES(alokasi)`,
                 [
                     data.tahun,
                     data.kabupaten,
