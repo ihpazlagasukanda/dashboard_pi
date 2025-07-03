@@ -87,49 +87,37 @@
                         <option value="2025">2025</option>
                       </select>
                     </div>
-                    <!-- Kabupaten -->
-                     
-                    <div class="grid grid-cols-2 items-center gap-2">
-                      <label
-                        for="kabupatenSelect"
-                        class="text-sm font-medium text-gray-700"
-                        >Kabupaten</label
-                      >
-                      <select
-                        id="kabupatenSelect"
-                        class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
-                      >
-                       <% if (user.kabupaten && user.kabupaten !== 'ALL') { %>
-                      <option value="">Pilih Kabupaten</option>
-                      <option value="<%= user.kabupaten %>"><%= user.kabupaten %></option>
-                    <% } else { %>
-                      <option value="">Pilih Kabupaten</option>
-                      <option value="BOYOLALI">BOYOLALI</option>
-                      <option value="SRAGEN">SRAGEN</option>
-                      <option value="KOTA SURAKARTA">KOTA SURAKARTA</option>
-                      <option value="KOTA MAGELANG">KOTA MAGELANG</option>
-                      <option value="MAGELANG">MAGELANG</option>
-                      <option value="SUKOHARJO">SUKOHARJO</option>
-                      <option value="KLATEN">KLATEN</option>
-                      <option value="WONOGIRI">WONOGIRI</option>
-                      <option value="KARANGANYAR">KARANGANYAR</option>
-                      <option value="BLORA">BLORA</option>
-              <option value="GROBOGAN">GROBOGAN</option>
-              <option value="JEPARA">JEPARA</option>
-              <option value="KUDUS">KUDUS</option>
-              <option value="PATI">PATI</option>
-              <option value="REMBANG">REMBANG</option>
-                      <option value="BANTUL">BANTUL</option>
-                      <option value="KOTA YOGYAKARTA">KOTA YOGYAKARTA</option>
-                      <option value="SLEMAN">SLEMAN</option>
-                      <option value="KULON PROGO">KULON PROGO</option>
-                      <option value="GUNUNG KIDUL">GUNUNG KIDUL</option>
-                      <% } %>
-                      </select> 
-                    </div>
-                    <br>
-                    <p class="text-info">Filter periode hanya untuk view, tidak bisa download sesuai periode</p>
-                    <div class="grid grid-cols-3 items-center gap-2">
+                
+               <div class="grid grid-cols-2 items-center gap-2">
+                <label for="provinsiSelect" class="text-sm font-medium text-gray-700">Provinsi:</label>
+                <select id="provinsiSelect" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full" style="min-width: 180px">
+                  <% if (user.kabupaten) { %>
+                    <option value="">Pilih Provinsi</option>
+                    <option value="DIY">DI YOGYAKARTA</option>
+                    <option value="JAWA TENGAH">JAWA TENGAH</option>
+                  <% } else { %>
+                    <option value="">Pilih Provinsi</option>
+                    <option value="DIY">DI YOGYAKARTA</option>
+                    <option value="JAWA TENGAH">JAWA TENGAH</option>
+                  <% } %>
+                </select>
+              </div>
+
+              <!-- Kabupaten Select -->
+              <div class="grid grid-cols-2 items-center gap-2">
+                <label for="kabupatenSelect" class="text-sm font-medium text-gray-700">Kabupaten:</label>
+                <select id="kabupatenSelect" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full" style="min-width: 180px">
+                  <option value="">Pilih Kabupaten</option>
+                  <% if (user.kabupaten && user.kabupaten !== 'ALL') { %>
+                    <option value="<%= user.kabupaten %>"><%= user.kabupaten %></option>
+                  <% } %>
+                </select>
+              </div>
+
+
+              <br>
+              <p class="text-info">Filter periode hanya untuk view, tidak bisa download sesuai periode</p>
+                <div class="grid grid-cols-3 items-center gap-2">
                 <label class="text-sm font-medium text-gray-700">Periode Bulan:</label>
                 <select id="periode-bulan-awal" class="border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
                   <option value="">Bulan Awal</option>
@@ -404,29 +392,91 @@
     </div>
 
     <script>
-        $(document).ready(function () {
-            let table = $('#summary-verval-table').DataTable({
-                processing: true,
-                serverSide: true,
-                deferLoading: 0, // Jangan langsung load data
-                ajax: {
-                    url: "/api/alokasivstebus",
-                    type: "GET",
-                    data: function (d) {
-                        d.kabupaten = $('#kabupatenSelect').val();
-                        d.tahun = $('#tahunSelect').val();
-                        const bulanAwal = $('#periode-bulan-awal').val();
-                        const bulanAkhir = $('#periode-bulan-akhir').val();
+  const kabupatenData = {
+    "DIY": [
+      "KOTA YOGYAKARTA", "BANTUL", "SLEMAN", "KULON PROGO", "GUNUNG KIDUL"
+    ],
+    "JAWA TENGAH": [
+      "BANJARNEGARA", "BANYUMAS", "BATANG", "BLORA", "BOYOLALI",
+      "BREBES", "CILACAP", "DEMAK", "GROBOGAN", "JEPARA",
+      "KARANGANYAR", "KEBUMEN", "KENDAL", "KLATEN", "KUDUS",
+      "MAGELANG", "PATI", "PEKALONGAN", "PEMALANG", "PURBALINGGA",
+      "PURWOREJO", "REMBANG", "SEMARANG", "SRAGEN", "SUKOHARJO",
+      "TEGAL", "TEMANGGUNG", "WONOGIRI", "WONOSOBO",
+      "KOTA MAGELANG", "KOTA PEKALONGAN", "KOTA SALATIGA",
+      "KOTA SEMARANG", "KOTA SURAKARTA", "KOTA TEGAL"
+    ]
+  };
 
-                        // Kirim jika keduanya terisi
-                        if (bulanAwal && bulanAkhir) {
-                            d.bulan_awal = parseInt(bulanAwal);
-                            d.bulan_akhir = parseInt(bulanAkhir);
-                        }
-                    }
-                },
-                columns: [
-                    { data: "kabupaten" },
+  const kabupatenDIY = kabupatenData["DIY"];
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const provinsiSelect = document.getElementById('provinsiSelect');
+    const kabupatenSelect = document.getElementById('kabupatenSelect');
+    const userKabupaten = "<%= user.kabupaten || '' %>";
+    const username = "<%= user.username || '' %>";
+
+    function populateKabupaten(provinsi) {
+      kabupatenSelect.innerHTML = '<option value="">Pilih Kabupaten</option>';
+      if (kabupatenData[provinsi]) {
+        kabupatenData[provinsi].forEach(kab => {
+          kabupatenSelect.append(new Option(kab, kab));
+        });
+      }
+    }
+
+    // Mode untuk region_yogyakarta
+    if (username.includes('region_yogyakarta')) {
+      provinsiSelect.innerHTML = `<option value="DIY" selected>DI YOGYAKARTA</option>`;
+      provinsiSelect.disabled = true;
+
+      kabupatenSelect.innerHTML = `<option value="KOTA YOGYAKARTA" selected>KOTA YOGYAKARTA</option>`;
+      kabupatenSelect.disabled = true;
+    }
+    // User dengan kabupaten tertentu
+    else if (userKabupaten && userKabupaten !== 'ALL') {
+      const provinsi = kabupatenDIY.includes(userKabupaten) ? "DIY" : "JAWA TENGAH";
+      provinsiSelect.innerHTML = `<option value="${provinsi}" selected>${provinsi}</option>`;
+      provinsiSelect.disabled = true;
+
+      kabupatenSelect.innerHTML = `<option value="${userKabupaten}" selected>${userKabupaten}</option>`;
+      kabupatenSelect.disabled = true;
+    }
+    // User akses penuh
+    else {
+      provinsiSelect.innerHTML = `
+        <option value="">Pilih Provinsi</option>
+        <option value="DIY">DI YOGYAKARTA</option>
+        <option value="JAWA TENGAH">JAWA TENGAH</option>
+      `;
+      provinsiSelect.addEventListener('change', function () {
+        populateKabupaten(this.value);
+      });
+      provinsiSelect.dispatchEvent(new Event('change'));
+    }
+  });
+
+  $(document).ready(function () {
+    const table = $('#summary-verval-table').DataTable({
+      processing: true,
+      serverSide: true,
+      deferLoading: 0,
+      ajax: {
+        url: "/api/alokasivstebus",
+        type: "GET",
+        data: function (d) {
+          d.kabupaten = $('#kabupatenSelect').val();
+          d.tahun = $('#tahunSelect').val();
+          const bulanAwal = $('#periode-bulan-awal').val();
+          const bulanAkhir = $('#periode-bulan-akhir').val();
+          if (bulanAwal && bulanAkhir) {
+            d.bulan_awal = parseInt(bulanAwal);
+            d.bulan_akhir = parseInt(bulanAkhir);
+          }
+        }
+      },
+      columns: [
+         { data: "kabupaten" },
                     { data: "kecamatan" },
                     { data: "desa" },
                     { data: "poktan" },
@@ -495,27 +545,27 @@
                     { data: "des_npk", render: $.fn.dataTable.render.number(',', '.', 0, '') },
                     { data: "des_npk_formula", render: $.fn.dataTable.render.number(',', '.', 0, '') },
                     { data: "des_organik", render: $.fn.dataTable.render.number(',', '.', 0, '') }
-                ]
-            });
+      ]
+    });
 
-            function fetchSummaryData() {
-    const filters = {
+    function fetchSummaryData() {
+      const filters = {
         kabupaten: $('#kabupatenSelect').val(),
         kecamatan: $('#kecamatanSelect').val(),
         tahun: $('#tahunSelect').val(),
-        bulan_awal: $('#periode-bulan-awal').val(),  // ex: "01"
-        bulan_akhir: $('#periode-bulan-akhir').val() // ex: "05"
-    };
+        bulan_awal: $('#periode-bulan-awal').val(),
+        bulan_akhir: $('#periode-bulan-akhir').val()
+      };
 
-    if (!filters.kabupaten || !filters.tahun) return;
+      if (!filters.kabupaten || !filters.tahun) return;
 
-                $.ajax({
-                    url: "/api/petani-summary",
-                    type: "GET",
-                    data: filters,
-                    success: function (response) {
-                        if (response.sum) {
-                            $("#sum-urea-text").text(parseFloat(response.sum.total_urea || 0).toLocaleString("id-ID"));
+      $.ajax({
+        url: "/api/petani-summary",
+        type: "GET",
+        data: filters,
+        success: function (response) {
+          if (response.sum) {
+              $("#sum-urea-text").text(parseFloat(response.sum.total_urea || 0).toLocaleString("id-ID"));
                             $("#sum-npk-text").text(parseFloat(response.sum.total_npk || 0).toLocaleString("id-ID"));
                             $("#sum-npk-formula-text").text(parseFloat(response.sum.total_npk_formula || 0).toLocaleString("id-ID"));
                             $("#sum-organik-text").text(parseFloat(response.sum.total_organik || 0).toLocaleString("id-ID"));
@@ -589,50 +639,57 @@
                             $("#sum-des-npk").text(parseFloat(response.sum.des_tebus_npk || 0).toLocaleString("id-ID"));
                             $("#sum-des-npk-formula").text(parseFloat(response.sum.des_tebus_npk_formula || 0).toLocaleString("id-ID"));
                             $("#sum-des-organik").text(parseFloat(response.sum.des_tebus_organik || 0).toLocaleString("id-ID"));
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error("Gagal mengambil data summary:", error);
-                        $(".summary-value").text("0");
-                    }
-                });
-            }
+             
+          }
+        },
+        error: function (xhr, status, error) {
+          console.error("Gagal mengambil data summary:", error);
+          $(".summary-value").text("0");
+        }
+      });
+    }
 
-            $('#kabupatenSelect, #tahunSelect, #kecamatanSelect, #periode-bulan-awal, #periode-bulan-akhir').on('change', function () {
-                let kabupaten = $('#kabupatenSelect').val();
-                let tahun = $('#tahunSelect').val();
+    $('#kabupatenSelect, #tahunSelect, #kecamatanSelect, #periode-bulan-awal, #periode-bulan-akhir').on('change', function () {
+      const kabupaten = $('#kabupatenSelect').val();
+      const tahun = $('#tahunSelect').val();
 
-               if (kabupaten && tahun) {
-                    $.when(table.draw()).then(function() {
-                        fetchSummaryData(); // Panggil setelah tabel selesai reload
-                    });
-                }
-            });
-
-            $('#download-summary').on('click', function () {
-                let kabupaten = $('#kabupatenSelect').val();
-                let kecamatan = $('#kecamatanSelect').val();
-                let tahun = $('#tahunSelect').val();
-                let url = `/api/download-petanisummary?kabupaten=${kabupaten}&tahun=${tahun}`;
-                window.location.href = url;
-            });
-
-            $('#download-sum').on('click', function () {
-                let kabupaten = $('#kabupatenSelect').val();
-                let kecamatan = $('#kecamatanSelect').val();
-                let tahun = $('#tahunSelect').val();
-                let url = `/api/download-petanisum?kabupaten=${kabupaten}&tahun=${tahun}`;
-                window.location.href = url;
-            });
-
-            $.get("/api/filters", function (data) {
-                data.kecamatan.forEach((item) =>
-                    $("#kecamatanSelect").append(
-                        `<option value="${item}">${item}</option>`
-                    )
-                );
-            });
+      if (kabupaten && tahun) {
+        $.when(table.draw()).then(() => {
+          fetchSummaryData();
         });
+      }
+    });
+
+    $('#download-summary').on('click', function () {
+      const kabupaten = $('#kabupatenSelect').val();
+      const kecamatan = $('#kecamatanSelect').val();
+      const tahun = $('#tahunSelect').val();
+
+      if (kabupaten && tahun) {
+        const url = `/api/download-petanisummary?kabupaten=${kabupaten}&tahun=${tahun}&kecamatan=${kecamatan || ''}`;
+        window.location.href = url;
+      }
+    });
+
+    $('#download-sum').on('click', function () {
+      const kabupaten = $('#kabupatenSelect').val();
+      const kecamatan = $('#kecamatanSelect').val();
+      const tahun = $('#tahunSelect').val();
+
+      if (kabupaten && tahun) {
+        const url = `/api/download-petanisum?kabupaten=${kabupaten}&tahun=${tahun}&kecamatan=${kecamatan || ''}`;
+        window.location.href = url;
+      }
+    });
+
+    $.get("/api/filters", function (data) {
+      if (data.kecamatan) {
+        data.kecamatan.forEach(item => {
+          $("#kecamatanSelect").append(`<option value="${item}">${item}</option>`);
+        });
+      }
+    });
+  });
     </script>
 
     <!-- Core JS Files -->

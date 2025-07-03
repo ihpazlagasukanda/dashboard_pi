@@ -62,6 +62,17 @@
       <ol>
         <li>Masukkan bulan dan tahun. Kabupaten boleh kosong.</li>
       </ol>
+      <p class="text-danger">Wilayah wajib diisi</p>
+      <div class="grid grid-cols-2 items-center gap-2">
+        <label for="manajer-verval" class="text-sm font-medium text-gray-700">Wilayah</label>
+        <select id="manajer-verval" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
+          <option value="">Pilih Wilayah</option>
+          <option value="JATENG1">JATENG 1</option>
+          <option value="JATENG2">JATENG 2</option>
+          <option value="DIYJATENG3">DIY & JATENG 3</option>
+          <option value="JATENG4">JATENG 4</option>
+        </select>
+      </div>
 
       <div class="grid grid-cols-2 items-center gap-2">
         <label for="tahun-verval" class="text-sm font-medium text-gray-700">Tahun</label>
@@ -95,21 +106,41 @@
         <label for="kabupaten-verval" class="text-sm font-medium text-gray-700">Kabupaten</label>
         <select id="kabupaten-verval" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
           <option value="">Semua Kabupaten</option>
-          <option value="BOYOLALI">BOYOLALI</option>
-          <option value="SRAGEN">SRAGEN</option>
-          <option value="KOTA SURAKARTA">KOTA SURAKARTA</option>
-          <option value="KOTA MAGELANG">KOTA MAGELANG</option>
-          <option value="MAGELANG">MAGELANG</option>
-          <option value="SUKOHARJO">SUKOHARJO</option>
-          <option value="KLATEN">KLATEN</option>
-          <option value="WONOGIRI">WONOGIRI</option>
-          <option value="KARANGANYAR">KARANGANYAR</option>
+          <option value="BANJARNEGARA">BANJARNEGARA</option>
+          <option value="BANYUMAS">BANYUMAS</option>
+          <option value="BATANG">BATANG</option>
           <option value="BLORA">BLORA</option>
-              <option value="GROBOGAN">GROBOGAN</option>
-              <option value="JEPARA">JEPARA</option>
-              <option value="KUDUS">KUDUS</option>
-              <option value="PATI">PATI</option>
-              <option value="REMBANG">REMBANG</option>
+          <option value="BOYOLALI">BOYOLALI</option>
+          <option value="BREBES">BREBES</option>
+          <option value="CILACAP">CILACAP</option>
+          <option value="DEMAK">DEMAK</option>
+          <option value="GROBOGAN">GROBOGAN</option>
+          <option value="JEPARA">JEPARA</option>
+          <option value="KARANGANYAR">KARANGANYAR</option>
+          <option value="KEBUMEN">KEBUMEN</option>
+          <option value="KENDAL">KENDAL</option>
+          <option value="KLATEN">KLATEN</option>
+          <option value="KUDUS">KUDUS</option>
+          <option value="MAGELANG">MAGELANG</option>
+          <option value="PATI">PATI</option>
+          <option value="PEKALONGAN">PEKALONGAN</option>
+          <option value="PEMALANG">PEMALANG</option>
+          <option value="PURBALINGGA">PURBALINGGA</option>
+          <option value="PURWOREJO">PURWOREJO</option>
+          <option value="REMBANG">REMBANG</option>
+          <option value="SEMARANG">SEMARANG</option>
+          <option value="SRAGEN">SRAGEN</option>
+          <option value="SUKOHARJO">SUKOHARJO</option>
+          <option value="TEGAL">TEGAL</option>
+          <option value="TEMANGGUNG">TEMANGGUNG</option>
+          <option value="WONOGIRI">WONOGIRI</option>
+          <option value="WONOSOBO">WONOSOBO</option>
+          <option value="KOTA MAGELANG">KOTA MAGELANG</option>
+          <option value="KOTA PEKALONGAN">KOTA PEKALONGAN</option>
+          <option value="KOTA SALATIGA">KOTA SALATIGA</option>
+          <option value="KOTA SEMARANG">KOTA SEMARANG</option>
+          <option value="KOTA SURAKARTA">KOTA SURAKARTA</option>
+          <option value="KOTA TEGAL">KOTA TEGAL</option>
           <option value="BANTUL">BANTUL</option>
           <option value="KOTA YOGYAKARTA">KOTA YOGYAKARTA</option>
           <option value="SLEMAN">SLEMAN</option>
@@ -129,10 +160,21 @@
     </div>
 
     <div id="do" class="tab-content">
-      <!-- <h5>Hapus Data Penyaluran DO</h5>
+      <h5>Hapus Data Penyaluran DO</h5>
       <ol>
         <li>Masukkan bulan dan tahun. Kabupaten boleh kosong.</li>
       </ol>
+<p class="text-danger">Wilayah wajib diisi</p>
+    <div class="grid grid-cols-2 items-center gap-2">
+        <label for="manajer-penyalurando" class="text-sm font-medium text-gray-700">Wilayah</label>
+        <select id="manajer-penyalurando" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
+          <option value="">Pilih Wilayah</option>
+          <option value="JATENG1">JATENG 1</option>
+          <option value="JATENG2">JATENG 2</option>
+          <option value="DIYJATENG3">DIY & JATENG 3</option>
+          <option value="JATENG4">JATENG 4</option>
+        </select>
+      </div>
 
       <div class="grid grid-cols-2 items-center gap-2">
         <label for="tahun-penyalurando" class="text-sm font-medium text-gray-700">Tahun</label>
@@ -165,22 +207,41 @@
       <div class="grid grid-cols-2 items-center gap-2 mt-2">
         <label for="kabupaten-penyalurando" class="text-sm font-medium text-gray-700">Kabupaten</label>
         <select id="kabupaten-penyalurando" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
-          <option value="">Semua Kabupaten</option>
-          <option value="BOYOLALI">BOYOLALI</option>
-          <option value="SRAGEN">SRAGEN</option>
-          <option value="KOTA SURAKARTA">KOTA SURAKARTA</option>
-          <option value="KOTA MAGELANG">KOTA MAGELANG</option>
-          <option value="MAGELANG">MAGELANG</option>
-          <option value="SUKOHARJO">SUKOHARJO</option>
-          <option value="KLATEN">KLATEN</option>
-          <option value="WONOGIRI">WONOGIRI</option>
-          <option value="KARANGANYAR">KARANGANYAR</option>
+          <option value="BANJARNEGARA">BANJARNEGARA</option>
+          <option value="BANYUMAS">BANYUMAS</option>
+          <option value="BATANG">BATANG</option>
           <option value="BLORA">BLORA</option>
-              <option value="GROBOGAN">GROBOGAN</option>
-              <option value="JEPARA">JEPARA</option>
-              <option value="KUDUS">KUDUS</option>
-              <option value="PATI">PATI</option>
-              <option value="REMBANG">REMBANG</option>
+          <option value="BOYOLALI">BOYOLALI</option>
+          <option value="BREBES">BREBES</option>
+          <option value="CILACAP">CILACAP</option>
+          <option value="DEMAK">DEMAK</option>
+          <option value="GROBOGAN">GROBOGAN</option>
+          <option value="JEPARA">JEPARA</option>
+          <option value="KARANGANYAR">KARANGANYAR</option>
+          <option value="KEBUMEN">KEBUMEN</option>
+          <option value="KENDAL">KENDAL</option>
+          <option value="KLATEN">KLATEN</option>
+          <option value="KUDUS">KUDUS</option>
+          <option value="MAGELANG">MAGELANG</option>
+          <option value="PATI">PATI</option>
+          <option value="PEKALONGAN">PEKALONGAN</option>
+          <option value="PEMALANG">PEMALANG</option>
+          <option value="PURBALINGGA">PURBALINGGA</option>
+          <option value="PURWOREJO">PURWOREJO</option>
+          <option value="REMBANG">REMBANG</option>
+          <option value="SEMARANG">SEMARANG</option>
+          <option value="SRAGEN">SRAGEN</option>
+          <option value="SUKOHARJO">SUKOHARJO</option>
+          <option value="TEGAL">TEGAL</option>
+          <option value="TEMANGGUNG">TEMANGGUNG</option>
+          <option value="WONOGIRI">WONOGIRI</option>
+          <option value="WONOSOBO">WONOSOBO</option>
+          <option value="KOTA MAGELANG">KOTA MAGELANG</option>
+          <option value="KOTA PEKALONGAN">KOTA PEKALONGAN</option>
+          <option value="KOTA SALATIGA">KOTA SALATIGA</option>
+          <option value="KOTA SEMARANG">KOTA SEMARANG</option>
+          <option value="KOTA SURAKARTA">KOTA SURAKARTA</option>
+          <option value="KOTA TEGAL">KOTA TEGAL</option>
           <option value="BANTUL">BANTUL</option>
           <option value="KOTA YOGYAKARTA">KOTA YOGYAKARTA</option>
           <option value="SLEMAN">SLEMAN</option>
@@ -191,7 +252,7 @@
 
       <div class="d-flex flex-column gap-2 mt-4">
         <button type="button" class="btn btn-danger" data-jenis="penyalurando">Hapus Data Penyaluran DO</button>
-      </div> -->
+      </div>
     </div>
 
     <div id="wcm" class="tab-content">
@@ -233,12 +294,13 @@
     }
 
     // Ambil input berdasarkan ID yang dibentuk dari jenis
+    const manajer = $(`#manajer-${jenis}`).val();
     const tahun = $(`#tahun-${jenis}`).val();
     const bulan = $(`#bulan-${jenis}`).val();
     const kabupaten = $(`#kabupaten-${jenis}`).val();
 
-    if (!tahun || !bulan) {
-      return Swal.fire('Peringatan', 'Tahun dan bulan wajib diisi!', 'warning');
+    if (!manajer || !tahun || !bulan) {
+      return Swal.fire('Peringatan', 'Wilayah, Tahun, dan bulan wajib diisi!', 'warning');
     }
 
     // Label untuk konfirmasi
