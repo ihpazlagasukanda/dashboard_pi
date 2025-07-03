@@ -270,7 +270,7 @@ exports.getSkBupatiAlokasi = async (req, res) => {
     SUM(CASE WHEN produk = 'urea' THEN alokasi ELSE 0 END) AS total_urea,
     SUM(CASE WHEN produk = 'npk' THEN alokasi ELSE 0 END) AS total_npk,
     SUM(CASE WHEN produk = 'kakao' THEN alokasi ELSE 0 END) AS total_npk_formula,
-    SUM(CASE WHEN produk = 'organik' THEN alokasi ELSE 0 END) AS total_organik,
+    SUM(CASE WHEN produk = 'organik' THEN alokasi ELSE 0 END) AS total_organik
 FROM sk_bupati
 WHERE 1 = 1
         `;
