@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../config/db'); // Sesuaikan path ke file koneksi database kamu
 
 router.post('/delete-verval', async (req, res) => {
-    const { tahun, bulan, kabupaten, manajer } = req.body;
+    const { manajer, tahun, bulan, kabupaten } = req.body;
 
     // Validasi wajib
     if (!tahun || !bulan || !manajer) {
@@ -53,7 +53,7 @@ router.post('/delete-verval', async (req, res) => {
 
 
 router.post('/delete-penyalurando', async (req, res) => {
-    const { tahun, bulan, kabupaten, manajer } = req.body;
+    const {  manajer, tahun, bulan, kabupaten } = req.body;
 
     if (!tahun || !bulan || !manajer) {
         return res.status(400).json({ message: 'Tahun, bulan, dan manajer wajib diisi.' });

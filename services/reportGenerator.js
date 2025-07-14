@@ -4,74 +4,122 @@ const path = require('path');
 const db = require('../config/db');
 
 // Fungsi untuk generate semua laporan yang diperlukan
-async function generateAllReports() {
-    try {
-        const baseDir = path.join(__dirname, '../temp_exports');
-        if (!fs.existsSync(baseDir)) {
-            fs.mkdirSync(baseDir, { recursive: true });
-        }
+// async function generateAllReports() {
+//     try {
+//         const baseDir = path.join(__dirname, '../temp_exports');
+//         if (!fs.existsSync(baseDir)) {
+//             fs.mkdirSync(baseDir, { recursive: true });
+//         }
 
-        const kabupatenList = [
-            'KOTA YOGYAKARTA',
-            'SLEMAN',
-            'BANTUL',
-            'GUNUNG KIDUL',
-            'KULON PROGO',
-             'BANJARNEGARA',
-    'BANYUMAS',
-    'BATANG',
-    'BLORA',
-    'BOYOLALI',
-    'BREBES',
-    'CILACAP',
-    'DEMAK',
-    'GROBOGAN',
-    'JEPARA',
-    'KARANGANYAR',
-    'KEBUMEN',
-    'KENDAL',
-    'KLATEN',
-    'KOTA MAGELANG',
-    'KOTA PEKALONGAN',
-    'KOTA SALATIGA',
-    'KOTA SEMARANG',
-    'KOTA SURAKARTA',
-    'KOTA TEGAL',
-    'KUDUS',
-    'MAGELANG',
-    'PATI',
-    'PEKALONGAN',
-    'PEMALANG',
-    'PURBALINGGA',
-    'PURWOREJO',
-    'REMBANG',
-    'SALATIGA',
-    'SEMARANG',
-    'SRAGEN',
-    'SUKOHARJO',
-    'TEGAL',
-    'TEMANGGUNG',
-    'WONOGIRI',
-    'WONOSOBO'
-        ];
+//         const kabupatenList = [
+//             'KOTA YOGYAKARTA',
+//             'SLEMAN',
+//             'BANTUL',
+//             'GUNUNG KIDUL',
+//             'KULON PROGO',
+//              'BANJARNEGARA',
+//     'BANYUMAS',
+//     'BATANG',
+//     'BLORA',
+//     'BOYOLALI',
+//     'BREBES',
+//     'CILACAP',
+//     'DEMAK',
+//     'GROBOGAN',
+//     'JEPARA',
+//     'KARANGANYAR',
+//     'KEBUMEN',
+//     'KENDAL',
+//     'KLATEN',
+//     'KOTA MAGELANG',
+//     'KOTA PEKALONGAN',
+//     'KOTA SALATIGA',
+//     'KOTA SEMARANG',
+//     'KOTA SURAKARTA',
+//     'KOTA TEGAL',
+//     'KUDUS',
+//     'MAGELANG',
+//     'PATI',
+//     'PEKALONGAN',
+//     'PEMALANG',
+//     'PURBALINGGA',
+//     'PURWOREJO',
+//     'REMBANG',
+//     'SALATIGA',
+//     'SEMARANG',
+//     'SRAGEN',
+//     'SUKOHARJO',
+//     'TEGAL',
+//     'TEMANGGUNG',
+//     'WONOGIRI',
+//     'WONOSOBO'
+//         ];
 
-        const tahunList = [2025];
+//         const tahunList = [2025];
 
-        for (const kabupaten of kabupatenList) {
-            for (const tahun of tahunList) {
-                console.log(`[INFO] Generating report for ${kabupaten} - ${tahun}`);
-                await generateReport(kabupaten, tahun, baseDir);
-            }
-        }
+//         for (const kabupaten of kabupatenList) {
+//             for (const tahun of tahunList) {
+//                 console.log(`[INFO] Generating report for ${kabupaten} - ${tahun}`);
+//                 await generateReport(kabupaten, tahun, baseDir);
+//             }
+//         }
 
-        // Generate laporan ALL (tanpa filter)
-        console.log('[INFO] Generating full report (ALL)...');
-        await generateReport(null, null, baseDir);
+//         // Generate laporan ALL (tanpa filter)
+//         console.log('[INFO] Generating full report (ALL)...');
+//         await generateReport(null, null, baseDir);
 
-        console.log('[DONE] Semua laporan telah digenerate');
-    } catch (error) {
-        console.error('[ERROR] Gagal generate reports:', error);
+//         console.log('[DONE] Semua laporan telah digenerate');
+//     } catch (error) {
+//         console.error('[ERROR] Gagal generate reports:', error);
+//     }
+// }
+
+const kabupatenList = [
+  'KOTA YOGYAKARTA', 'SLEMAN', 'BANTUL', 'GUNUNG KIDUL', 'KULON PROGO',
+  'BANJARNEGARA', 'BANYUMAS', 'BATANG', 'BLORA', 'BOYOLALI',
+  'BREBES', 'CILACAP', 'DEMAK', 'GROBOGAN', 'JEPARA',
+  'KARANGANYAR', 'KEBUMEN', 'KENDAL', 'KLATEN', 'KOTA MAGELANG',
+  'KOTA PEKALONGAN', 'KOTA SALATIGA', 'KOTA SEMARANG', 'KOTA SURAKARTA', 'KOTA TEGAL',
+  'KUDUS', 'MAGELANG', 'PATI', 'PEKALONGAN', 'PEMALANG',
+  'PURBALINGGA', 'PURWOREJO', 'REMBANG', 'SALATIGA', 'SEMARANG',
+  'SRAGEN', 'SUKOHARJO', 'TEGAL', 'TEMANGGUNG', 'WONOGIRI', 'WONOSOBO'
+];
+
+const tahunList = [2025];
+
+async function generateAllReports(group, baseDir) {
+  try {
+    if (!fs.existsSync(baseDir)) {
+      fs.mkdirSync(baseDir, { recursive: true });
     }
+
+    let kabListGroup = [];
+
+    if (group === 'all') {
+      kabListGroup = kabupatenList;
+    } else {
+      const groupSize = Math.ceil(kabupatenList.length / 4);
+      const start = group * groupSize;
+      const end = start + groupSize;
+      kabListGroup = kabupatenList.slice(start, end);
+    }
+
+    for (const kabupaten of kabListGroup) {
+      for (const tahun of tahunList) {
+        console.log(`[INFO] Generating report for ${kabupaten} - ${tahun}`);
+        await generateReport(kabupaten, tahun, baseDir);
+      }
+    }
+
+    if (group === 'all') {
+      console.log('[INFO] Generating full report (ALL tanpa filter)...');
+      await generateReport(null, null, baseDir);
+    }
+
+    console.log(`[DONE] Grup ${group} selesai.`);
+  } catch (error) {
+    console.error(`[ERROR] generateAllReports Grup ${group}:`, error);
+  }
 }
 
 async function generateReport(kabupaten, tahun, baseDir) {

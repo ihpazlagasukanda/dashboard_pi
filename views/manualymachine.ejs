@@ -312,7 +312,7 @@
     // Konfirmasi sebelum hapus
     Swal.fire({
       title: 'Apakah Anda yakin?',
-      text: `Data ${jenisLabel} untuk ${kabupaten || 'semua kabupaten'} bulan ${bulan} tahun ${tahun} akan dihapus!`,
+      text: `Data ${jenisLabel} untuk ${kabupaten || 'semua kabupaten'} pada wilayah ${manajer} bulan ${bulan} tahun ${tahun} akan dihapus!`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
@@ -324,7 +324,7 @@
           url: `/delete/delete-${jenis}`,
           method: 'POST',
           contentType: 'application/json',
-          data: JSON.stringify({ tahun, bulan, kabupaten }),
+          data: JSON.stringify({ tahun, bulan, kabupaten, manajer }),
           success: function (res) {
             Swal.fire('Berhasil', res.message || 'Data berhasil dihapus', 'success');
           },
