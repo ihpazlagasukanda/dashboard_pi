@@ -79,7 +79,21 @@ exports.uploadErdkk = async (req, res) => {
         // Ambil kolom dari baris pertama
         const rowValues = sheet.getRow(1).values;
         if (rowValues[0] === undefined) rowValues.shift(); // Hapus elemen pertama jika kosong
-        const actualColumns = rowValues.map(cell => (cell ? cell.toString().trim() : ""));
+        const actualColumns = rowValues.map(cell => {
+    if (!cell) return "";
+    if (typeof cell === "string") return cell.trim();
+    if (typeof cell === "number") return cell.toString().trim();
+    if (typeof cell === "object") {
+        // Tangani beberapa kemungkinan format Excel
+        if (cell.text) return cell.text.trim();
+        if (cell.result) return cell.result.toString().trim();
+        if (cell.richText) return cell.richText.map(r => r.text).join('').trim();
+        if (cell.formula && cell.result) return cell.result.toString().trim();
+        return "[Invalid Object]";
+    }
+    return cell.toString().trim(); // fallback
+});
+
 
         // Cek apakah struktur file sesuai
         if (actualColumns.length !== expectedColumns.length) {
@@ -102,23 +116,35 @@ exports.uploadErdkk = async (req, res) => {
         let erdkkDataMap = new Map(); // Untuk menggabungkan baris duplikat
         const shift = 0; // Shift kolom untuk DIY dan non-DIY
 
-        for (let rowNumber = 2; rowNumber <= sheet.rowCount; rowNumber++) {
-            const row = sheet.getRow(rowNumber);
-            const kodeDesa = row.getCell(2).value || "";
-            const namaDesa = desaMap[kodeDesa] || "Desa Tidak Ditemukan";
-            // const kecamatan = row.getCell(3).value?.toString().trim() || "";
-            const kecamatan = kecMap[kodeDesa] || "Kecamatan Tidak Ditemukan";
-            const kodeKios = row.getCell(3).value?.toString().trim() || "";
-            const namaKios = row.getCell(4).value?.toString().trim() || "";
-            const poktan = row.getCell(6).value?.toString().trim().toUpperCase() || "";
-            const nik = row.getCell(8).value?.toString().replace(/`/g, "'").trim() || "";
-            const namaPetani = row.getCell(7).value?.toString().trim() || "";
+        function cleanCell(cell) {
+            const val = cell?.value;
+            if (val == null) return "";
+            if (typeof val === "object") {
+                return val.text || val.result || (val.richText?.map(r => r.text).join('')) || "[Invalid Object]";
+            }
+            return val.toString().trim();
+        }
 
-            // Skip baris jika data penting tidak ada
+
+        for (let rowNumber = 2; rowNumber <= sheet.rowCount; rowNumber++) {
+           const row = sheet.getRow(rowNumber);
+            const kodeDesa = cleanCell(row.getCell(2));
+            const namaDesa = desaMap[kodeDesa] || "Desa Tidak Ditemukan";
+            const kecamatan = kecMap[kodeDesa] || "Kecamatan Tidak Ditemukan";
+            const kodeKios = cleanCell(row.getCell(3));
+            const namaKios = cleanCell(row.getCell(4));
+            const poktan = cleanCell(row.getCell(6)).toUpperCase();
+            const nik = cleanCell(row.getCell(8)).replace(/`/g, "'");
+            const namaPetani = cleanCell(row.getCell(7));
+
             if (!kecamatan || !nik || !namaPetani) {
                 skippedCount++;
                 continue;
             }
+
+            console.log('Isi nama_petani:', namaPetani);
+            console.log('Panjang nama_petani:', String(namaPetani).length);
+
 
             const parseExcelNumber = (value) => {
                 if (value === null || value === undefined) return 0;

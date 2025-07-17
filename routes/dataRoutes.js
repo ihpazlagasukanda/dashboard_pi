@@ -2,44 +2,42 @@ const express = require("express");
 const router = express.Router();
 const db = require("../config/db"); // Sesuaikan dengan koneksi MySQL kamu
 const dataController = require("../controllers/dataController");
+const monitoringController = require("../controllers/monitoringController");
+const rekapRealisasiController = require("../controllers/rekapRealisasiController");
+const rekapPetaniController = require("../controllers/rekapPetaniController");
+const f5Controller = require("../controllers/f5Controller");
 const { getAllData } = require("../controllers/dataController");
 const { getSummaryData } = require("../controllers/dataController");
 const path = require('path');
 const fs = require('fs');
 
 const { datacatalog } = require("googleapis/build/src/apis/datacatalog");
+const { rekapPetani } = require("../controllers/rekapPetaniController");
 
-// const { generatePetaniReport } = require('../services/excelService');
-// const { processLargeExport } = require('../services/bigDataService');
-// const { generateExportPath } = require('../services/cacheService');
+// Menu Monitoring Transaksi Petani 
+// pilihan jenis alokasi
+router.get("/erdkk/summary", monitoringController.getErdkkSummary);
+router.get("/sk-bupati/alokasi", monitoringController.getSkBupatiAlokasi);
+router.get("/verval/summary", monitoringController.getSummaryPenebusan);
+router.get("/erdkk/count", monitoringController.getErdkkCount);
+router.get("/verval/count", monitoringController.getPenebusanCount);
+router.get("/download/erdkk", dataController.downloadErdkk);
+// end Monitoring Transaksi Petani
 
-// Endpoint untuk request export
-// router.post('/export', async (req, res) => {
-//     try {
-//         const exportPath = generateExportPath(req.body.kabupaten);
+// Menu Rekap Realisasi
+router.get('/summary/pupuk', rekapRealisasiController.summaryPupuk);
+router.get('/download/summary-pupuk', rekapRealisasiController.downloadSummaryPupuk);
+// End Rekap Realisasi
 
-//         // Untuk data kecil (<50k rows)
-//         if (req.body.smallExport) {
-//             await generatePetaniReport(req.body, exportPath);
-//             return res.json({
-//                 downloadUrl: `/download?file=${path.basename(exportPath)}`
-//             });
-//         }
+// Menu Rekap Jumlah Petani
+router.get('/rekap/petani', rekapPetaniController.rekapPetani);
+router.get('/download/rekap-petani', rekapPetaniController.downloadRekapPetani);
+// End Rekap Jumlah Petani
 
-//         // Untuk data besar (background process)
-//         processLargeExport(req.body, (progress) => {
-//             req.io.emit('export-progress', { progress });
-//         }).then(() => {
-//             req.io.emit('export-ready', {
-//                 downloadUrl: `/download?file=${path.basename(exportPath)}`
-//             });
-//         });
-
-//         res.json({ message: 'Export sedang diproses...' });
-//     } catch (error) {
-//         res.status(500).json({ error: error.message });
-//     }
-// });
+//Menu F5
+router.get('/download/f5', f5Controller.downloadF5);
+router.get('/data/f5', f5Controller.getF5);
+// End Menu F5
 
 router.get('/download-export', (req, res) => {
     const fileName = req.query.file;
@@ -75,24 +73,9 @@ router.get("/data/summary", getSummaryData);
 
 router.get("/erdkk", dataController.getErdkk);
 
-// untuk dashboard 1
-//pilihan jenis alokasi
-router.get("/erdkk/summary", dataController.getErdkkSummary);
-router.get("/sk-bupati/alokasi", dataController.getSkBupatiAlokasi);
-
-router.get("/verval/summary", dataController.getSummaryPenebusan);
-router.get("/erdkk/count", dataController.getErdkkCount);
-router.get("/verval/count", dataController.getPenebusanCount);
-router.get("/download/erdkk", dataController.downloadErdkk);
-// end dashboard 1
-
 router.get('/data/jumlah-petani', dataController.getJumlahPetani);
 
 router.get('/alokasivstebus', dataController.alokasiVsTebusan);
-
-router.get('/summary/pupuk', dataController.summaryPupuk);
-router.get('/rekap/petani', dataController.rekapPetani);
-
 
 router.get('/petani-summary', dataController.getVervalSummary);
 
@@ -100,7 +83,6 @@ router.get('/tebusperbulan', dataController.tebusanPerBulan);
 
 router.get('/download-petanisummary', dataController.downloadPetaniSummary);
 router.get('/download-petanisum', dataController.downloadPetaniSum);
-
 router.get('/data/salurkios', dataController.getSalurKios);
 
 router.get('/data/salurkios/sum', dataController.getSalurKiosSum);
@@ -112,7 +94,6 @@ router.get('/data', dataController.getData);
 router.get('/data/sum', dataController.getSum);
 router.get('/data/download', dataController.exportExcel);
 
-
 router.get('/data/wcm', dataController.getWcm);
 router.get('/data/wcmf5', dataController.getWcmF5);
 router.get('/download/wcm', dataController.downloadWcm);
@@ -120,9 +101,6 @@ router.get('/data/wcmvsverval', dataController.wcmVsVerval);
 router.get('/data/penyaluran_do', dataController.getPenyaluranDo);
 router.get('/download/wcmf5', dataController.downloadWcmF5);
 router.get('/download/wcmvsverval', dataController.exportExcelWcmVsVerval);
-router.get('/download/summary-pupuk', dataController.downloadSummaryPupuk);
-router.get('/download/rekap-petani', dataController.downloadRekapPetani);
-
 
 router.get('/download/poktanbelumterdaftar', dataController.downloadPoktan);
 

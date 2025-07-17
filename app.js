@@ -80,6 +80,10 @@ app.get('/upload-wcm', authMiddleware, requireLevel(2), (req, res) => {
     res.render('upload-wcm', { user: req.user });
 });
 
+app.get('/upload-f5', authMiddleware, requireLevel(2), (req, res) => {
+    res.render('upload-f5', { user: req.user });
+});
+
 app.get('/upload-penyalurando', authMiddleware, requireLevel(2), (req, res) => {
     res.render('upload-penyaluranDo', { user: req.user });
 });
@@ -120,6 +124,10 @@ app.get('/wcm', authMiddleware, (req, res) => {
 
 app.get('/wcmf5', authMiddleware, (req, res) => {
     res.render('f5', { user: req.user });
+});
+
+app.get('/f5', authMiddleware, (req, res) => {
+    res.render('f5wcm', { user: req.user });
 });
 
 app.get('/sum', authMiddleware, (req, res) => {
