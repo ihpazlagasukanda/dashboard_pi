@@ -11,8 +11,13 @@ const wcmRoutes = require("./routes/wcmRoutes");
 const outRouter = require("./routes/outRoutes");
 const skRoutes = require("./routes/skRoutes");
 const deleteRoutes = require("./routes/deleteRoutes");
+const userRoutes = require("./routes/userRoutes");
 const triggerCron = require("./routes/triggerCron");
 const uploadPenyaluranDoRoutes = require("./routes/penyaluranDoRoutes");
+const checkAkses = require('./middlewares/checkAkses');
+const logAksesMenu = require('./middlewares/logAksesMenu');
+
+const methodOverride = require('method-override');
 require('dotenv').config();
 
 const app = express();
@@ -25,6 +30,7 @@ const upload = multer({ storage: storage });
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
+app.use(methodOverride('_method'));
 
 // Set view engine ke EJS
 app.set('view engine', 'ejs');
@@ -32,6 +38,10 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Akses file statis
 app.use(express.static('public'));
+
+app.use(logAksesMenu);
+app.set('trust proxy', true);
+
 
 // Middleware untuk pengecekan level admin
 function requireLevel(level) {
@@ -55,11 +65,11 @@ app.get('/login', (req, res) => {
 });
 
 // Halaman lain dengan proteksi autentikasi
-app.get('/dataverval', authMiddleware, (req, res) => {
+app.get('/dataverval', authMiddleware, checkAkses(['C3']), (req, res) => {
     res.render('dataTable', { user: req.user });
 });
 
-app.get('/salurkios', authMiddleware, (req, res) => {
+app.get('/salurkios', authMiddleware, checkAkses(['C2']), (req, res) => {
     res.render('salurkios', { user: req.user });
 });
 
@@ -68,89 +78,89 @@ app.get('/salurkios', authMiddleware, (req, res) => {
 // });
 
 // Halaman Upload - Hanya level 2
-app.get('/upload', authMiddleware, requireLevel(2), (req, res) => {
+app.get('/upload', authMiddleware, requireLevel(2), checkAkses(['B']), (req, res) => {
     res.render('upload', { user: req.user });
 });
 
-app.get('/upload-erdkk', authMiddleware, requireLevel(2), (req, res) => {
+app.get('/upload-erdkk', authMiddleware, requireLevel(2), checkAkses(['B']), (req, res) => {
     res.render('upload-erdkk', { user: req.user });
 });
 
-app.get('/upload-wcm', authMiddleware, requireLevel(2), (req, res) => {
+app.get('/upload-wcm', authMiddleware, requireLevel(2), checkAkses(['B']), (req, res) => {
     res.render('upload-wcm', { user: req.user });
 });
 
-app.get('/upload-f5', authMiddleware, requireLevel(2), (req, res) => {
+app.get('/upload-f5', authMiddleware, requireLevel(2), checkAkses(['B']), (req, res) => {
     res.render('upload-f5', { user: req.user });
 });
 
-app.get('/upload-penyalurando', authMiddleware, requireLevel(2), (req, res) => {
+app.get('/upload-penyalurando', authMiddleware, requireLevel(2), checkAkses(['B']), (req, res) => {
     res.render('upload-penyaluranDo', { user: req.user });
 });
 
-app.get('/upload-skbupati', authMiddleware, requireLevel(2), (req, res) => {
+app.get('/upload-skbupati', authMiddleware, requireLevel(2), checkAkses(['B']), (req, res) => {
     res.render('upload-skBupati', { user: req.user });
 });
 
-app.get('/upload-poktan', authMiddleware, requireLevel(2), (req, res) => {
+app.get('/upload-poktan', authMiddleware, requireLevel(2), checkAkses(['B']), (req, res) => {
     res.render('upload-poktan', { user: req.user });
 });
 
-app.get('/paduanupload', authMiddleware, requireLevel(2), (req, res) => {
+app.get('/paduanupload', authMiddleware, requireLevel(2), checkAkses(['B']), (req, res) => {
     res.render('paduanupload', { user: req.user });
 });
 
-app.get('/manualymachine', authMiddleware, requireLevel(2), (req, res) => {
+app.get('/manualymachine', authMiddleware, requireLevel(2), checkAkses(['B']), (req, res) => {
     res.render('manualymachine', { user: req.user });
 });
 
 
 // Routes untuk halaman lain
-app.get('/erdkk', authMiddleware, (req, res) => {
+app.get('/erdkk', authMiddleware, checkAkses(['C4']), (req, res) => {
     res.render('erdkk', { user: req.user });
 });
 
-app.get('/esummary', authMiddleware, (req, res) => {
+app.get('/esummary', authMiddleware, checkAkses(['C1']), (req, res) => {
     res.render('alokasivstebusan', { user: req.user });
 });
 
-app.get('/summary', authMiddleware, (req, res) => {
-    res.render('esummary', { user: req.user });
-});
-
-app.get('/wcm', authMiddleware, (req, res) => {
+app.get('/wcm', authMiddleware, checkAkses(['D3']), (req, res) => {
     res.render('wcm', { user: req.user });
 });
 
-app.get('/wcmf5', authMiddleware, (req, res) => {
+app.get('/wcmf5', authMiddleware, checkAkses(['D2']), (req, res) => {
     res.render('f5', { user: req.user });
 });
 
-app.get('/f5', authMiddleware, (req, res) => {
+app.get('/f5', authMiddleware, checkAkses(['D1']), (req, res) => {
     res.render('f5wcm', { user: req.user });
 });
 
-app.get('/sum', authMiddleware, (req, res) => {
+app.get('/sum', authMiddleware, checkAkses(['A2']), (req, res) => {
     res.render('sum', { user: req.user });
 });
 
-app.get('/rekap-petani', authMiddleware, (req, res) => {
+app.get('/rekap-petani', authMiddleware, checkAkses(['A3']), (req, res) => {
     res.render('rekap-petani', { user: req.user });
 });
 
-app.get('/wcmvsverval', authMiddleware, (req, res) => {
+app.get('/wcmvsverval', authMiddleware, checkAkses(['D4']), (req, res) => {
     res.render('wcmvsverval', { user: req.user });
 });
 
-app.get('/penyalurando', authMiddleware, requireLevel(2), (req, res) => {
+app.get('/penyalurando', authMiddleware, requireLevel(2), checkAkses(['D5']), (req, res) => {
     res.render('penyalurando', { user: req.user });
+});
+
+app.get('/manageuser', authMiddleware, requireLevel(2), checkAkses(['SUPER']), (req, res) => {
+    res.render('manage-users', { user: req.user });
 });
 
 // app.get('/visualisasi', authMiddleware, (req, res) => {
 //     res.render('visualisasi', { user: req.user });
 // });
 
-app.get('/visualisasi', authMiddleware, requireLevel(2), (req, res) => {
+app.get('/visualisasi', authMiddleware, checkAkses(['A4']), (req, res) => {
     res.render('visulisasi', { user: req.user });
 });
 
@@ -166,6 +176,7 @@ app.use('/api/data', authMiddleware, uploadPenyaluranDoRoutes);
 app.use(authRoutes);  // Pastikan authRoutes ada
 app.use('/upload', outRouter);  // Route untuk upload
 app.use('/delete', authMiddleware, deleteRoutes);
+app.use('/admin', authMiddleware, userRoutes);
 
 app.use(express.json({ limit: '50mb' })); // Sesuaikan ukuran jika perlu
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <%- include('./partials/head'); %>
+</head>
+<body>
+  <div class="wrapper">
+    <%- include('./partials/header'); %>
+    <div class="container">
+      <div class="page-inner">
+        <div class="page-header">
+          <h3 class="fw-bold mb-3">Manajemen Pengguna</h3>
+          <ul class="breadcrumbs mb-3">
+            <li class="nav-home">
+              <a href="/">
+                <i class="icon-home"></i>
+              </a>
+            </li>
+            <li class="separator">
+              <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+              <a href="/admin">Admin</a>
+            </li>
+            <li class="separator">
+              <i class="icon-arrow-right"></i>
+            </li>
+            <li class="nav-item">
+              <a href="#">Manajemen Pengguna</a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <input type="text" class="form-control" placeholder="Cari pengguna..." id="searchUser">
+          </div>
+          <div class="col-md-3">
+            <select class="form-select" id="filterRole">
+              <option value="">Semua Role</option>
+              <option value="2">Admin</option>
+              <option value="1">User</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <select class="form-select" id="filterStatus">
+              <option value="">Semua Status</option>
+              <option value="aktif">Aktif</option>
+              <option value="nonaktif">Nonaktif</option>
+            </select>
+          </div>
+          <div class="col-md-2 text-end">
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTambah">Tambah Pengguna</button>
+          </div>
+        </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table id="multi-filter-select" class="table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Kabupaten</th>
+                <th>Status</th>
+                <th>Akses</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="dataTable">
+              
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Modal Edit User -->
+      <div class="modal fade" id="modalEditUser" tabindex="-1" aria-labelledby="modalEditUserLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <form id="formEditUser">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="modalEditUserLabel">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <input type="hidden" id="editUserId">
+
+                <div class="mb-3">
+                  <label class="form-label">Username</label>
+                  <input type="text" id="editUsername" class="form-control" required readonly>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Level</label>
+                  <select id="editLevel" class="form-select" required>
+                    <option value="1">User</option>
+                    <option value="2">Admin</option>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Status</label>
+                  <select id="editStatus" class="form-select" required>
+                    <option value="aktif">Aktif</option>
+                    <option value="nonaktif">Nonaktif</option>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Kabupaten</label>
+                  <input type="text" id="editKabupaten" class="form-control" placeholder="Contoh: SLEMAN">
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label">Akses</label>
+                  <select id="editAkses" class="form-select" name="akses[]" multiple>
+                    <option value="A1">Monitoring</option>
+                    <option value="A2">Rekap Realisasi</option>
+                    <option value="A3">Rekap Jumlah Petani</option>
+                    <option value="A4">Grafik Penebusan</option>
+                    <option value="B">Upload</option>
+                    <option value="C1">Summary Petani</option>
+                    <option value="C2">Salur Kios Perbulan</option>
+                    <option value="C3">Data Verval</option>
+                    <option value="C4">Data e-RDKK</option>
+                    <option value="D1">F5</option>
+                    <option value="D2">Rekap F6</option>
+                    <option value="D3">F6</option>
+                    <option value="D4">Realisasi F5&F6</option>
+                    <option value="D5">Penyaluran DO</option>
+                  </select>
+                  <small class="form-text text-muted">Tekan Ctrl (atau Cmd di Mac) untuk memilih lebih dari satu.</small>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Modal Tambah Pengguna -->
+      <div class="modal fade" id="modalTambah" tabindex="-1" aria-labelledby="modalTambahLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <form method="POST" action="/admin/manage-users" id="formTambahUser">
+              <div class="modal-header">
+                <h5 class="modal-title" id="modalTambahLabel">Tambah Pengguna</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label for="username" class="form-label">Username</label>
+                  <input type="text" class="form-control" name="username" id="username" required>
+                </div>
+                <div class="mb-3">
+                  <label for="email" class="form-label">Email</label>
+                  <input type="email" class="form-control" name="email" id="email">
+                </div>
+                <div class="mb-3">
+                  <label for="password" class="form-label">Password</label>
+                  <input type="password" class="form-control" name="password" id="password" required>
+                </div>
+                <div class="mb-3">
+                  <label for="level" class="form-label">Role</label>
+                  <select class="form-select" name="level" id="level">
+                    <option value="1">User</option>
+                    <option value="2">Admin</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="kabupaten" class="form-label">Kabupaten (opsional)</label>
+                  <input type="text" class="form-control" name="kabupaten" id="kabupaten">
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Atur Akses -->
+      <div class="modal fade" id="modalAkses" tabindex="-1" aria-labelledby="modalAksesLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="modalAksesLabel">Atur Akses Pengguna</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="/admin/manage-users" id="formAkses">
+              <div class="modal-body">
+                <input type="hidden" name="userId" id="aksesUserId">
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" name="akses[]" value="A1" id="aksesA1">
+                  <label class="form-check-label" for="aksesA1">Monitoring Transaksi Petani</label>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" name="akses[]" value="A2" id="aksesA2">
+                  <label class="form-check-label" for="aksesA2">Rekap Realisasi</label>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" name="akses[]" value="A3" id="aksesA3">
+                  <label class="form-check-label" for="aksesA3">Rekap Jumlah Petani</label>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" name="akses[]" value="A4" id="aksesA4">
+                  <label class="form-check-label" for="aksesA4">Grafik Penebusan</label>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" name="akses[]" value="B" id="aksesUpload">
+                  <label class="form-check-label" for="aksesUpload">Upload</label>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" name="akses[]" value="C1" id="aksesC1">
+                  <label class="form-check-label" for="aksesC1">Summary Petani</label>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" name="akses[]" value="C2" id="aksesC2">
+                  <label class="form-check-label" for="aksesC2">Salur Kios Perbulan</label>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" name="akses[]" value="C3" id="aksesC3">
+                  <label class="form-check-label" for="aksesC3">Data Verval</label>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" name="akses[]" value="C4" id="aksesC4">
+                  <label class="form-check-label" for="aksesC4">Data e-RDKK</label>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" name="akses[]" value="D1" id="aksesD1">
+                  <label class="form-check-label" for="aksesD1">F5</label>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" name="akses[]" value="D2" id="aksesD2">
+                  <label class="form-check-label" for="aksesD2">Rekap F6</label>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" name="akses[]" value="D3" id="aksesD3">
+                  <label class="form-check-label" for="aksesD3">F6</label>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" name="akses[]" value="D4" id="aksesD4">
+                  <label class="form-check-label" for="aksesD4">Realisasi F5&F6</label>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input" type="checkbox" name="akses[]" value="D5" id="aksesD5">
+                  <label class="form-check-label" for="aksesD5">Penyaluran DO</label>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                <button type="submit" class="btn btn-primary">Simpan Akses</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Konfirmasi Hapus -->
+      <div class="modal fade" id="modalHapus" tabindex="-1" aria-labelledby="modalHapusLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="modalHapusLabel">Konfirmasi Hapus</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              Apakah Anda yakin ingin menghapus pengguna ini?
+              <input type="hidden" id="hapusUserId">
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+              <button type="button" class="btn btn-danger" id="btnHapus">Hapus</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <%- include('./partials/footer'); %>
+  </div>
+
+  <!-- Core JS Files -->
+  <script src="./assets/js/core/jquery-3.7.1.min.js"></script>
+  <script src="./assets/js/core/popper.min.js"></script>
+  <script src="./assets/js/core/bootstrap.min.js"></script>
+  <script src="./assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js"></script>
+  <script src="./assets/js/plugin/datatables/datatables.min.js"></script>
+  <script src="./assets/js/kaiadmin.min.js"></script>
+  <script src="./assets/js/setting-demo2.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+  <script>
+    $(document).ready(function () {
+      // Inisialisasi DataTable
+      let table = $("#multi-filter-select").DataTable({
+        processing: true,
+        serverSide: true,
+        searching: false,
+        lengthChange: false,
+        ajax: {
+          url: "/admin/manage-users",
+          type: "GET",
+          data: function (d) {
+            d.search = $("#searchUser").val();
+            d.level = $("#filterRole").val();
+            d.status = $("#filterStatus").val();
+          }
+        },
+        columns: [
+          { data: "username" },
+          {
+            data: "level",
+            render: function (data) {
+              if (data == 1) {
+                return `<span class="badge badge-primary">User</span>`;
+              } else if (data == 2) {
+                return `<span class="badge badge-warning">Admin</span>`;
+              } else {
+                return `<span class="badge badge-secondary">Unknown</span>`;
+              }
+            }
+          },
+          { data: "kabupaten" },
+          {
+            data: "status",
+            render: function (data) {
+              if (data === 'aktif') {
+                return `<span class="badge badge-success">Aktif</span>`;
+              } else {
+                return `<span class="badge badge-danger">Nonaktif</span>`;
+              }
+            }
+          },
+          {
+            data: "akses",
+            render: function (data) {
+              const akses = JSON.parse(data || "[]");
+              return akses.join(", ");
+            }
+          },
+          {
+            data: null,
+            orderable: false,
+            searchable: false,
+            render: function (data, type, row) {
+              return `
+                <button class="btn btn-sm btn-warning btn-edit" data-id="${row.id}">
+                  <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="btn btn-sm btn-danger btn-delete" data-id="${row.id}">
+                  <i class="fas fa-trash-alt"></i> Hapus
+                </button>
+                <button class="btn btn-sm btn-info btn-akses" data-id="${row.id}" data-bs-toggle="modal" data-bs-target="#modalAkses">
+                  <i class="fas fa-key"></i> Akses
+                </button>
+              `;
+            }
+          }
+        ],
+      });
+
+      // Fungsi pencarian dan filter
+      $("#searchUser, #filterRole, #filterStatus").on("change keyup", function () {
+        table.draw();
+      });
+
+      // Modal Akses
+      const modalAkses = document.getElementById('modalAkses');
+      modalAkses.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const userId = button.getAttribute('data-id');
+        document.getElementById('aksesUserId').value = userId;
+        
+        // Ambil data akses user dari server
+        $.ajax({
+          url: `/admin/manage-users/${userId}/akses`,
+          type: 'GET',
+          success: function(data) {
+            // Reset semua checkbox
+            $('input[name="akses[]"]').prop('checked', false);
+            
+            // Set checkbox berdasarkan data akses
+            if (data.akses && data.akses.length > 0) {
+              data.akses.forEach(function(akses) {
+                $(`input[name="akses[]"][value="${akses}"]`).prop('checked', true);
+              });
+            }
+          }
+        });
+      });
+
+      // Form Tambah User
+      $('#formTambahUser').on('submit', function(e) {
+        e.preventDefault();
+        const formData = $(this).serialize();
+        
+        $.ajax({
+          url: '/admin/manage-users',
+          type: 'POST',
+          data: formData,
+          success: function() {
+            $('#modalTambah').modal('hide');
+            table.draw();
+            alert('Pengguna berhasil ditambahkan');
+            $('#formTambahUser')[0].reset();
+          },
+          error: function() {
+            alert('Gagal menambahkan pengguna');
+          }
+        });
+      });
+
+      // Form Edit User
+      $('#formEditUser').on('submit', function(e) {
+        e.preventDefault();
+        const id = $('#editUserId').val();
+        const updatedData = {
+          username: $('#editUsername').val(),
+          level: $('#editLevel').val(),
+          status: $('#editStatus').val(),
+          kabupaten: $('#editKabupaten').val(),
+          akses: $('#editAkses').val() || []
+        };
+
+        $.ajax({
+          url: `/admin/manage-users/${id}`,
+          type: 'PUT',
+          contentType: 'application/json',
+          data: JSON.stringify(updatedData),
+          success: function() {
+            $('#modalEditUser').modal('hide');
+            table.draw();
+            alert('Data user berhasil diperbarui.');
+          },
+          error: function() {
+            alert('Gagal memperbarui data user.');
+          }
+        });
+      });
+
+      // Form Akses
+      $('#formAkses').on('submit', function(e) {
+        e.preventDefault();
+        const userId = $('#aksesUserId').val();
+        const akses = $('input[name="akses[]"]:checked').map(function() {
+          return this.value;
+        }).get();
+
+        $.ajax({
+          url: `/admin/manage-users/${userId}/akses`,
+          type: 'PUT',
+          contentType: 'application/json',
+          data: JSON.stringify({ akses: akses }),
+          success: function() {
+            $('#modalAkses').modal('hide');
+            table.draw();
+            alert('Akses pengguna berhasil diperbarui.');
+          },
+          error: function() {
+            alert('Gagal memperbarui akses pengguna.');
+          }
+        });
+      });
+
+      // Tombol Edit
+      $('#multi-filter-select tbody').on('click', '.btn-edit', function() {
+        const id = $(this).data('id');
+
+        $.ajax({
+          url: `/admin/manage-users/${id}`,
+          type: 'GET',
+          success: function(data) {
+            $('#editUserId').val(data.id);
+            $('#editUsername').val(data.username);
+            $('#editLevel').val(data.level);
+            $('#editStatus').val(data.status);
+            $('#editKabupaten').val(data.kabupaten);
+            
+            // Set akses
+            const akses = JSON.parse(data.akses || "[]");
+            $('#editAkses').val(akses);
+            
+            $('#modalEditUser').modal('show');
+          },
+          error: function() {
+            alert('Gagal mengambil data user.');
+          }
+        });
+      });
+
+      // Tombol Hapus
+      $('#multi-filter-select tbody').on('click', '.btn-delete', function() {
+        const id = $(this).data('id');
+        $('#hapusUserId').val(id);
+        $('#modalHapus').modal('show');
+      });
+
+      // Konfirmasi Hapus
+      $('#btnHapus').on('click', function() {
+        const id = $('#hapusUserId').val();
+        
+        $.ajax({
+          url: `/admin/manage-users/${id}`,
+          type: 'DELETE',
+          success: function() {
+            $('#modalHapus').modal('hide');
+            table.draw();
+            alert('Pengguna berhasil dihapus');
+          },
+          error: function() {
+            alert('Gagal menghapus pengguna');
+          }
+        });
+      });
+
+      // Inisialisasi Select2 untuk multi-select
+      $('#editAkses').select2({
+        placeholder: "Pilih akses",
+        width: '100%',
+        dropdownParent: $('#modalEditUser')
+      });
+    });
+  </script>
+</body>
+</html>

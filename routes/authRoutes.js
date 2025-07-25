@@ -2,7 +2,9 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
+const db = require('../config/db');
 require('dotenv').config();
+
 
 const router = express.Router();
 
@@ -34,6 +36,10 @@ router.post('/login', async (req, res) => {
         const { username, password } = req.body;
         console.log("🔍 Login request:", username);
 
+        const userAgent = req.headers['user-agent'];
+        const forwarded = req.headers['x-forwarded-for'];
+         const ipAddress = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+
         const user = await User.findByUsername(username);
         if (!user) {
             return res.status(401).send("<script>alert('User tidak ditemukan'); window.location='/login';</script>");
@@ -44,8 +50,28 @@ router.post('/login', async (req, res) => {
             return res.status(401).send("<script>alert('Password salah'); window.location='/login';</script>");
         }
 
-        // ✅ Tambahkan ID dan level ke token
-        const tokenPayload = { id: user.id, username: user.username, level: user.level, kabupaten: user.kabupaten };
+        // ✅ Tambahkan parsing akses (dari DB bentuknya string JSON)
+        let aksesArray = [];
+        try {
+            aksesArray = JSON.parse(user.akses || '[]');
+        } catch (e) {
+            console.warn('❗ Gagal parse akses:', user.akses);
+        }
+
+        
+        await db.execute(
+        `INSERT INTO log_login (user_id, username, ip_address, user_agent) VALUES (?, ?, ?, ?)`,
+        [user.id, user.username, ipAddress, userAgent]
+        );
+
+        const tokenPayload = {
+            id: user.id,
+            username: user.username,
+            level: user.level,
+            kabupaten: user.kabupaten,
+            akses: aksesArray, // ✅ ini penting
+        };
+
         const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
         console.log("🔑 Token payload:", tokenPayload); // Debug log
@@ -58,6 +84,7 @@ router.post('/login', async (req, res) => {
         res.status(500).send("Terjadi kesalahan server");
     }
 });
+
 
 // Logout
 router.get('/logout', (req, res) => {

@@ -57,24 +57,24 @@ exports.uploadF5 = async (req, res) => {
         }
 
         const expectedColumnsF5 = [
-  'Kode Produsen',
-  'Produsen',
-  'No F5',
-  'Kode Distributor',
-  'Nama Distributor',
-  'Tahun',
-  'Bulan',
-  'Kode Provinsi',
-  'Provinsi',
-  'Kode Kabupaten',
-  'Kabupaten',
-  'Status',
-  'Kode Produk',
-  'Produk',
-  'Stok Awal',
-  'Penebusan',
-  'Penyaluran',
-  'Stok Akhir'
+            'Kode Produsen',
+            'Produsen',
+            'No F5',
+            'Kode Distributor',
+            'Nama Distributor',
+            'Tahun',
+            'Bulan',
+            'Kode Provinsi',
+            'Provinsi',
+            'Kode Kabupaten',
+            'Kabupaten',
+            'Status',
+            'Kode Produk',
+            'Produk',
+            'Stok Awal',
+            'Penebusan',
+            'Penyaluran',
+            'Stok Akhir'
 ];
 
 

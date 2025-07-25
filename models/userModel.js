@@ -5,7 +5,7 @@ const User = {
     findByUsername: async (username) => {
         try {
             console.log("🔍 Menjalankan query pencarian user:", username);
-            const [results] = await db.execute("SELECT * FROM admin WHERE username = ?", [username]);
+            const [results] = await db.execute("SELECT * FROM admin WHERE username = ? AND status = 'aktif'", [username]);
 
             console.log("✅ Hasil query:", results);
 

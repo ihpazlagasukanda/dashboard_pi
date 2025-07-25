@@ -27,165 +27,125 @@
     <div class="sidebar-wrapper scrollbar scrollbar-inner">
       <div class="sidebar-content">
         <ul class="nav nav-secondary">
-          <li class="nav-item active">
-            <a
-              data-bs-toggle="collapse"
-              href="#dashboard"
-              class="collapsed"
-              aria-expanded="false"
-            >
-              <i class="fas fa-home"></i>
-              <p>Dashboard</p>
-              <span class="caret"></span>
-            </a>
-            <div class="collapse" id="dashboard">
-              <ul class="nav nav-collapse">
-                <li>
-                  <a href="/">
-                    <span class="sub-item">Monitoring Transaksi Petani</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="/sum">
-                    <span class="sub-item">Rekap Realisasi</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="/rekap-petani">
-                    <span class="sub-item">Rekap Jumlah Petani</span>
-                  </a>
-                </li>
-                <% if (user.level == 2) { %>
-                <li>
-                  <a href="/visualisasi">
-                    <span class="sub-item">Grafik Penebusan</span>
-                  </a>
-                </li>
-                <% } %>
-              </ul>
-            </div>
-          </li>
-          <li class="nav-section">
-            <span class="sidebar-mini-icon">
-              <i class="fa fa-ellipsis-h"></i>
-            </span>
-            <h4 class="text-section">Components</h4>
-          </li>
-          <% if (user.level == 2) { %>
-            <li class="nav-item">
-              <a data-bs-toggle="collapse" href="#forms">
-                <i class="fas fa-pen-square"></i>
-                <p>Upload</p>
-                <span class="caret"></span>
-              </a>
-              <div class="collapse" id="forms">
-                <ul class="nav nav-collapse">
-                  <li>
-                    <a href="/upload">
-                      <span class="sub-item">Upload Data Verval</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/upload-erdkk">
-                      <span class="sub-item">Upload Data e-RDKK</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/upload-wcm">
-                      <span class="sub-item">Upload Data F6</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/upload-f5">
-                      <span class="sub-item">Upload Data F5</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/upload-skbupati">
-                      <span class="sub-item">Upload SK Bupati</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/upload-penyalurando">
-                      <span class="sub-item">Upload Penyaluran DO</span>
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </li>
-            <% } %>
-          <li class="nav-item">
-            <a data-bs-toggle="collapse" href="#tables">
-              <i class="fas fa-table"></i>
-              <p>Data</p>
-              <span class="caret"></span>
-            </a>
-            <div class="collapse" id="tables">
-              <ul class="nav nav-collapse">
-                <li>
-                  <a href="/esummary">
-                    <span class="sub-item">Data Summary Petani</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="/salurkios">
-                    <span class="sub-item">Data Salur Kios per Bulan</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="/dataverval">
-                    <span class="sub-item">Data Verval</span>
-                  </a>
-                </li>
-                <% if (user.level == 2) { %>
-                <li>
-                  <a href="/erdkk">
-                    <span class="sub-item">Data e-RDKK</span>
-                  </a>
-                </li>
-                <% } %>
-              </ul>
-            </div>
-          </li>
-          <li class="nav-item">
-            <a data-bs-toggle="collapse" href="#wcm">
-              <i class="fas fa-table"></i>
-              <p>WCM</p>
-              <span class="caret"></span>
-            </a>
-            <div class="collapse" id="wcm">
-              <ul class="nav nav-collapse">
-                <li>
-                  <a href="/f5">
-                    <span class="sub-item">Data F5</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="/wcmf5">
-                    <span class="sub-item">Rekap F6</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="/wcm">
-                    <span class="sub-item">Data F6</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="/wcmvsverval">
-                    <span class="sub-item">Realisasi F5 & F6</span>
-                  </a>
-                </li>
-                <% if (user.level == 2) { %>
-                <li>
-                  <a href="/penyalurando">
-                    <span class="sub-item">Penyaluran DO</span>
-                  </a>
-                </li>
-                <% } %>
-              </ul>
-            </div>
-          </li>
-        </ul>
+  <li class="nav-item active">
+    <a data-bs-toggle="collapse" href="#dashboard" class="collapsed" aria-expanded="false">
+      <i class="fas fa-home"></i>
+      <p>Dashboard</p>
+      <span class="caret"></span>
+    </a>
+    <div class="collapse" id="dashboard">
+      <ul class="nav nav-collapse">
+        <% if (user.akses.includes('A1')) { %>
+        <li>
+          <a href="/">
+            <span class="sub-item">Monitoring Transaksi Petani</span>
+          </a>
+        </li>
+        <% } %>
+        <% if (user.akses.includes('A2')) { %>
+        <li>
+          <a href="/sum">
+            <span class="sub-item">Rekap Realisasi</span>
+          </a>
+        </li>
+        <% } %>
+        <% if (user.akses.includes('A3')) { %>
+        <li>
+          <a href="/rekap-petani">
+            <span class="sub-item">Rekap Jumlah Petani</span>
+          </a>
+        </li>
+        <% } %>
+        <% if (user.akses.includes('A4')) { %>
+        <li>
+          <a href="/visualisasi">
+            <span class="sub-item">Grafik Penebusan</span>
+          </a>
+        </li>
+        <% } %>
+      </ul>
+    </div>
+  </li>
+
+  <li class="nav-section">
+    <span class="sidebar-mini-icon">
+      <i class="fa fa-ellipsis-h"></i>
+    </span>
+    <h4 class="text-section">Components</h4>
+  </li>
+
+  <% if (user.akses.includes('B')) { %>
+  <li class="nav-item">
+    <a data-bs-toggle="collapse" href="#forms">
+      <i class="fas fa-pen-square"></i>
+      <p>Upload</p>
+      <span class="caret"></span>
+    </a>
+    <div class="collapse" id="forms">
+      <ul class="nav nav-collapse">
+        <li><a href="/upload"><span class="sub-item">Upload Data Verval</span></a></li>
+        <li><a href="/upload-erdkk"><span class="sub-item">Upload Data e-RDKK</span></a></li>
+        <li><a href="/upload-wcm"><span class="sub-item">Upload Data F6</span></a></li>
+        <li><a href="/upload-f5"><span class="sub-item">Upload Data F5</span></a></li>
+        <li><a href="/upload-skbupati"><span class="sub-item">Upload SK Bupati</span></a></li>
+        <li><a href="/upload-penyalurando"><span class="sub-item">Upload Penyaluran DO</span></a></li>
+      </ul>
+    </div>
+  </li>
+  <% } %>
+
+  <li class="nav-item">
+    <a data-bs-toggle="collapse" href="#tables">
+      <i class="fas fa-table"></i>
+      <p>Data</p>
+      <span class="caret"></span>
+    </a>
+    <div class="collapse" id="tables">
+      <ul class="nav nav-collapse">
+        <% if (user.akses.includes('C1')) { %>
+        <li><a href="/esummary"><span class="sub-item">Data Summary Petani</span></a></li>
+        <% } %>
+        <% if (user.akses.includes('C2')) { %>
+        <li><a href="/salurkios"><span class="sub-item">Data Salur Kios per Bulan</span></a></li>
+        <% } %>
+        <% if (user.akses.includes('C3')) { %>
+        <li><a href="/dataverval"><span class="sub-item">Data Verval</span></a></li>
+        <% } %>
+        <% if (user.akses.includes('C4')) { %>
+        <li><a href="/erdkk"><span class="sub-item">Data e-RDKK</span></a></li>
+        <% } %>
+      </ul>
+    </div>
+  </li>
+
+  <li class="nav-item">
+    <a data-bs-toggle="collapse" href="#wcm">
+      <i class="fas fa-table"></i>
+      <p>WCM</p>
+      <span class="caret"></span>
+    </a>
+    <div class="collapse" id="wcm">
+      <ul class="nav nav-collapse">
+        <% if (user.akses.includes('D1')) { %>
+        <li><a href="/f5"><span class="sub-item">Data F5</span></a></li>
+        <% } %>
+        <% if (user.akses.includes('D2')) { %>
+        <li><a href="/wcmf5"><span class="sub-item">Rekap F6</span></a></li>
+        <% } %>
+        <% if (user.akses.includes('D3')) { %>
+        <li><a href="/wcm"><span class="sub-item">Data F6</span></a></li>
+        <% } %>
+        <% if (user.akses.includes('D4')) { %>
+        <li><a href="/wcmvsverval"><span class="sub-item">Realisasi F5 & F6</span></a></li>
+        <% } %>
+        <% if (user.akses.includes('D5')) { %>
+        <li><a href="/penyalurando"><span class="sub-item">Penyaluran DO</span></a></li>
+        <% } %>
+      </ul>
+    </div>
+  </li>
+</ul>
+
       </div>
     </div>
   </div>

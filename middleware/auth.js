@@ -7,12 +7,23 @@ module.exports = (req, res, next) => {
     if (!token) return res.redirect('/login');
 
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) return res.redirect('/login');
+    if (err) return res.redirect('/login');
 
-        req.user = decoded;
-        res.locals.username = decoded.username;
-        res.locals.userLevel = decoded.level;
-        res.locals.kabupaten = decoded.kabupaten; // tambahkan ini
-        next();
-    });
+    // Pastikan akses adalah array, walau yang tersimpan adalah string
+    if (typeof decoded.akses === 'string') {
+        try {
+            decoded.akses = JSON.parse(decoded.akses);
+        } catch (e) {
+            decoded.akses = []; // fallback kalau gagal parse
+        }
+    }
+
+    req.user = decoded;
+    res.locals.username = decoded.username;
+    res.locals.userLevel = decoded.level;
+    res.locals.kabupaten = decoded.kabupaten;
+    res.locals.akses = decoded.akses;
+    next();
+});
+
 };
