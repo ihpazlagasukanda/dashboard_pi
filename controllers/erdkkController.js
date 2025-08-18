@@ -188,10 +188,10 @@ exports.uploadErdkk = async (req, res) => {
             if (erdkkDataMap.has(key)) {
                 const existingData = erdkkDataMap.get(key);
 
-                existingData[8] += totalUrea;
-                existingData[9] += totalNpk;
-                existingData[10] += totalNpkFormula;
-                existingData[11] += totalOrganik;
+                existingData[9] += totalUrea;
+                existingData[10] += totalNpk;
+                existingData[11] += totalNpkFormula;
+                existingData[12] += totalOrganik;
             } else {
                 erdkkDataMap.set(key, [
                     tahun, kabupaten, kecamatan, namaDesa, poktan, kodeKios, namaKios, nik, namaPetani,
