@@ -1679,219 +1679,247 @@ exports.wcmVsVerval = async (req, res) => {
             draw = 1
         } = req.query;
 
+        // Validasi parameter wajib
+        if (!tahun) {
+            return res.status(400).json({ message: 'Parameter tahun wajib diisi' });
+        }
+
         const produkFilter = produk && produk !== 'ALL' ? produk.toUpperCase() : 'ALL';
         const statusFilter = status.toUpperCase();
 
-        const params = [];
-        const whereClauses = ['g.tahun = ?'];
-        params.push(tahun);
+        // Bangun filter conditions dan parameters
+        const baseParams = [];
+        const whereConditions = [];
+        
+        // Filter untuk CTE
+        const cteConditions = {
+            penebusan: [],
+            stok_akhir_prev: [],
+            verval: []
+        };
 
+        const cteParams = {
+            penebusan: [],
+            stok_akhir_prev: [],
+            verval: []
+        };
+
+        // Tahun selalu ada
+        cteConditions.penebusan.push('YEAR(pd.tanggal_penyaluran) = ?');
+        cteParams.penebusan.push(tahun);
+        
+        cteConditions.stok_akhir_prev.push('(CASE WHEN w.bulan = 12 THEN w.tahun + 1 ELSE w.tahun END) = ?');
+        cteParams.stok_akhir_prev.push(tahun);
+        
+        cteConditions.verval.push('vf.tahun = ?');
+        cteParams.verval.push(tahun);
+
+        // Filter bulan
         if (bulan && bulan !== 'ALL') {
-            whereClauses.push('g.bulan = ?');
-            params.push(bulan);
+            cteConditions.penebusan.push('MONTH(pd.tanggal_penyaluran) = ?');
+            cteParams.penebusan.push(bulan);
+            
+            cteConditions.stok_akhir_prev.push('(CASE WHEN w.bulan = 12 THEN 1 ELSE w.bulan + 1 END) = ?');
+            cteParams.stok_akhir_prev.push(bulan);
+            
+            cteConditions.verval.push('vf.bulan = ?');
+            cteParams.verval.push(bulan);
+            
+            whereConditions.push('g.bulan = ?');
+            baseParams.push(bulan);
         }
 
+        // Filter produk
         if (produkFilter !== 'ALL') {
-            whereClauses.push('g.produk = ?');
-            params.push(produkFilter);
+            cteConditions.penebusan.push('pd.produk = ?');
+            cteParams.penebusan.push(produkFilter);
+            
+            cteConditions.stok_akhir_prev.push('w.produk = ?');
+            cteParams.stok_akhir_prev.push(produkFilter);
+            
+            cteConditions.verval.push('vf.produk = ?');
+            cteParams.verval.push(produkFilter);
+            
+            whereConditions.push('g.produk = ?');
+            baseParams.push(produkFilter);
         }
 
+        // Filter kabupaten
         if (kabupaten && kabupaten !== 'ALL') {
-            whereClauses.push('g.kabupaten = ?');
-            params.push(kabupaten);
+            cteConditions.penebusan.push('pd.kabupaten = ?');
+            cteParams.penebusan.push(kabupaten);
+            
+            cteConditions.stok_akhir_prev.push('w.kabupaten = ?');
+            cteParams.stok_akhir_prev.push(kabupaten);
+            
+            cteConditions.verval.push('vf.kabupaten = ?');
+            cteParams.verval.push(kabupaten);
+            
+            whereConditions.push('g.kabupaten = ?');
+            baseParams.push(kabupaten);
         }
 
-        const whereSQL = whereClauses.length ? 'WHERE ' + whereClauses.join(' AND ') : '';
+        // Tahun untuk main query
+        whereConditions.push('g.tahun = ?');
+        baseParams.push(tahun);
 
+        const whereSQL = whereConditions.length ? 'WHERE ' + whereConditions.join(' AND ') : '';
+
+        // Query yang dioptimalkan dengan filter di setiap CTE
         const baseQuery = `
-            WITH
-penebusan AS (
-  SELECT 
-    pd.kode_kios,
-    pd.kecamatan,
-    pd.kabupaten,
-    pd.produk,
-    MONTH(pd.tanggal_penyaluran) AS bulan,
-    YEAR(pd.tanggal_penyaluran) AS tahun,
-    pd.kode_distributor,
-    pd.distributor,
-    pd.nama_kios,
-    pd.provinsi,
-    SUM(pd.qty) AS penebusan
-  FROM penyaluran_do pd
-  GROUP BY 
-    pd.kode_kios,
-    pd.kecamatan,
-    pd.kabupaten,
-    pd.produk,
-    MONTH(pd.tanggal_penyaluran),
-    YEAR(pd.tanggal_penyaluran),
-    pd.kode_distributor,
-    pd.distributor,
-    pd.nama_kios,
-    pd.provinsi
-),
-
-stok_akhir_prev AS (
-  SELECT 
-    w.kode_kios,
-    w.kecamatan,
-    w.kabupaten,
-    w.produk,
-    CASE WHEN w.bulan = 12 THEN 1 ELSE w.bulan + 1 END AS bulan,
-    CASE WHEN w.bulan = 12 THEN w.tahun + 1 ELSE w.tahun END AS tahun,
-    w.kode_distributor,
-    w.nama_kios,
-    w.provinsi,
-    w.distributor,
-    SUM(w.stok_akhir) AS stok_awal
-  FROM wcm w
-  WHERE w.stok_akhir > 0
-  GROUP BY 
-    w.kode_kios,
-    w.kecamatan,
-    w.kabupaten,
-    w.produk,
-    CASE WHEN w.bulan = 12 THEN 1 ELSE w.bulan + 1 END,
-    CASE WHEN w.bulan = 12 THEN w.tahun + 1 ELSE w.tahun END,
-    w.kode_distributor,
-    w.nama_kios,
-    w.provinsi,
-    w.distributor
-),
-
-verval AS (
-  SELECT 
-    vf.kode_kios,
-    vf.kecamatan,
-    vf.kabupaten,
-    vf.produk,
-    vf.tahun,
-    vf.bulan,
-    SUM(vf.penyaluran) AS total_penyaluran
-  FROM verval_f6 vf
-  GROUP BY 
-    vf.kode_kios,
-    vf.kecamatan,
-    vf.kabupaten,
-    vf.produk,
-    vf.tahun,
-    vf.bulan
-),
-
-gabungan AS (
-  SELECT 
-    p.kode_kios,
-    p.kecamatan,
-    p.kabupaten,
-    p.produk,
-    p.tahun,
-    p.bulan,
-    p.kode_distributor,
-    p.nama_kios,
-    p.provinsi,
-    p.distributor
-  FROM penebusan p
-
-  UNION
-
-  SELECT 
-    s.kode_kios,
-    s.kecamatan,
-    s.kabupaten,
-    s.produk,
-    s.tahun,
-    s.bulan,
-    s.kode_distributor,
-    s.nama_kios,
-    s.provinsi,
-    s.distributor
-  FROM stok_akhir_prev s
-)
-
-SELECT 
-  g.provinsi,
-  g.kabupaten,
-  g.kecamatan,
-  g.kode_kios,
-  g.nama_kios,
-  g.kode_distributor,
-  g.distributor,
-  g.tahun,
-  g.bulan,
-  g.produk,
-
-  ROUND(COALESCE(sa.stok_awal, 0) * 1000, 0) AS stok_awal_wcm,
-  ROUND(COALESCE(p.penebusan, 0) * 1000, 0) AS penebusan_wcm,
-  ROUND(COALESCE(wcm.penyaluran, 0) * 1000, 0) AS penyaluran_wcm,
-  ROUND(COALESCE(v.total_penyaluran, 0), 0) AS penyaluran_verval,
-
-  ROUND(
-    (COALESCE(sa.stok_awal, 0) * 1000 + COALESCE(p.penebusan, 0) * 1000 - COALESCE(v.total_penyaluran, 0)),
-    0
-  ) AS stok_akhir_wcm,
-
-  ROUND(COALESCE(wcm.penyaluran, 0) * 1000, 0) - ROUND(COALESCE(v.total_penyaluran, 0), 0) AS status_penyaluran
-
-FROM gabungan g
-LEFT JOIN penebusan p
-  ON g.kode_kios = p.kode_kios
-  AND g.kecamatan = p.kecamatan
-  AND g.kabupaten = p.kabupaten
-  AND g.produk = p.produk
-  AND g.tahun = p.tahun
-  AND g.bulan = p.bulan
-  AND g.kode_distributor = p.kode_distributor
-
-LEFT JOIN stok_akhir_prev sa
-  ON g.kode_kios = sa.kode_kios
-  AND g.kecamatan = sa.kecamatan
-  AND g.kabupaten = sa.kabupaten
-  AND g.produk = sa.produk
-  AND g.tahun = sa.tahun
-  AND g.bulan = sa.bulan
-  AND g.kode_distributor = sa.kode_distributor
-
-LEFT JOIN wcm
-  ON wcm.kode_kios = g.kode_kios
-  AND wcm.kecamatan = g.kecamatan
-  AND wcm.kabupaten = g.kabupaten
-  AND wcm.produk = g.produk
-  AND wcm.tahun = g.tahun
-  AND wcm.bulan = g.bulan
-  AND wcm.kode_distributor = g.kode_distributor
-
-LEFT JOIN verval v
-  ON v.kode_kios = g.kode_kios
-  AND v.kecamatan = g.kecamatan
-  AND v.kabupaten = g.kabupaten
-  AND v.produk = g.produk
-  AND v.tahun = g.tahun
-  AND v.bulan = g.bulan
-
-${whereSQL}
-
-ORDER BY g.kode_kios
-
+            WITH penebusan AS (
+                SELECT 
+                    pd.kode_kios,
+                    pd.kecamatan,
+                    pd.kabupaten,
+                    pd.produk,
+                    MONTH(pd.tanggal_penyaluran) AS bulan,
+                    YEAR(pd.tanggal_penyaluran) AS tahun,
+                    pd.kode_distributor,
+                    pd.distributor,
+                    pd.nama_kios,
+                    pd.provinsi,
+                    SUM(pd.qty) AS penebusan
+                FROM penyaluran_do pd
+                ${cteConditions.penebusan.length ? 'WHERE ' + cteConditions.penebusan.join(' AND ') : ''}
+                GROUP BY 
+                    pd.kode_kios, pd.kecamatan, pd.kabupaten, pd.produk,
+                    MONTH(pd.tanggal_penyaluran), YEAR(pd.tanggal_penyaluran),
+                    pd.kode_distributor, pd.distributor, pd.nama_kios, pd.provinsi
+            ),
+            stok_akhir_prev AS (
+                SELECT 
+                    w.kode_kios,
+                    w.kecamatan,
+                    w.kabupaten,
+                    w.produk,
+                    CASE WHEN w.bulan = 12 THEN 1 ELSE w.bulan + 1 END AS bulan,
+                    CASE WHEN w.bulan = 12 THEN w.tahun + 1 ELSE w.tahun END AS tahun,
+                    w.kode_distributor,
+                    w.nama_kios,
+                    w.provinsi,
+                    w.distributor,
+                    SUM(w.stok_akhir) AS stok_awal
+                FROM wcm w
+                WHERE w.stok_akhir > 0
+                ${cteConditions.stok_akhir_prev.length ? 'AND ' + cteConditions.stok_akhir_prev.join(' AND ') : ''}
+                GROUP BY 
+                    w.kode_kios, w.kecamatan, w.kabupaten, w.produk,
+                    CASE WHEN w.bulan = 12 THEN 1 ELSE w.bulan + 1 END,
+                    CASE WHEN w.bulan = 12 THEN w.tahun + 1 ELSE w.tahun END,
+                    w.kode_distributor, w.nama_kios, w.provinsi, w.distributor
+            ),
+            verval AS (
+                SELECT 
+                    vf.kode_kios,
+                    vf.kecamatan,
+                    vf.kabupaten,
+                    vf.produk,
+                    vf.tahun,
+                    vf.bulan,
+                    SUM(vf.penyaluran) AS total_penyaluran
+                FROM verval_f6 vf
+                ${cteConditions.verval.length ? 'WHERE ' + cteConditions.verval.join(' AND ') : ''}
+                GROUP BY 
+                    vf.kode_kios, vf.kecamatan, vf.kabupaten, vf.produk, vf.tahun, vf.bulan
+            ),
+            gabungan AS (
+                SELECT 
+                    kode_kios, kecamatan, kabupaten, produk, tahun, bulan,
+                    kode_distributor, nama_kios, provinsi, distributor
+                FROM penebusan
+                UNION
+                SELECT 
+                    kode_kios, kecamatan, kabupaten, produk, tahun, bulan,
+                    kode_distributor, nama_kios, provinsi, distributor
+                FROM stok_akhir_prev
+            )
+            SELECT 
+                g.provinsi,
+                g.kabupaten,
+                g.kecamatan,
+                g.kode_kios,
+                g.nama_kios,
+                g.kode_distributor,
+                g.distributor,
+                g.tahun,
+                g.bulan,
+                g.produk,
+                ROUND(COALESCE(sa.stok_awal, 0) * 1000, 0) AS stok_awal_wcm,
+                ROUND(COALESCE(p.penebusan, 0) * 1000, 0) AS penebusan_wcm,
+                ROUND(COALESCE(wcm.penyaluran, 0) * 1000, 0) AS penyaluran_wcm,
+                ROUND(COALESCE(v.total_penyaluran, 0), 0) AS penyaluran_verval,
+                ROUND(
+                    (COALESCE(sa.stok_awal, 0) * 1000 + COALESCE(p.penebusan, 0) * 1000 - COALESCE(v.total_penyaluran, 0)),
+                    0
+                ) AS stok_akhir_wcm,
+                ROUND(COALESCE(wcm.penyaluran, 0) * 1000, 0) - ROUND(COALESCE(v.total_penyaluran, 0), 0) AS status_penyaluran
+            FROM gabungan g
+            LEFT JOIN penebusan p
+                ON g.kode_kios = p.kode_kios
+                AND g.kecamatan = p.kecamatan
+                AND g.kabupaten = p.kabupaten
+                AND g.produk = p.produk
+                AND g.tahun = p.tahun
+                AND g.bulan = p.bulan
+                AND g.kode_distributor = p.kode_distributor
+            LEFT JOIN stok_akhir_prev sa
+                ON g.kode_kios = sa.kode_kios
+                AND g.kecamatan = sa.kecamatan
+                AND g.kabupaten = sa.kabupaten
+                AND g.produk = sa.produk
+                AND g.tahun = sa.tahun
+                AND g.bulan = sa.bulan
+                AND g.kode_distributor = sa.kode_distributor
+            LEFT JOIN wcm
+                ON wcm.kode_kios = g.kode_kios
+                AND wcm.kecamatan = g.kecamatan
+                AND wcm.kabupaten = g.kabupaten
+                AND wcm.produk = g.produk
+                AND wcm.tahun = g.tahun
+                AND wcm.bulan = g.bulan
+                AND wcm.kode_distributor = g.kode_distributor
+            LEFT JOIN verval v
+                ON v.kode_kios = g.kode_kios
+                AND v.kecamatan = g.kecamatan
+                AND v.kabupaten = g.kabupaten
+                AND v.produk = g.produk
+                AND v.tahun = g.tahun
+                AND v.bulan = g.bulan
+            ${whereSQL}
         `;
 
-        const countQuery = `SELECT COUNT(*) AS total FROM (${baseQuery}) AS count_table`;
-        const [countResult] = await db.query(countQuery, params);
-        const recordsTotal = countResult[0].total;
+        // Gabungkan semua parameter untuk base query
+        const allBaseParams = [
+            ...cteParams.penebusan,
+            ...cteParams.stok_akhir_prev,
+            ...cteParams.verval,
+            ...baseParams
+        ];
 
+        // Query untuk mendapatkan total records
+        const countQuery = `SELECT COUNT(*) AS total FROM (${baseQuery}) AS count_table`;
+        const [countResult] = await db.query(countQuery, allBaseParams);
+        const recordsTotal = countResult[0]?.total || 0;
+
+        // Filter berdasarkan status jika diperlukan
         let filteredQuery = baseQuery;
-        const filteredParams = [...params];
+        let filteredParams = [...allBaseParams];
 
         if (statusFilter !== 'ALL') {
-            filteredQuery = `SELECT * FROM (${baseQuery}) AS filtered_table WHERE status_penyaluran ${statusFilter === 'SESUAI' ? '=' : '!='} ?`;
-            filteredParams.push(0);
+            filteredQuery = `
+                SELECT * FROM (${baseQuery}) AS filtered_table 
+                WHERE status_penyaluran ${statusFilter === 'SESUAI' ? '= 0' : '!= 0'}
+            `;
         }
 
+        // Query untuk mendapatkan filtered count
         const filteredCountQuery = `SELECT COUNT(*) AS total FROM (${filteredQuery}) AS count_filtered_table`;
         const [filteredCountResult] = await db.query(filteredCountQuery, filteredParams);
-        const recordsFiltered = filteredCountResult[0].total;
+        const recordsFiltered = filteredCountResult[0]?.total || 0;
 
-        const finalQuery = `${filteredQuery} LIMIT ? OFFSET ?`;
+        // Query akhir dengan pagination
+        const finalQuery = `${filteredQuery} ORDER BY kode_kios LIMIT ? OFFSET ?`;
         filteredParams.push(parseInt(length), parseInt(start));
 
         const [data] = await db.query(finalQuery, filteredParams);
@@ -1905,7 +1933,10 @@ ORDER BY g.kode_kios
 
     } catch (error) {
         console.error('Error in wcmVsVerval:', error);
-        res.status(500).json({ message: 'Terjadi kesalahan saat memproses data.', error: error.message });
+        res.status(500).json({ 
+            message: 'Terjadi kesalahan saat memproses data.', 
+            error: error.message 
+        });
     }
 };
 
