@@ -11,6 +11,7 @@ const wcmRoutes = require("./routes/wcmRoutes");
 const outRouter = require("./routes/outRoutes");
 const skRoutes = require("./routes/skRoutes");
 const deleteRoutes = require("./routes/deleteRoutes");
+const farmerRoutes = require("./routes/farmerRoutes");
 const userRoutes = require("./routes/userRoutes");
 const triggerCron = require("./routes/triggerCron");
 const uploadPenyaluranDoRoutes = require("./routes/penyaluranDoRoutes");
@@ -64,6 +65,10 @@ app.get('/login', (req, res) => {
     res.render('login');
 });
 
+app.get('/sisaalokasi', (req, res) => {
+    res.render('sisaalokasi');
+});
+
 // Halaman lain dengan proteksi autentikasi
 app.get('/dataverval', authMiddleware, checkAkses(['C3']), (req, res) => {
     res.render('dataTable', { user: req.user });
@@ -76,6 +81,7 @@ app.get('/salurkios', authMiddleware, checkAkses(['C2']), (req, res) => {
 // app.get('/dashboard2', authMiddleware, (req, res) => {
 //     res.render('chart', { user: req.user });
 // });
+
 
 // Halaman Upload - Hanya level 2
 app.get('/upload', authMiddleware, requireLevel(2), checkAkses(['B']), (req, res) => {
@@ -177,6 +183,7 @@ app.use(authRoutes);  // Pastikan authRoutes ada
 app.use('/upload', outRouter);  // Route untuk upload
 app.use('/delete', authMiddleware, deleteRoutes);
 app.use('/admin', authMiddleware, userRoutes);
+app.use("/data", farmerRoutes);
 
 app.use(express.json({ limit: '50mb' })); // Sesuaikan ukuran jika perlu
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));

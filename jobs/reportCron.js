@@ -40,27 +40,27 @@ const baseDir = path.join(__dirname, '../temp_exports');
 //     console.log('[MANUAL] Semua laporan selesai diproses.');
 // })();
 
-(async () => {
-    const tahun = 2024;
-    const kabupatenList = [
-        'BOYOLALI'
-    ];
+// (async () => {
+//     const tahun = 2024;
+//     const kabupatenList = [
+//         'BOYOLALI'
+//     ];
 
-    for (const kabupaten of kabupatenList) {
-        try {
-            console.log(`[MANUAL] Mulai generate report untuk ${kabupaten} - ${tahun}`);
-            await generateReport(kabupaten, tahun, baseDir);
-            console.log(`[MANUAL] Selesai generate report untuk ${kabupaten}`);
-        } catch (error) {
-            console.error(`[MANUAL ERROR] Gagal generate report untuk ${kabupaten}:`, error);
-        }
+//     for (const kabupaten of kabupatenList) {
+//         try {
+//             console.log(`[MANUAL] Mulai generate report untuk ${kabupaten} - ${tahun}`);
+//             await generateReport(kabupaten, tahun, baseDir);
+//             console.log(`[MANUAL] Selesai generate report untuk ${kabupaten}`);
+//         } catch (error) {
+//             console.error(`[MANUAL ERROR] Gagal generate report untuk ${kabupaten}:`, error);
+//         }
 
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
-    }
+//         await new Promise(resolve => setTimeout(resolve, 1000));
+//     }
 
-    console.log('[MANUAL] Semua laporan selesai diproses.');
-})();
+//     console.log('[MANUAL] Semua laporan selesai diproses.');
+// })();
 
 
 // ========== CRON JOB ==========

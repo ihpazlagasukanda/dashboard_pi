@@ -248,7 +248,8 @@ const simpanBatch = async (connection, data) => {
         const [result] = await connection.query(
             `INSERT INTO erdkk (tahun, kabupaten, kecamatan, desa, poktan, kode_kios, nama_kios, nik, nama_petani, urea, npk, npk_formula, organik)
             VALUES ? 
-            ON DUPLICATE KEY UPDATE 
+            ON DUPLICATE KEY UPDATE
+            nama_petani = VALUES(nama_petani),
             urea = VALUES(urea), 
             npk = VALUES(npk), 
             npk_formula = VALUES(npk_formula), 

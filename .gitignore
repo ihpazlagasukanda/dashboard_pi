@@ -5,3 +5,4 @@ logs/
 backup.sql
 example.env
 temp_exports/
+data/farmers.json
