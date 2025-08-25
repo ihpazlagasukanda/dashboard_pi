@@ -65,9 +65,9 @@ app.get('/login', (req, res) => {
     res.render('login');
 });
 
-app.get('/sisaalokasi', (req, res) => {
-    res.render('sisaalokasi');
-});
+// app.get('/sisaalokasi', (req, res) => {
+//     res.render('sisaalokasi');
+// });
 
 // Halaman lain dengan proteksi autentikasi
 app.get('/dataverval', authMiddleware, checkAkses(['C3']), (req, res) => {
