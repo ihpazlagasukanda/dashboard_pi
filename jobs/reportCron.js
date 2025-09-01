@@ -6,7 +6,7 @@ console.log('[INIT] Cron job siap...');
 const baseDir = path.join(__dirname, '../temp_exports');
 
 (async () => {
-    const tahun = 2025;
+    const tahun = 2024;
     const kabupatenList = [
         'KOTA YOGYAKARTA',
         'SLEMAN',
@@ -15,6 +15,8 @@ const baseDir = path.join(__dirname, '../temp_exports');
         'KULON PROGO',
         'SRAGEN',
         'BOYOLALI',
+        'MAGELANG',
+        'KOTA MAGELANG',
         'KLATEN',
         'WONOGIRI',
         'KARANGANYAR',
