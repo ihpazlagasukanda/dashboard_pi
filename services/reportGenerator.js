@@ -127,107 +127,144 @@ async function generateReport(kabupaten, tahun, baseDir) {
         // ===================== 1. SETUP QUERY =====================
         let query = `
         SELECT 
-                e.kabupaten, 
-                e.kecamatan,
-                e.nik, 
-                e.nama_petani, 
-                e.kode_kios,
-                e.desa,
-                e.poktan,
-                e.tahun, 
-                e.urea, 
-                e.npk, 
-                e.npk_formula, 
-                e.organik,
+    COALESCE(e.kabupaten, v.kabupaten) AS kabupaten, 
+    COALESCE(e.kecamatan, v.kecamatan) AS kecamatan,
+    COALESCE(e.nik, v.nik) AS nik, 
+    COALESCE(e.nama_petani, v.nama_petani) AS nama_petani, 
+    COALESCE(e.kode_kios, v.kode_kios) AS kode_kios,
+    COALESCE(e.desa, '') AS desa,
+    COALESCE(e.poktan, v.poktan) AS poktan,
+    COALESCE(e.tahun, v.tahun) AS tahun, 
+    COALESCE(e.urea, 0) AS urea, 
+    COALESCE(e.npk, 0) AS npk, 
+    COALESCE(e.npk_formula, 0) AS npk_formula, 
+    COALESCE(e.organik, 0) AS organik,
 
-                COALESCE(v.tebus_urea, 0) AS tebus_urea,
-                COALESCE(v.tebus_npk, 0) AS tebus_npk,
-                COALESCE(v.tebus_npk_formula, 0) AS tebus_npk_formula,
-                COALESCE(v.tebus_organik, 0) AS tebus_organik,
+    COALESCE(v.tebus_urea, 0) AS tebus_urea,
+    COALESCE(v.tebus_npk, 0) AS tebus_npk,
+    COALESCE(v.tebus_npk_formula, 0) AS tebus_npk_formula,
+    COALESCE(v.tebus_organik, 0) AS tebus_organik,
 
-                (e.urea - COALESCE(v.tebus_urea, 0)) AS sisa_urea,
-                (e.npk - COALESCE(v.tebus_npk, 0)) AS sisa_npk,
-                (e.npk_formula - COALESCE(v.tebus_npk_formula, 0)) AS sisa_npk_formula,
-                (e.organik - COALESCE(v.tebus_organik, 0)) AS sisa_organik,
+    (COALESCE(e.urea, 0) - COALESCE(v.tebus_urea, 0)) AS sisa_urea,
+    (COALESCE(e.npk, 0) - COALESCE(v.tebus_npk, 0)) AS sisa_npk,
+    (COALESCE(e.npk_formula, 0) - COALESCE(v.tebus_npk_formula, 0)) AS sisa_npk_formula,
+    (COALESCE(e.organik, 0) - COALESCE(v.tebus_organik, 0)) AS sisa_organik,
 
-                COALESCE(t.jan_urea, 0) AS jan_urea,
-                COALESCE(t.feb_urea, 0) AS feb_urea,
-                COALESCE(t.mar_urea, 0) AS mar_urea,
-                COALESCE(t.apr_urea, 0) AS apr_urea,
-                COALESCE(t.mei_urea, 0) AS mei_urea,
-                COALESCE(t.jun_urea, 0) AS jun_urea,
-                COALESCE(t.jul_urea, 0) AS jul_urea,
-                COALESCE(t.agu_urea, 0) AS agu_urea,
-                COALESCE(t.sep_urea, 0) AS sep_urea,
-                COALESCE(t.okt_urea, 0) AS okt_urea,
-                COALESCE(t.nov_urea, 0) AS nov_urea,
-                COALESCE(t.des_urea, 0) AS des_urea,
+    -- distribusi bulanan
+    COALESCE(t.jan_urea, 0) AS jan_urea,
+    COALESCE(t.feb_urea, 0) AS feb_urea,
+    COALESCE(t.mar_urea, 0) AS mar_urea,
+    COALESCE(t.apr_urea, 0) AS apr_urea,
+    COALESCE(t.mei_urea, 0) AS mei_urea,
+    COALESCE(t.jun_urea, 0) AS jun_urea,
+    COALESCE(t.jul_urea, 0) AS jul_urea,
+    COALESCE(t.agu_urea, 0) AS agu_urea,
+    COALESCE(t.sep_urea, 0) AS sep_urea,
+    COALESCE(t.okt_urea, 0) AS okt_urea,
+    COALESCE(t.nov_urea, 0) AS nov_urea,
+    COALESCE(t.des_urea, 0) AS des_urea,
 
-                COALESCE(t.jan_npk, 0) AS jan_npk,
-                COALESCE(t.feb_npk, 0) AS feb_npk,
-                COALESCE(t.mar_npk, 0) AS mar_npk,
-                COALESCE(t.apr_npk, 0) AS apr_npk,
-                COALESCE(t.mei_npk, 0) AS mei_npk,
-                COALESCE(t.jun_npk, 0) AS jun_npk,
-                COALESCE(t.jul_npk, 0) AS jul_npk,
-                COALESCE(t.agu_npk, 0) AS agu_npk,
-                COALESCE(t.sep_npk, 0) AS sep_npk,
-                COALESCE(t.okt_npk, 0) AS okt_npk,
-                COALESCE(t.nov_npk, 0) AS nov_npk,
-                COALESCE(t.des_npk, 0) AS des_npk,
+    COALESCE(t.jan_npk, 0) AS jan_npk,
+    COALESCE(t.feb_npk, 0) AS feb_npk,
+    COALESCE(t.mar_npk, 0) AS mar_npk,
+    COALESCE(t.apr_npk, 0) AS apr_npk,
+    COALESCE(t.mei_npk, 0) AS mei_npk,
+    COALESCE(t.jun_npk, 0) AS jun_npk,
+    COALESCE(t.jul_npk, 0) AS jul_npk,
+    COALESCE(t.agu_npk, 0) AS agu_npk,
+    COALESCE(t.sep_npk, 0) AS sep_npk,
+    COALESCE(t.okt_npk, 0) AS okt_npk,
+    COALESCE(t.nov_npk, 0) AS nov_npk,
+    COALESCE(t.des_npk, 0) AS des_npk,
 
-                COALESCE(t.jan_npk_formula, 0) AS jan_npk_formula,
-                COALESCE(t.feb_npk_formula, 0) AS feb_npk_formula,
-                COALESCE(t.mar_npk_formula, 0) AS mar_npk_formula,
-                COALESCE(t.apr_npk_formula, 0) AS apr_npk_formula,
-                COALESCE(t.mei_npk_formula, 0) AS mei_npk_formula,
-                COALESCE(t.jun_npk_formula, 0) AS jun_npk_formula,
-                COALESCE(t.jul_npk_formula, 0) AS jul_npk_formula,
-                COALESCE(t.agu_npk_formula, 0) AS agu_npk_formula,
-                COALESCE(t.sep_npk_formula, 0) AS sep_npk_formula,
-                COALESCE(t.okt_npk_formula, 0) AS okt_npk_formula,
-                COALESCE(t.nov_npk_formula, 0) AS nov_npk_formula,
-                COALESCE(t.des_npk_formula, 0) AS des_npk_formula,
+    COALESCE(t.jan_npk_formula, 0) AS jan_npk_formula,
+    COALESCE(t.feb_npk_formula, 0) AS feb_npk_formula,
+    COALESCE(t.mar_npk_formula, 0) AS mar_npk_formula,
+    COALESCE(t.apr_npk_formula, 0) AS apr_npk_formula,
+    COALESCE(t.mei_npk_formula, 0) AS mei_npk_formula,
+    COALESCE(t.jun_npk_formula, 0) AS jun_npk_formula,
+    COALESCE(t.jul_npk_formula, 0) AS jul_npk_formula,
+    COALESCE(t.agu_npk_formula, 0) AS agu_npk_formula,
+    COALESCE(t.sep_npk_formula, 0) AS sep_npk_formula,
+    COALESCE(t.okt_npk_formula, 0) AS okt_npk_formula,
+    COALESCE(t.nov_npk_formula, 0) AS nov_npk_formula,
+    COALESCE(t.des_npk_formula, 0) AS des_npk_formula,
 
-                COALESCE(t.jan_organik, 0) AS jan_organik,
-                COALESCE(t.feb_organik, 0) AS feb_organik,
-                COALESCE(t.mar_organik, 0) AS mar_organik,
-                COALESCE(t.apr_organik, 0) AS apr_organik,
-                COALESCE(t.mei_organik, 0) AS mei_organik,
-                COALESCE(t.jun_organik, 0) AS jun_organik,
-                COALESCE(t.jul_organik, 0) AS jul_organik,
-                COALESCE(t.agu_organik, 0) AS agu_organik,
-                COALESCE(t.sep_organik, 0) AS sep_organik,
-                COALESCE(t.okt_organik, 0) AS okt_organik,
-                COALESCE(t.nov_organik, 0) AS nov_organik,
-                COALESCE(t.des_organik, 0) AS des_organik
-            FROM erdkk e
-            LEFT JOIN verval_summary v 
-                ON e.nik = v.nik
-                AND e.kabupaten = v.kabupaten
-                AND e.tahun = v.tahun
-                AND e.kecamatan = v.kecamatan
-                AND e.kode_kios = v.kode_kios
-            LEFT JOIN tebusan_per_bulan t 
-                ON e.nik = t.nik
-                AND e.kabupaten = t.kabupaten
-                AND e.tahun = t.tahun
-                AND e.kecamatan = t.kecamatan
-                AND e.kode_kios = t.kode_kios
-            WHERE 1=1
+    COALESCE(t.jan_organik, 0) AS jan_organik,
+    COALESCE(t.feb_organik, 0) AS feb_organik,
+    COALESCE(t.mar_organik, 0) AS mar_organik,
+    COALESCE(t.apr_organik, 0) AS apr_organik,
+    COALESCE(t.mei_organik, 0) AS mei_organik,
+    COALESCE(t.jun_organik, 0) AS jun_organik,
+    COALESCE(t.jul_organik, 0) AS jul_organik,
+    COALESCE(t.agu_organik, 0) AS agu_organik,
+    COALESCE(t.sep_organik, 0) AS sep_organik,
+    COALESCE(t.okt_organik, 0) AS okt_organik,
+    COALESCE(t.nov_organik, 0) AS nov_organik,
+    COALESCE(t.des_organik, 0) AS des_organik
+
+FROM (
+    -- Data dari ERDKK
+    SELECT 
+        e.kabupaten, e.kecamatan, e.nik, e.nama_petani, e.kode_kios, e.nama_kios,
+        e.tahun, e.desa, e.poktan,
+        e.urea, e.npk, e.npk_formula, e.organik
+    FROM erdkk e
+    
+    UNION ALL
+    
+    -- Data dari VERVAL yang tidak ada di ERDKK
+    SELECT 
+        v.kabupaten, v.kecamatan, v.nik, v.nama_petani, v.kode_kios, v.nama_kios,
+        v.tahun, '' AS desa, v.poktan,   -- desa diisi kosong
+        0 AS urea, 0 AS npk, 0 AS npk_formula, 0 AS organik
+    FROM verval_summary v
+    LEFT JOIN erdkk e 
+        ON e.nik = v.nik
+       AND e.kabupaten = v.kabupaten
+       AND e.tahun = v.tahun
+       AND e.kecamatan = v.kecamatan
+       AND e.kode_kios = v.kode_kios
+    WHERE e.nik IS NULL
+) AS combined
+
+LEFT JOIN erdkk e 
+    ON combined.nik = e.nik
+   AND combined.kabupaten = e.kabupaten
+   AND combined.tahun = e.tahun
+   AND combined.kecamatan = e.kecamatan
+   AND combined.kode_kios = e.kode_kios
+
+LEFT JOIN verval_summary v 
+    ON combined.nik = v.nik
+   AND combined.kabupaten = v.kabupaten
+   AND combined.tahun = v.tahun
+   AND combined.kecamatan = v.kecamatan
+   AND combined.kode_kios = v.kode_kios
+
+LEFT JOIN tebusan_per_bulan t 
+    ON combined.nik = t.nik
+   AND combined.kabupaten = t.kabupaten
+   AND combined.tahun = t.tahun
+   AND combined.kecamatan = t.kecamatan
+   AND combined.kode_kios = t.kode_kios
+
+WHERE 1=1
         `;
 
         let params = [];
 
         if (tahun) {
-            query += " AND e.tahun = ?";
+            query += " AND combined.tahun = ?";
             params.push(tahun);
         }
 
         if (kabupaten) {
-            query += " AND e.kabupaten = ?";
+            query += " AND combined.kabupaten = ?";
             params.push(kabupaten);
         }
+
+        // ... (kode selanjutnya tetap sama seperti yang Anda berikan)
         let kab = kabupaten ? kabupaten.replace(/\s+/g, '_').toUpperCase() : 'ALL';
         let thn = tahun || '';
         let fileName = `data_summary_${kab}${thn ? `_${thn}` : ''}.xlsx`;
@@ -240,6 +277,7 @@ async function generateReport(kabupaten, tahun, baseDir) {
         });
         const worksheet = workbook.addWorksheet("Summary");
 
+        // ... (kode untuk setup header, styling, dan proses data tetap sama)
         // ===================== 3. SETUP HEADER =====================
         // Style border
         const borderStyle = {
@@ -454,8 +492,8 @@ async function generateReport(kabupaten, tahun, baseDir) {
                 const dataRow = worksheet.addRow([
                     row.kabupaten,
                     row.kecamatan,
-                    row.desa || '', // Tambahkan kolom desa
-                    row.poktan || '', // Poktan
+                    row.desa || '',
+                    row.poktan || '',
                     row.nik,
                     row.nama_petani,
                     row.kode_kios,
@@ -477,8 +515,6 @@ async function generateReport(kabupaten, tahun, baseDir) {
                 ]);
 
                 dataRow.commit();
-
-                // Tambahkan border ke setiap cell
                 dataRow.eachCell(cell => {
                     cell.border = borderStyle;
                 });
@@ -488,7 +524,7 @@ async function generateReport(kabupaten, tahun, baseDir) {
             console.log(`Memproses batch ${offset / batchSize}...`);
         }
 
-        // ===================== 6. UPDATE BARIS TOTAL DENGAN DATA AKTUAL =====================
+       // ===================== 6. UPDATE BARIS TOTAL DENGAN DATA AKTUAL =====================
 
         // Tambahkan kembali baris total dengan data yang sudah dihitung
         const updatedTotalRow = worksheet.addRow([
@@ -571,16 +607,14 @@ async function generateReport(kabupaten, tahun, baseDir) {
         // ===================== 7. SIMPAN FILE =====================
         const filePath = path.join(baseDir, fileName);
 
-        // Pastikan direktori ada
         if (!fs.existsSync(baseDir)) {
             fs.mkdirSync(baseDir, { recursive: true });
         }
 
-        worksheet.commit(); // wajib untuk streaming writer
-        await workbook.commit(); // ganti dari writeFile
+        worksheet.commit();
+        await workbook.commit();
 
         console.log(`File ${fileName} berhasil digenerate di ${filePath}`);
-
         return filePath;
 
     } catch (error) {
