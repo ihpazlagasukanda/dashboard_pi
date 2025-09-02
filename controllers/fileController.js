@@ -38,7 +38,7 @@ const generateKodeTransaksi = () => {
     return 'TX-' + Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 7).toUpperCase();
 };
 
-// Fungsi untuk memproses file Excel (dipertahankan sama seperti aslinya)
+// Fungsi untuk memproses file Excel - DIPERBAIKI
 const processExcelFile = async (file, metodePenebusan) => {
     const workbook = new ExcelJS.Workbook();
     let buffer;
@@ -52,11 +52,10 @@ const processExcelFile = async (file, metodePenebusan) => {
 
     const worksheet = workbook.worksheets[0];
     const expectedColumnsKartan = ['NO', 'KABUPATEN', 'KECAMATAN', 'KODE KIOS', 'NAMA KIOS', 'NIK', 'NAMA PETANI', 'UREA', 'NPK', 'SP36', 'ZA', 'NPK FORMULA', 'ORGANIK', 'ORGANIK CAIR', 'TGL TEBUS', 'TGL INPUT', 'STATUS'];
-    //  const expectedColumnsIpubers = ['NO', 'KABUPATEN', 'KECAMATAN', 'NO TRANSAKSI', 'KODE KIOS', 'NAMA KIOS', 'POKTAN', 'NIK', 'NAMA PETANI', 'KOMODITAS','UREA', 'NPK','NPK FORMULA', 'ORGANIK', 'ORGANIK CAIR', 'TGL TEBUS', 'TGL INPUT', 'STATUS'];
     const expectedColumnsIpubers = ['No', 'Kabupaten', 'Kecamatan', 'Kode Kios', 'Nama Kios', 'Kode TRX', 'No Transaksi', 'NIK', 'Nama Petani', 'Urea', 'NPK', 'SP36', 'ZA', 'NPK Formula', 'Organik', 'Organik Cair', 'Keterangan', 'Tanggal Tebus', 'Tanggal Entri', 'Tanggal Update', 'Tipe Tebus', 'NIK Perwakilan', 'Url Bukti', 'Status'];
 
     // Validasi header
-    const headerRow = metodePenebusan === 'ipubers' ? 1 : 1;
+    const headerRow = 1; // Selalu row 1 untuk kedua metode
     const rowValues = worksheet.getRow(headerRow).values;
     if (rowValues[0] === undefined) rowValues.shift();
     const actualColumns = rowValues.map(cell => cell ? cell.toString().trim() : "");
@@ -66,67 +65,91 @@ const processExcelFile = async (file, metodePenebusan) => {
         throw new Error('Struktur file Excel tidak sesuai');
     }
 
-    // Proses data
+    // Proses data - DIPERBAIKI: Filter yang lebih baik
     const startRow = headerRow + 1;
-    let rows = worksheet.getRows(startRow, worksheet.rowCount - startRow);
-    rows = rows.filter(row => row.getCell(1).value && row.getCell(2).value);
+    
+    // Dapatkan semua baris dengan cara yang lebih reliable
+    let rows = [];
+    for (let i = startRow; i <= worksheet.rowCount; i++) {
+        try {
+            const row = worksheet.getRow(i);
+            // Periksa apakah baris memiliki data (tidak hanya header atau kosong)
+            const hasData = row.values.some((cell, index) => 
+                index > 0 && cell !== null && cell !== undefined && cell.toString().trim() !== ''
+            );
+            
+            if (hasData) {
+                rows.push(row);
+            }
+        } catch (error) {
+            console.warn(`Error membaca row ${i}:`, error.message);
+            // Lanjut ke row berikutnya jika ada error
+            continue;
+        }
+    }
+
+    console.log(`Ditemukan ${rows.length} baris data setelah filter`);
 
     return rows.map((row) => {
         let tanggalTebus, tanggalExcel;
-const kodeTransaksi = metodePenebusan === 'ipubers' ? row.getCell(7).text : generateKodeTransaksi();
+        const kodeTransaksi = metodePenebusan === 'ipubers' ? row.getCell(7).text : generateKodeTransaksi();
 
-if (metodePenebusan === 'ipubers') {
-    tanggalExcel = row.getCell(18).text;
-} else if (metodePenebusan === 'kartan') {
-    tanggalExcel = row.getCell(15).text;
-}
-
-// Fungsi bantu untuk parse tanggal acak
-function parseTanggalAcak(tanggal) {
-    if (!tanggal || typeof tanggal !== 'string') return null;
-
-    // Hapus spasi ekstra dan normalisasi separator ke "/"
-    const cleaned = tanggal.trim().replace(/\s+/g, '').replace(/[-.]/g, '/');
-
-    // Coba parse dengan format D/M/YYYY atau DD/MM/YYYY
-    const parts = cleaned.split('/');
-    if (parts.length === 3) {
-        let [d, m, y] = parts;
-
-        // Jika tahun hanya 2 digit
-        if (y.length === 2) {
-            y = parseInt(y) > 50 ? '19' + y : '20' + y;
+        if (metodePenebusan === 'ipubers') {
+            tanggalExcel = row.getCell(18).text;
+        } else if (metodePenebusan === 'kartan') {
+            tanggalExcel = row.getCell(15).text;
         }
 
-        // Tambahkan padding nol
-        d = d.padStart(2, '0');
-        m = m.padStart(2, '0');
+        // Fungsi bantu untuk parse tanggal acak
+        function parseTanggalAcak(tanggal) {
+            if (!tanggal || typeof tanggal !== 'string') return null;
 
-        return `${y}/${m}/${d}`;
-    }
+            // Hapus spasi ekstra dan normalisasi separator ke "/"
+            const cleaned = tanggal.trim().replace(/\s+/g, '').replace(/[-.]/g, '/');
 
-    return null;
-}
+            // Coba parse dengan format D/M/YYYY atau DD/MM/YYYY
+            const parts = cleaned.split('/');
+            if (parts.length === 3) {
+                let [d, m, y] = parts;
 
-// Format tanggal (dipertahankan dalam format YYYY/MM/DD)
-if (tanggalExcel instanceof Date || !isNaN(Date.parse(tanggalExcel))) {
-    const dateObj = new Date(tanggalExcel);
-    const year = dateObj.getFullYear();
-    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-    const day = dateObj.getDate().toString().padStart(2, '0');
-    tanggalTebus = `${year}/${month}/${day}`;
-} else if (typeof tanggalExcel === 'string') {
-    const parsed = parseTanggalAcak(tanggalExcel);
-    if (parsed) tanggalTebus = parsed;
-}
+                // Jika tahun hanya 2 digit
+                if (y.length === 2) {
+                    y = parseInt(y) > 50 ? '19' + y : '20' + y;
+                }
 
+                // Tambahkan padding nol
+                d = d.padStart(2, '0');
+                m = m.padStart(2, '0');
+
+                return `${y}/${m}/${d}`;
+            }
+
+            return null;
+        }
+
+        // Format tanggal
+        if (tanggalExcel instanceof Date || !isNaN(Date.parse(tanggalExcel))) {
+            const dateObj = new Date(tanggalExcel);
+            const year = dateObj.getFullYear();
+            const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+            const day = dateObj.getDate().toString().padStart(2, '0');
+            tanggalTebus = `${year}/${month}/${day}`;
+        } else if (typeof tanggalExcel === 'string') {
+            const parsed = parseTanggalAcak(tanggalExcel);
+            if (parsed) tanggalTebus = parsed;
+        }
+
+        // Default tanggal jika parsing gagal
+        if (!tanggalTebus) {
+            tanggalTebus = new Date().toISOString().split('T')[0].replace(/-/g, '/');
+        }
 
         if (metodePenebusan === 'ipubers') {
             return {
                 kabupaten: (row.getCell(2).text || '').replace(/^KAB\.\s*/i, '').trim(),
                 kecamatan: row.getCell(3).text || '',
                 kodeTransaksi: kodeTransaksi,
-                poktan: row.getCell(25).text || '',
+                poktan: row.getCell(25)?.text || '', // Gunakan optional chaining
                 kodeKios: row.getCell(4).text || '',
                 namaKios: row.getCell(5).text || '',
                 nik: row.getCell(8).text || '',
@@ -140,28 +163,8 @@ if (tanggalExcel instanceof Date || !isNaN(Date.parse(tanggalExcel))) {
                 npkFormula: convertToNumber(row.getCell(14).text || '0'),
                 organik: convertToNumber(row.getCell(15).text || '0'),
                 organikCair: convertToNumber(row.getCell(16).text || '0'),
-                kakao: convertToNumber(row.getCell(26).text || '0'),
+                kakao: convertToNumber(row.getCell(26)?.text || '0'), // Gunakan optional chaining
                 status: row.getCell(24).text || 'Tidak Diketahui'
-
-                // kabupaten: (row.getCell(2).text || '').replace(/^KAB\.\s*/i, '').trim(),
-                // kecamatan: row.getCell(3).text || '',
-                // kodeTransaksi: kodeTransaksi,
-                // poktan: row.getCell(7).text || '',
-                // kodeKios: row.getCell(5).text || '',
-                // namaKios: row.getCell(6).text || '',
-                // nik: row.getCell(8).text || '',
-                // namaPetani: row.getCell(9).text || '',
-                // metodePenebusan: 'ipubers',
-                // tanggalTebus: tanggalTebus,
-                // urea: convertToNumber(row.getCell(11).text || '0'),
-                // npk: convertToNumber(row.getCell(26).text || '0'),
-                // sp36: convertToNumber(row.getCell(28).text || '0'),
-                // za: convertToNumber(row.getCell(29).text || '0'),
-                // npkFormula: convertToNumber(row.getCell(13).text || '0'),
-                // organik: convertToNumber(row.getCell(14).text || '0'),
-                // organikCair: convertToNumber(row.getCell(15).text || '0'),
-                // kakao: convertToNumber(row.getCell(27).text || '0'),
-                // status: row.getCell(18).text || 'Tidak Diketahui'
             };
         } else {
             const mid = `'${row.getCell(4).text || ''}`;
@@ -182,7 +185,7 @@ if (tanggalExcel instanceof Date || !isNaN(Date.parse(tanggalExcel))) {
                 npkFormula: convertToNumber(row.getCell(12).text || '0'),
                 organik: convertToNumber(row.getCell(13).text || '0'),
                 organikCair: convertToNumber(row.getCell(14).text || '0'),
-                kakao: convertToNumber(row.getCell(19).text || '0'),
+                kakao: convertToNumber(row.getCell(19)?.text || '0'), // Gunakan optional chaining
                 mid: mid,
                 namaKios: row.getCell(5).text || '',
                 status: row.getCell(17).text || 'kartan'
@@ -191,7 +194,7 @@ if (tanggalExcel instanceof Date || !isNaN(Date.parse(tanggalExcel))) {
     });
 };
 
-// Fungsi untuk mendapatkan mapping kode kios (dipertahankan sama seperti aslinya)
+// Fungsi untuk mendapatkan mapping kode kios
 const getKodeKiosMappings = async () => {
     const [allMainMID] = await db.query('SELECT mid, kabupaten, kecamatan, nama_kios, kode_kios FROM main_mid');
     const [allMasterMID] = await db.query('SELECT mid, kode_kios FROM master_mid');
@@ -228,7 +231,7 @@ const getKodeKiosMappings = async () => {
     return mappings;
 };
 
-// Fungsi untuk menentukan kode kios (dipertahankan sama seperti aslinya)
+// Fungsi untuk menentukan kode kios
 const determineKodeKios = (rowData, mappings) => {
     if (rowData.metodePenebusan !== 'kartan') {
         return rowData.kodeKios || '-';
@@ -239,7 +242,6 @@ const determineKodeKios = (rowData, mappings) => {
     const cleanKab = cleanText(rowData.kabupaten);
     const cleanKec = cleanText(rowData.kecamatan);
     const cleanNama = cleanNamaKios(rowData.namaKios);
-
 
     if (mid2025Map.has(cleanMid)) {
         return mid2025Map.get(cleanMid);
@@ -266,7 +268,7 @@ const determineKodeKios = (rowData, mappings) => {
     return rowData.kodeKios || '-';
 };
 
-// Fungsi baru untuk menyimpan data dengan retry mechanism
+// Fungsi untuk menyimpan data dengan retry mechanism
 const saveWithRetry = async (values, retryCount = 0) => {
     const connection = await db.getConnection();
     try {
@@ -278,12 +280,14 @@ const saveWithRetry = async (values, retryCount = 0) => {
         // Split into smaller batches if needed
         for (let i = 0; i < values.length; i += BATCH_SIZE) {
             const batch = values.slice(i, i + BATCH_SIZE);
-            await connection.query(
-                `INSERT INTO verval 
-                (kabupaten, kecamatan, poktan, kode_kios, nama_kios, nik, nama_petani, metode_penebusan, tanggal_tebus, 
-                urea, npk, sp36, za, npk_formula, organik, organik_cair, kakao, kode_transaksi, status) 
-                VALUES ?`, [batch]
-            );
+            if (batch.length > 0) { // Pastikan batch tidak kosong
+                await connection.query(
+                    `INSERT INTO verval 
+                    (kabupaten, kecamatan, poktan, kode_kios, nama_kios, nik, nama_petani, metode_penebusan, tanggal_tebus, 
+                    urea, npk, sp36, za, npk_formula, organik, organik_cair, kakao, kode_transaksi, status) 
+                    VALUES ?`, [batch]
+                );
+            }
         }
 
         await connection.commit();
@@ -292,7 +296,7 @@ const saveWithRetry = async (values, retryCount = 0) => {
         await connection.rollback();
 
         if ((error.code === 'ER_LOCK_WAIT_TIMEOUT' || error.code === 'ER_LOCK_DEADLOCK') && retryCount < MAX_RETRIES) {
-            const delayTime = RETRY_DELAY_BASE * Math.pow(2, retryCount); // Exponential backoff
+            const delayTime = RETRY_DELAY_BASE * Math.pow(2, retryCount);
             console.warn(`[Retry ${retryCount + 1}] Lock timeout detected, retrying in ${delayTime}ms...`);
             await delay(delayTime);
             return saveWithRetry(values, retryCount + 1);
@@ -330,6 +334,7 @@ exports.uploadFile = async (req, res) => {
 
         let totalInserted = 0;
         let totalDuplicates = 0;
+        let totalFilesProcessed = 0;
 
         // 2. Proses setiap file
         for (const file of files) {
@@ -341,6 +346,8 @@ exports.uploadFile = async (req, res) => {
 
             try {
                 const fileData = await processExcelFile(file, metodePenebusan);
+                log(`Data yang diproses dari ${file.originalname}: ${fileData.length} baris`);
+
                 const batches = [];
                 let currentBatch = [];
 
@@ -367,21 +374,29 @@ exports.uploadFile = async (req, res) => {
                     }
                 }
 
+                // Pastikan batch terakhir tidak terlewat
                 if (currentBatch.length > 0) {
                     batches.push(currentBatch);
                 }
 
+                log(`Menyiapkan ${batches.length} batch untuk disimpan`);
+
                 // 4. Simpan data per batch dengan retry mechanism
                 for (const batch of batches) {
                     try {
-                        await saveWithRetry(batch);
-                        totalInserted += batch.length;
-                        log(`Berhasil menyimpan batch ${batch.length} data`);
+                        if (batch.length > 0) {
+                            await saveWithRetry(batch);
+                            totalInserted += batch.length;
+                            log(`Berhasil menyimpan batch ${batch.length} data`);
+                        }
                     } catch (err) {
                         logError('Gagal menyimpan batch data', err);
                         throw err;
                     }
                 }
+
+                totalFilesProcessed++;
+                log(`Selesai memproses file ${file.originalname}`);
 
             } catch (err) {
                 logError('Gagal memproses file', err);
@@ -392,11 +407,12 @@ exports.uploadFile = async (req, res) => {
             }
         }
 
-        log(`Proses selesai. Total: ${totalInserted} data baru, ${totalDuplicates} duplikat`);
+        log(`Proses selesai. Total: ${totalInserted} data baru, ${totalDuplicates} duplikat, ${totalFilesProcessed} file diproses`);
         return res.json({
             success: true,
             inserted: totalInserted,
             duplicates: totalDuplicates,
+            filesProcessed: totalFilesProcessed,
             message: `Berhasil memproses ${files.length} file`
         });
 
