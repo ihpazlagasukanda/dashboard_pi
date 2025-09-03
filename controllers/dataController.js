@@ -847,13 +847,6 @@ exports.alokasiVsTebusan = async (req, res) => {
             countParams.push(kabupaten);
         }
 
-        // if (kecamatan) {
-        //     query += " AND e.kecamatan = ?";
-        //     countQuery += " AND e.kecamatan = ?";
-        //     params.push(kecamatan);
-        //     countParams.push(kecamatan);
-        // }
-
         if (tahun) {
             query += " AND e.tahun = ?";
             countQuery += " AND e.tahun = ?";
@@ -1082,15 +1075,15 @@ exports.getVervalSummary = async (req, res) => {
 
         let query = `
             SELECT 
-                SUM(e.urea) AS total_urea,
-                SUM(e.npk) AS total_npk,
-                SUM(e.npk_formula) AS total_npk_formula,
-                SUM(e.organik) AS total_organik,
+                SUM(combined.urea) AS total_urea,
+                SUM(combined.npk) AS total_npk,
+                SUM(combined.npk_formula) AS total_npk_formula,
+                SUM(combined.organik) AS total_organik,
 
-                SUM(e.urea - COALESCE(v.tebus_urea, 0)) AS sisa_urea,
-                SUM(e.npk - COALESCE(v.tebus_npk, 0)) AS sisa_npk,
-                SUM(e.npk_formula - COALESCE(v.tebus_npk_formula, 0)) AS sisa_npk_formula,
-                SUM(e.organik - COALESCE(v.tebus_organik, 0)) AS sisa_organik,
+                SUM(combined.urea - COALESCE(v.tebus_urea, 0)) AS sisa_urea,
+                SUM(combined.npk - COALESCE(v.tebus_npk, 0)) AS sisa_npk,
+                SUM(combined.npk_formula - COALESCE(v.tebus_npk_formula, 0)) AS sisa_npk_formula,
+                SUM(combined.organik - COALESCE(v.tebus_organik, 0)) AS sisa_organik,
 
                 SUM(COALESCE(v.tebus_urea, 0)) AS total_tebus_urea,
                 SUM(COALESCE(v.tebus_npk, 0)) AS total_tebus_npk,
@@ -1098,39 +1091,57 @@ exports.getVervalSummary = async (req, res) => {
                 SUM(COALESCE(v.tebus_organik, 0)) AS total_tebus_organik,
 
                 ${bulanSumFields}
-            FROM erdkk e
+            FROM (
+                -- Data dari ERDKK
+                SELECT 
+                    e.kabupaten, e.kecamatan, e.nik, e.nama_petani, e.kode_kios, e.nama_kios,
+                    e.tahun, e.desa, e.poktan,
+                    e.urea, e.npk, e.npk_formula, e.organik
+                FROM erdkk e
+                
+                UNION ALL
+                
+                -- Data dari VERVAL yang tidak ada di ERDKK
+                SELECT 
+                    v.kabupaten, v.kecamatan, v.nik, v.nama_petani, v.kode_kios, v.nama_kios,
+                    v.tahun, '' AS desa, v.poktan,
+                    0 AS urea, 0 AS npk, 0 AS npk_formula, 0 AS organik
+                FROM verval_summary v
+                LEFT JOIN erdkk e 
+                    ON e.nik = v.nik
+                   AND e.kabupaten = v.kabupaten
+                   AND e.tahun = v.tahun
+                   AND e.kecamatan = v.kecamatan
+                   AND e.kode_kios = v.kode_kios
+                WHERE e.nik IS NULL
+            ) AS combined
             LEFT JOIN verval_summary v 
-                ON e.nik = v.nik 
-                AND e.kabupaten = v.kabupaten
-                AND e.tahun = v.tahun
-                AND e.kecamatan = v.kecamatan
+                ON combined.nik = v.nik 
+                AND combined.kabupaten = v.kabupaten
+                AND combined.tahun = v.tahun
+                AND combined.kecamatan = v.kecamatan
+                AND combined.kode_kios = v.kode_kios
             LEFT JOIN tebusan_per_bulan t
-                ON e.nik = t.nik
-                AND e.kabupaten = t.kabupaten
-                AND e.tahun = t.tahun
-                AND e.kecamatan = t.kecamatan
+                ON combined.nik = t.nik
+                AND combined.kabupaten = t.kabupaten
+                AND combined.tahun = t.tahun
+                AND combined.kecamatan = t.kecamatan
+                AND combined.kode_kios = t.kode_kios
             WHERE 1=1
         `;
 
         let params = [];
         if (kabupaten) {
-            query += " AND e.kabupaten = ?";
+            query += " AND combined.kabupaten = ?";
             params.push(kabupaten);
         }
 
-        // if (kecamatan) {
-        //     query += " AND e.kecamatan = ?";
-        //     params.push(kecamatan);
-        // }
-
         if (tahun) {
-            query += " AND e.tahun = ?";
+            query += " AND combined.tahun = ?";
             params.push(tahun);
         }
 
         const [summary] = await db.query(query, params);
-
-        console.log("Summary Data:", summary);
 
         res.json({ sum: summary[0] || {} });
     } catch (error) {
