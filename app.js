@@ -65,9 +65,9 @@ app.get('/login', (req, res) => {
     res.render('login');
 });
 
-// app.get('/sisaalokasi', (req, res) => {
-//     res.render('sisaalokasi');
-// });
+app.get('/sisaalokasi', (req, res) => {
+    res.render('sisaalokasi');
+});
 
 // Halaman lain dengan proteksi autentikasi
 app.get('/dataverval', authMiddleware, checkAkses(['C3']), (req, res) => {
@@ -81,7 +81,6 @@ app.get('/salurkios', authMiddleware, checkAkses(['C2']), (req, res) => {
 // app.get('/dashboard2', authMiddleware, (req, res) => {
 //     res.render('chart', { user: req.user });
 // });
-
 
 // Halaman Upload - Hanya level 2
 app.get('/upload', authMiddleware, requireLevel(2), checkAkses(['B']), (req, res) => {
