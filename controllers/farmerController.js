@@ -8,40 +8,76 @@ const jsonFilePath = path.join(__dirname, "../data/farmers.json");
 exports.generateFarmersJSON = async (req, res) => {
   try {
     const query = `
-      SELECT 
-    e.kabupaten,
-    e.kecamatan,
-    e.desa,
-    e.poktan,
-    e.nik,
-    e.nama_petani,
-    COALESCE(SUM(e.urea),0) - COALESCE(SUM(v.urea),0) AS sisa_urea,
-    COALESCE(SUM(e.npk),0) - COALESCE(SUM(v.npk),0) AS sisa_npk,
-    COALESCE(SUM(e.npk_formula),0) - COALESCE(SUM(v.npk_formula),0) AS sisa_npk_formula,
-    COALESCE(SUM(e.organik),0) - COALESCE(SUM(v.organik),0) AS sisa_organik,
-    (
-        (COALESCE(SUM(e.urea),0) - COALESCE(SUM(v.urea),0)) +
-        (COALESCE(SUM(e.npk),0) - COALESCE(SUM(v.npk),0)) +
-        (COALESCE(SUM(e.npk_formula),0) - COALESCE(SUM(v.npk_formula),0)) +
-        (COALESCE(SUM(e.organik),0) - COALESCE(SUM(v.organik),0))
-    ) AS total_sisa
-FROM erdkk e
-LEFT JOIN verval v 
-    ON e.nik = v.nik
-   AND YEAR(v.tanggal_tebus) = 2025
-WHERE e.tahun = 2025 
-  AND e.kabupaten IN 
-      ('BOYOLALI', 'KLATEN', 'SUKOHARJO', 'KARANGANYAR', 'WONOGIRI', 'SRAGEN', 
+    SELECT 
+        COALESCE(e.kabupaten, v.kabupaten) AS kabupaten, 
+        COALESCE(e.kecamatan, v.kecamatan) AS kecamatan,
+        COALESCE(e.nik, v.nik) AS nik, 
+        COALESCE(e.nama_petani, '') AS nama_petani, 
+        COALESCE(e.kode_kios, v.kode_kios) AS kode_kios,
+        COALESCE(e.desa, '') AS desa,
+        COALESCE(e.poktan, '') AS poktan,
+        COALESCE(e.tahun, v.tahun) AS tahun, 
+
+        (COALESCE(e.urea,0) - COALESCE(v.tebus_urea,0)) AS sisa_urea,
+        (COALESCE(e.npk,0) - COALESCE(v.tebus_npk,0)) AS sisa_npk,
+        (COALESCE(e.npk_formula,0) - COALESCE(v.tebus_npk_formula,0)) AS sisa_npk_formula,
+        (COALESCE(e.organik,0) - COALESCE(v.tebus_organik,0)) AS sisa_organik,
+        (
+            (COALESCE(e.urea,0) - COALESCE(v.tebus_urea,0)) +
+            (COALESCE(e.npk,0) - COALESCE(v.tebus_npk,0)) +
+            (COALESCE(e.npk_formula,0) - COALESCE(v.tebus_npk_formula,0)) +
+            (COALESCE(e.organik,0) - COALESCE(v.tebus_organik,0))
+        ) AS total_sisa
+
+    FROM (
+        -- Data dari ERDKK
+        SELECT 
+            e.kabupaten, e.kecamatan, e.nik, e.nama_petani, e.kode_kios,
+            e.tahun, e.desa, e.poktan,
+            SUM(e.urea) AS urea, 
+            SUM(e.npk) AS npk, 
+            SUM(e.npk_formula) AS npk_formula, 
+            SUM(e.organik) AS organik
+        FROM erdkk e
+        WHERE e.tahun = 2025
+          AND e.kabupaten IN ('BOYOLALI', 'KLATEN', 'SUKOHARJO', 'KARANGANYAR', 'WONOGIRI', 'SRAGEN', 
        'KOTA SURAKARTA', 'SLEMAN', 'BANTUL', 'GUNUNG KIDUL', 'KULON PROGO', 'KOTA YOGYAKARTA')
-GROUP BY 
-    e.kabupaten,
-    e.kecamatan,
-    e.desa,
-    e.poktan,
-    e.nik,
-    e.nama_petani
-ORDER BY 
-    e.kabupaten, e.kecamatan, e.desa, e.poktan, e.nama_petani;
+        GROUP BY e.kabupaten, e.kecamatan, e.nik, e.nama_petani, e.kode_kios, e.tahun, e.desa, e.poktan
+        
+        UNION ALL
+        
+        -- Data dari VERVAL yang tidak ada di ERDKK (alokasi = 0)
+        SELECT 
+            v.kabupaten, v.kecamatan, v.nik, '' AS nama_petani, v.kode_kios,
+            v.tahun, '' AS desa, '' AS poktan,
+            0 AS urea, 0 AS npk, 0 AS npk_formula, 0 AS organik
+        FROM verval_summary v
+        LEFT JOIN erdkk e 
+            ON e.nik = v.nik
+           AND e.kabupaten = v.kabupaten
+           AND e.tahun = v.tahun
+           AND e.kode_kios = v.kode_kios
+        WHERE v.tahun = 2025
+          AND v.kabupaten IN ('BOYOLALI', 'KLATEN', 'SUKOHARJO', 'KARANGANYAR', 'WONOGIRI', 'SRAGEN', 
+       'KOTA SURAKARTA', 'SLEMAN', 'BANTUL', 'GUNUNG KIDUL', 'KULON PROGO', 'KOTA YOGYAKARTA')
+          AND e.nik IS NULL
+     ) AS combined
+
+    LEFT JOIN verval_summary v 
+        ON combined.nik = v.nik
+       AND combined.kabupaten = v.kabupaten
+       AND combined.tahun = v.tahun
+       AND combined.kode_kios = v.kode_kios
+
+    LEFT JOIN erdkk e 
+        ON combined.nik = e.nik
+       AND combined.kabupaten = e.kabupaten
+       AND combined.tahun = e.tahun
+       AND combined.kode_kios = e.kode_kios
+
+    WHERE combined.tahun = 2025
+      AND combined.kabupaten IN ('BOYOLALI', 'KLATEN', 'SUKOHARJO', 'KARANGANYAR', 'WONOGIRI', 'SRAGEN', 
+       'KOTA SURAKARTA', 'SLEMAN', 'BANTUL', 'GUNUNG KIDUL', 'KULON PROGO', 'KOTA YOGYAKARTA');
     `;
 
     const [rows] = await pool.query(query);
