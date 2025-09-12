@@ -12,6 +12,7 @@ const outRouter = require("./routes/outRoutes");
 const skRoutes = require("./routes/skRoutes");
 const deleteRoutes = require("./routes/deleteRoutes");
 const farmerRoutes = require("./routes/farmerRoutes");
+const kiosRoutes = require("./routes/kiosRoutes-s");
 const userRoutes = require("./routes/userRoutes");
 const triggerCron = require("./routes/triggerCron");
 const uploadPenyaluranDoRoutes = require("./routes/penyaluranDoRoutes");
@@ -21,15 +22,40 @@ const logAksesMenu = require('./middlewares/logAksesMenu');
 const methodOverride = require('method-override');
 require('dotenv').config();
 
+const cluster = require('cluster');
+const numCPUs = require('os').cpus().length;
+const compression = require('compression');
+
+// Optimasi clustering - hanya untuk production
+if (process.env.NODE_ENV === 'production' && cluster.isMaster) {
+  console.log(`Master ${process.pid} is running`);
+  
+  // Fork workers (maksimal 4 worker untuk menghemat RAM)
+  const workerCount = Math.min(numCPUs, 4);
+  for (let i = 0; i < workerCount; i++) {
+    cluster.fork();
+  }
+  
+  cluster.on('exit', (worker, code, signal) => {
+    console.log(`Worker ${worker.process.pid} died. Restarting...`);
+    cluster.fork();
+  });
+  
+  // Jangan jalankan kode aplikasi lebih lanjut di master process
+  return;
+}
+
 const app = express();
+
+app.use(compression());
 
 // Konfigurasi multer
 const storage = multer.memoryStorage(); // Penyimpanan di RAM
 const upload = multer({ storage: storage });
 
 // Middleware
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(methodOverride('_method'));
 
@@ -37,8 +63,9 @@ app.use(methodOverride('_method'));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Akses file statis
-app.use(express.static('public'));
+app.use(express.static('public', {
+  maxAge: process.env.NODE_ENV === 'production' ? '7d' : '0'
+}));
 
 app.use(logAksesMenu);
 app.set('trust proxy', true);
@@ -183,15 +210,18 @@ app.use('/upload', outRouter);  // Route untuk upload
 app.use('/delete', authMiddleware, deleteRoutes);
 app.use('/admin', authMiddleware, userRoutes);
 app.use("/data", farmerRoutes);
+app.use("/download", kiosRoutes);
 
 app.use(express.json({ limit: '50mb' })); // Sesuaikan ukuran jika perlu
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Jalankan server
-const PORT = process.env.PORT || 3000;
-const server = app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+// Jalankan server hanya di worker processes
+if (process.env.NODE_ENV !== 'production' || !cluster.isMaster) {
+  const PORT = process.env.PORT || 3000;
+  const server = app.listen(PORT, () => {
+    console.log(`Worker ${process.pid} started. Server running on port ${PORT}`);
+  });
 
-// Set timeout server menjadi 10 menit (600.000 ms)
-server.setTimeout(1800000); // 600.000 ms = 10 menit
+  // Set timeout server menjadi 10 menit (600.000 ms)
+  server.setTimeout(1800000); // 600.000 ms = 10 menit
+}
