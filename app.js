@@ -19,6 +19,8 @@ const uploadPenyaluranDoRoutes = require("./routes/penyaluranDoRoutes");
 const checkAkses = require('./middlewares/checkAkses');
 const logAksesMenu = require('./middlewares/logAksesMenu');
 
+require('./logger');
+
 const methodOverride = require('method-override');
 require('dotenv').config();
 

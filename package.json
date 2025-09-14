@@ -32,7 +32,9 @@
     "mysql2": "^3.12.0",
     "node-cron": "^4.0.5",
     "papaparse": "^5.5.2",
-    "uuid": "^11.1.0"
+    "redis": "^5.8.2",
+    "uuid": "^11.1.0",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
     "prettier": "^3.5.3",

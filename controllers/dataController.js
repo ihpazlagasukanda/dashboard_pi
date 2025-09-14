@@ -4,6 +4,7 @@ const { Worker } = require('worker_threads');
 const path = require('path');
 const fs = require('fs');
 const { generateReport } = require('../services/reportGenerator');
+const client = require('../redisClient');
 
 
 exports.getDataWithPagination = async (req, res) => {
@@ -1677,24 +1678,120 @@ exports.downloadSalur = async (req, res) => {
 
 // wcm
 
+// Fungsi untuk generate cache key TANPA parameter draw
+const generateCacheKey = (params) => {
+  // Normalisasi parameter - abaikan draw karena selalu berubah
+  const tahun = params.tahun || '';
+  const bulan = params.bulan || 'ALL';
+  const produk = params.produk || 'ALL';
+  const kabupaten = params.kabupaten || 'ALL';
+  const status = params.status || 'ALL';
+  const start = params.start || '0';
+  const length = params.length || '10';
+  
+  return `wcm_verval:${tahun}:${bulan}:${produk}:${kabupaten}:${status}:${start}:${length}`;
+};
+
+// Fungsi untuk mengecek info cache
+const getCacheInfo = async (key) => {
+  try {
+    const ttl = await client.ttl(key);
+    return { exists: ttl > -2, ttl };
+  } catch (error) {
+    return { exists: false, ttl: -2, error: error.message };
+  }
+};
+
 exports.wcmVsVerval = async (req, res) => {
+    const startTime = Date.now();
+    let cacheStatus = 'MISS';
+    let cacheKey = '';
+    let queryTime = 0;
+    let cacheCheckTime = 0;
+
     try {
-        const {
-            tahun,
-            bulan,
-            produk,
-            kabupaten,
-            status = 'ALL',
-            start = 0,
-            length = 10,
-            draw = 1
-        } = req.query;
+        // Normalisasi parameter
+        const tahun = req.query.tahun;
+        const bulan = req.query.bulan || 'ALL';
+        const produk = req.query.produk || 'ALL';
+        const kabupaten = req.query.kabupaten || 'ALL';
+        const status = req.query.status || 'ALL';
+        const start = req.query.start || '0';
+        const length = req.query.length || '10';
+        const draw = req.query.draw || '1';
 
         // Validasi parameter wajib
         if (!tahun) {
             return res.status(400).json({ message: 'Parameter tahun wajib diisi' });
         }
 
+        // Generate cache key TANPA draw
+        cacheKey = generateCacheKey({ tahun, bulan, produk, kabupaten, status, start, length });
+        
+        console.log('══════════════════════════════════════════════════');
+        console.log('🔍 REQUEST DITERIMA:', new Date().toLocaleString('id-ID'));
+        console.log('📋 Parameter:', { tahun, bulan, produk, kabupaten, status, start, length, draw });
+        console.log('🔑 Cache Key:', cacheKey);
+        
+        // Cek cache terlebih dahulu
+        const cacheCheckStart = Date.now();
+        try {
+            const cachedData = await client.get(cacheKey);
+            cacheCheckTime = Date.now() - cacheCheckStart;
+            
+            if (cachedData) {
+                const cacheInfo = await getCacheInfo(cacheKey);
+                const parsedData = JSON.parse(cachedData);
+                
+                cacheStatus = 'HIT';
+                console.log('✅ ✅ ✅ DATA DIAMBIL DARI CACHE ✅ ✅ ✅');
+                console.log('⏰ Cache TTL:', cacheInfo.ttl, 'detik tersisa');
+                console.log('📊 Jumlah data:', parsedData.data.length, 'records');
+                console.log('⚡ Waktu akses cache:', cacheCheckTime, 'ms');
+                console.log('💾 Total waktu response:', Date.now() - startTime, 'ms');
+                
+                // Response dari cache dengan draw yang baru
+                const response = {
+                    draw: parseInt(draw),
+                    recordsTotal: parsedData.recordsTotal,
+                    recordsFiltered: parsedData.recordsFiltered,
+                    data: parsedData.data,
+                    cacheInfo: {
+                        status: 'HIT',
+                        key: cacheKey,
+                        ttl: cacheInfo.ttl,
+                        responseTime: Date.now() - startTime,
+                        cacheTime: cacheCheckTime,
+                        source: 'redis_cache'
+                    }
+                };
+                
+                res.set({
+                    'X-Cache-Status': 'HIT',
+                    'X-Cache-Key': cacheKey,
+                    'X-Cache-TTL': cacheInfo.ttl,
+                    'X-Response-Time': (Date.now() - startTime) + 'ms'
+                });
+                
+                return res.json(response);
+            } else {
+                const cacheInfo = await getCacheInfo(cacheKey);
+                console.log('❌ DATA TIDAK DITEMUKAN DI CACHE');
+                console.log('ℹ️  Status cache:', cacheInfo.exists ? 'Exists' : 'Not exists');
+                if (cacheInfo.exists) {
+                    console.log('⏰ Cache TTL:', cacheInfo.ttl, 'detik');
+                }
+            }
+        } catch (cacheError) {
+            cacheCheckTime = Date.now() - cacheCheckStart;
+            console.log('⚠️  Error akses cache:', cacheError.message);
+            cacheStatus = 'ERROR';
+        }
+
+        // Jika tidak ada di cache, lanjutkan dengan query database
+        console.log('🔍 Query database...');
+        const queryStartTime = Date.now();
+        
         const produkFilter = produk && produk !== 'ALL' ? produk.toUpperCase() : 'ALL';
         const statusFilter = status.toUpperCase();
 
@@ -1934,23 +2031,79 @@ exports.wcmVsVerval = async (req, res) => {
         filteredParams.push(parseInt(length), parseInt(start));
 
         const [data] = await db.query(finalQuery, filteredParams);
+        
+        queryTime = Date.now() - queryStartTime;
+        console.log('⏱️  Waktu query database:', queryTime, 'ms');
 
-        res.json({
-            draw: parseInt(draw),
+        // Data untuk disimpan di cache (TANPA draw)
+        const dataForCache = {
             recordsTotal,
             recordsFiltered,
             data
+        };
+
+        // Data untuk response (DENGAN draw)
+        const response = {
+            draw: parseInt(draw),
+            recordsTotal,
+            recordsFiltered,
+            data,
+            cacheInfo: {
+                status: cacheStatus,
+                key: cacheKey,
+                responseTime: Date.now() - startTime,
+                queryTime: queryTime,
+                cacheCheckTime: cacheCheckTime,
+                source: 'database'
+            }
+        };
+
+        // Simpan ke cache dengan expiry 5 menit (300 detik) - TANPA draw
+        try {
+            await client.setEx(cacheKey, 300, JSON.stringify(dataForCache));
+            console.log('💾 DISIMPAN KE CACHE (5 menit)');
+            console.log('⏰ Akan expired dalam 300 detik');
+        } catch (cacheError) {
+            console.log('❌ Gagal menyimpan ke cache:', cacheError.message);
+            response.cacheInfo.cacheSaveError = cacheError.message;
+        }
+
+        console.log('⚡ Total waktu response:', Date.now() - startTime, 'ms');
+        console.log('══════════════════════════════════════════════════');
+        
+        // Header response
+        res.set({
+            'X-Cache-Status': cacheStatus,
+            'X-Cache-Key': cacheKey,
+            'X-Response-Time': (Date.now() - startTime) + 'ms',
+            'X-Query-Time': queryTime + 'ms',
+            'X-Cache-Check-Time': cacheCheckTime + 'ms'
         });
 
+        res.json(response);
+
     } catch (error) {
-        console.error('Error in wcmVsVerval:', error);
+        const errorTime = Date.now() - startTime;
+        console.error('❌❌❌ ERROR dalam wcmVsVerval:', error);
+        console.log('⏰ Waktu sampai error:', errorTime, 'ms');
+        console.log('══════════════════════════════════════════════════');
+        
+        res.set({
+            'X-Cache-Status': 'ERROR',
+            'X-Error-Time': errorTime + 'ms'
+        });
+        
         res.status(500).json({ 
             message: 'Terjadi kesalahan saat memproses data.', 
-            error: error.message 
+            error: error.message,
+            cacheInfo: {
+                status: 'ERROR',
+                key: cacheKey,
+                responseTime: errorTime
+            }
         });
     }
 };
-
 
 exports.exportExcelWcmVsVerval = async (req, res) => {
     try {

@@ -1,392 +1,259 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
     <%- include('./partials/head'); %>
+    <title>Data Summary Petani</title>
 </head>
 <body>
     <div class="wrapper">
         <%- include('./partials/header'); %>
 
-        <div class="container">
+        <main class="container">
             <div class="page-inner">
-                <br>
-                <div class="page-header">
-                    <h3 class="fw-bold mb-3">Data Summary Petani</h3>
-                    <ul class="breadcrumbs mb-3">
-                      <li class="nav-home">
-                        <a href="/">
-                          <i class="icon-home"></i>
-                        </a>
-                      </li>
-                      <li class="separator">
-                        <i class="icon-arrow-right"></i>
-                      </li>
-                      <li class="nav-item">
-                        <a href="/esummary">Data</a>
-                      </li>
-                      <li class="separator">
-                        <i class="icon-arrow-right"></i>
-                      </li>
-                      <li class="nav-item">
-                        <a href="/esummary">Data Summary Petani</a>
-                      </li>
-                    </ul>
-                  </div>
-        
-                  <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
-                    <div>
-                      <p class="op-7 mb-2">Untuk Menampilkan Data Sesuai, Harap Pilih</p>
+                <!-- Header Section -->
+                <section aria-labelledby="page-title">
+                    <div class="page-header">
+                        <h1 class="fw-bold mb-3" id="page-title">Data Summary Petani</h1>
+                        <nav aria-label="Breadcrumb">
+                            <ul class="breadcrumbs mb-3">
+                                <li class="nav-home">
+                                    <a href="/" aria-label="Beranda">
+                                        <i class="icon-home" aria-hidden="true"></i>
+                                    </a>
+                                </li>
+                                <li class="separator">
+                                    <i class="icon-arrow-right" aria-hidden="true"></i>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/esummary">Data</a>
+                                </li>
+                                <li class="separator">
+                                    <i class="icon-arrow-right" aria-hidden="true"></i>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/esummary" aria-current="page">Data Summary Petani</a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
-                  
-                    <div class="ms-md-auto py-2 py-md-0">
-                      <div class="dropdown">
-                        <button class="btn btn-primary btn-round dropdown-toggle d-flex align-items-center gap-2" 
-                                type="button" id="downloadDropdown" 
-                                data-bs-toggle="dropdown" aria-expanded="false">
-                          <i class="fa fa-download"></i> Download
-                        </button>
-                        <ul class="dropdown-menu">
-                          <!-- <li>
-                            <a class="dropdown-item d-flex align-items-center gap-2" href="#" id="download-sum">
-                              <i class="fa fa-file-alt text-primary"></i> Versi Lengkap
-                            </a>
-                          </li> -->
-                          <li>
-                            <a class="dropdown-item d-flex align-items-center gap-2" href="#" id="download-summary">
-                              <i class="fa fa-table text-info"></i> Sesuai Template
-                            </a>
-                          </li>
-                        </ul>
-                      </div>
+                </section>
+
+                <!-- Action Controls -->
+                <section aria-labelledby="action-title" class="mb-4">
+                    <div class="d-flex align-items-left align-items-md-center flex-column flex-md-row pt-2 pb-4">
+                        <div>
+                            <p class="op-7 mb-2" id="action-title">Untuk Menampilkan Data Sesuai, Harap Pilih</p>
+                        </div>
+                      
+                        <div class="ms-md-auto py-2 py-md-0">
+                            <div class="dropdown">
+                                <button class="btn btn-primary btn-round dropdown-toggle d-flex align-items-center gap-2" 
+                                        type="button" id="downloadDropdown" 
+                                        data-bs-toggle="dropdown" aria-expanded="false"
+                                        aria-haspopup="true">
+                                    <i class="fa fa-download" aria-hidden="true"></i> Download
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="downloadDropdown">
+                                    <li>
+                                        <a class="dropdown-item d-flex align-items-center gap-2" href="#" id="download-summary">
+                                            <i class="fa fa-table text-info" aria-hidden="true"></i> Sesuai Template
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
-                  </div>
-                  
-                  <!-- Spinner Loading -->
-                  <div id="loading-spinner" class="hidden fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center">
+                </section>
+
+                <!-- Loading Spinner -->
+                <div id="loading-spinner" class="hidden fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex justify-center items-center" 
+                     role="alert" aria-live="polite" aria-busy="true">
                     <div class="bg-white p-5 rounded-lg flex items-center space-x-3 shadow-lg">
-                      <div class="animate-spin h-8 w-8 border-t-4 border-blue-600 border-solid rounded-full"></div>
-                      <span class="text-lg font-semibold text-gray-700">Mengunduh data, harap tunggu...</span>
+                        <div class="animate-spin h-8 w-8 border-t-4 border-blue-600 border-solid rounded-full" aria-hidden="true"></div>
+                        <span class="text-lg font-semibold text-gray-700">Mengunduh data, harap tunggu...</span>
                     </div>
-                  </div>
-                  
-                  
-        
-                  <div
-                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-5"
-                  >
-                    <div class="grid grid-cols-2 items-center gap-2">
-                      <label for="tahunSelect" class="text-sm font-medium text-gray-700"
-                        >Tahun</label
-                      >
-                      <select
-                        id="tahunSelect"
-                        class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
-                      >
-                        <option value="">Semua Tahun</option>
-                        <option value="2024">2024</option>
-                        <option value="2025">2025</option>
-                      </select>
-                    </div>
+                </div>
+
+                <!-- Filter Controls -->
+                <section aria-labelledby="filter-title" class="mb-5">
+                    <h2 id="filter-title" class="visually-hidden">Filter Data</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-2 items-center gap-2">
+                            <label for="tahunSelect" class="text-sm font-medium text-gray-700">Tahun</label>
+                            <select id="tahunSelect" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
+                                <option value="">Semua Tahun</option>
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                            </select>
+                        </div>
                 
-               <div class="grid grid-cols-2 items-center gap-2">
-                <label for="provinsiSelect" class="text-sm font-medium text-gray-700">Provinsi:</label>
-                <select id="provinsiSelect" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full" style="min-width: 180px">
-                  <% if (user.kabupaten) { %>
-                    <option value="">Pilih Provinsi</option>
-                    <option value="DIY">DI YOGYAKARTA</option>
-                    <option value="JAWA TENGAH">JAWA TENGAH</option>
-                  <% } else { %>
-                    <option value="">Pilih Provinsi</option>
-                    <option value="DIY">DI YOGYAKARTA</option>
-                    <option value="JAWA TENGAH">JAWA TENGAH</option>
-                  <% } %>
-                </select>
-              </div>
+                        <div class="grid grid-cols-2 items-center gap-2">
+                            <label for="provinsiSelect" class="text-sm font-medium text-gray-700">Provinsi:</label>
+                            <select id="provinsiSelect" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full" style="min-width: 180px">
+                                <% if (user.kabupaten) { %>
+                                    <option value="">Pilih Provinsi</option>
+                                    <option value="DIY">DI YOGYAKARTA</option>
+                                    <option value="JAWA TENGAH">JAWA TENGAH</option>
+                                <% } else { %>
+                                    <option value="">Pilih Provinsi</option>
+                                    <option value="DIY">DI YOGYAKARTA</option>
+                                    <option value="JAWA TENGAH">JAWA TENGAH</option>
+                                <% } %>
+                            </select>
+                        </div>
 
-              <!-- Kabupaten Select -->
-              <div class="grid grid-cols-2 items-center gap-2">
-                <label for="kabupatenSelect" class="text-sm font-medium text-gray-700">Kabupaten:</label>
-                <select id="kabupatenSelect" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full" style="min-width: 180px">
-                  <option value="">Pilih Kabupaten</option>
-                  <% if (user.kabupaten && user.kabupaten !== 'ALL') { %>
-                    <option value="<%= user.kabupaten %>"><%= user.kabupaten %></option>
-                  <% } %>
-                </select>
-              </div>
+                        <div class="grid grid-cols-2 items-center gap-2">
+                            <label for="kabupatenSelect" class="text-sm font-medium text-gray-700">Kabupaten:</label>
+                            <select id="kabupatenSelect" class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full" style="min-width: 180px">
+                                <option value="">Pilih Kabupaten</option>
+                                <% if (user.kabupaten && user.kabupaten !== 'ALL') { %>
+                                    <option value="<%= user.kabupaten %>"><%= user.kabupaten %></option>
+                                <% } %>
+                            </select>
+                        </div>
+                    </div>
+                </section>
 
+                <!-- Information Note -->
+                <section class="mb-4" aria-labelledby="catatan-title">
+                    <h3 id="catatan-title" class="h6 text-muted mb-2">CATATAN:</h3>
+                    <ul class="list-unstyled">
+                        <li class="text-muted small mb-1">
+                            Petani yang belum terdaftar dalam data ERDKK pada awal tahun tidak akan muncul dalam data summary walaupun sudah melakukan penebusan.
+                        </li>
+                        <li class="text-muted small mb-1">
+                            Namun, petani tersebut akan mulai muncul apabila datanya telah dilengkapi dan dimasukkan melalui proses unggah (upload) ERDKK.
+                        </li>
+                    </ul>
+                </section>
 
-              <br>
-              <p class="text-info">Filter periode hanya untuk view, tidak bisa download sesuai periode</p>
-                <div class="grid grid-cols-3 items-center gap-2">
-                <label class="text-sm font-medium text-gray-700">Periode Bulan:</label>
-                <select id="periode-bulan-awal" class="border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
-                  <option value="">Bulan Awal</option>
-                  <option value="01">Januari</option>
-                  <option value="02">Februari</option>
-                  <option value="03">Maret</option>
-                  <option value="04">April</option>
-                  <option value="05">Mei</option>
-                  <option value="06">Juni</option>
-                  <option value="07">Juli</option>
-                  <option value="08">Agustus</option>
-                  <option value="09">September</option>
-                  <option value="10">Oktober</option>
-                  <option value="11">November</option>
-                  <option value="12">Desember</option>
-                </select>
-                <span class="text-center">-</span>
-                <select id="periode-bulan-akhir" class="border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full">
-                  <option value="">Bulan Akhir</option>
-                  <option value="01">Januari</option>
-                  <option value="02">Februari</option>
-                  <option value="03">Maret</option>
-                  <option value="04">April</option>
-                  <option value="05">Mei</option>
-                  <option value="06">Juni</option>
-                  <option value="07">Juli</option>
-                  <option value="08">Agustus</option>
-                  <option value="09">September</option>
-                  <option value="10">Oktober</option>
-                  <option value="11">November</option>
-                  <option value="12">Desember</option>
-                </select>
-              </div>
-        
-                    <!-- Kecamatan -->
-                    <!-- <div class="grid grid-cols-2 items-center gap-2">
-                      <label
-                        for="kecamatanSelect"
-                        class="text-sm font-medium text-gray-700"
-                        >Kecamatan</label
-                      >
-                      <select
-                        id="kecamatanSelect"
-                        class="filter-dropdown border border-gray-300 rounded-lg shadow-sm p-2 h-[40px] w-full"
-                      >
-                        <option value="">Semua Kecamatan</option>
-                      </select>
-                    </div> -->
-        
-                    <br />
-                  </div>
-     <div>
-          <p class="text-muted small mb-1">CATATAN :</p>
-            <ul>
-              <li class="text-muted small mb-1">Petani yang belum terdaftar dalam data ERDKK pada awal tahun tidak akan muncul dalam data summary walaupun sudah melakukan penebusan.</li>
-              <li class="text-muted small mb-1">Namun, petani tersebut akan mulai muncul apabila datanya telah dilengkapi dan dimasukkan melalui proses unggah (upload) ERDKK.</li>
-            </ul>
-          </div>
-                <!-- Tabel Data -->
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-head-row">
-                                    <div class="card-title">Data Summary Petani</div>
-                                    <div class="card-tools">
-              
+                <!-- Data Table -->
+                <section aria-labelledby="table-title">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-head-row">
+                                        <h4 class="card-title" id="table-title">Data Summary Petani</h4>
+                                        <div class="card-tools">
+                                            <!-- Tool buttons can be added here -->
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table id="summary-verval-table" class="table">
-                                        <thead>
-                                            <tr>
-                                                <th rowspan="2">Kabupaten</th>
-                                                <th rowspan="2">Kecamatan</th>
-                                                <th rowspan="2">Desa</th>
-                                                <th rowspan="2">Nama Poktan</th>
-                                                <th rowspan="2">NIK</th>
-                                                <th rowspan="2">Nama Petani</th>
-                                                <th rowspan="2">Kode Kios</th>
-                                                <th rowspan="2">Nama Kios</th>
-                                                <th colspan="4" class="text-center bg-primary text-white">Alokasi</th>
-                                                <th colspan="4" class="text-center bg-warning text-dark">Sisa Alokasi</th>
-                                                <th colspan="4" class="text-center bg-secondary text-white">Penyaluran</th>
-                                                <th colspan="4" class="text-center bg-success text-white">Januari</th>
-                                                <th colspan="4" class="text-center bg-success text-white">Februari</th>
-                                                <th colspan="4" class="text-center bg-success text-white">Maret</th>
-                                                <th colspan="4" class="text-center bg-success text-white">April</th>
-                                                <th colspan="4" class="text-center bg-success text-white">Mei</th>
-                                                <th colspan="4" class="text-center bg-success text-white">Juni</th>
-                                                <th colspan="4" class="text-center bg-success text-white">Juli</th>
-                                                <th colspan="4" class="text-center bg-success text-white">Agustus</th>
-                                                <th colspan="4" class="text-center bg-success text-white">September</th>
-                                                <th colspan="4" class="text-center bg-success text-white">Oktober</th>
-                                                <th colspan="4" class="text-center bg-success text-white">November</th>
-                                                <th colspan="4" class="text-center bg-success text-white">Desember</th>
-                                            </tr>
-                                            <tr>
-                                                <!-- Alokasi -->
-                                                <th>Urea</th>
-                                                <th>NPK</th>
-                                                <th>NPK Formula</th>
-                                                <th>Organik</th>
-                                                <!-- Sisa Alokasi -->
-                                                <th>Urea</th>
-                                                <th>NPK</th>
-                                                <th>NPK Formula</th>
-                                                <th>Organik</th>
-                                                <!-- Tebusan -->
-                                                <th>Urea</th>
-                                                <th>NPK</th>
-                                                <th>NPK Formula</th>
-                                                <th>Organik</th>
-
-                                                <th>Urea</th>
-                                                <th>NPK</th>
-                                                <th>NPK Formula</th>
-                                                <th>Organik</th>
-
-                                                <th>Urea</th>
-                                                <th>NPK</th>
-                                                <th>NPK Formula</th>
-                                                <th>Organik</th>
-
-                                                <th>Urea</th>
-                                                <th>NPK</th>
-                                                <th>NPK Formula</th>
-                                                <th>Organik</th>
-
-                                                <th>Urea</th>
-                                                <th>NPK</th>
-                                                <th>NPK Formula</th>
-                                                <th>Organik</th>
-
-                                                <th>Urea</th>
-                                                <th>NPK</th>
-                                                <th>NPK Formula</th>
-                                                <th>Organik</th>
-                                                
-                                                <th>Urea</th>
-                                                <th>NPK</th>
-                                                <th>NPK Formula</th>
-                                                <th>Organik</th>
-
-                                                <th>Urea</th>
-                                                <th>NPK</th>
-                                                <th>NPK Formula</th>
-                                                <th>Organik</th>
-
-                                                <th>Urea</th>
-                                                <th>NPK</th>
-                                                <th>NPK Formula</th>
-                                                <th>Organik</th>
-
-                                                <th>Urea</th>
-                                                <th>NPK</th>
-                                                <th>NPK Formula</th>
-                                                <th>Organik</th>
-
-                                                <th>Urea</th>
-                                                <th>NPK</th>
-                                                <th>NPK Formula</th>
-                                                <th>Organik</th>
-
-                                                <th>Urea</th>
-                                                <th>NPK</th>
-                                                <th>NPK Formula</th>
-                                                <th>Organik</th>
-
-                                                <th>Urea</th>
-                                                <th>NPK</th>
-                                                <th>NPK Formula</th>
-                                                <th>Organik</th>
-                                            </tr>
-                                        </thead>
-                                        <tfoot>
-                                            <tr>
-                                                <th colspan="8" class="text-center bg-danger text-white"> TOTAL ==></th>
-                                                
-                                                <!-- Sum Alokasi -->
-                                                <th id="sum-urea-text">0</th>
-                                                <th id="sum-npk-text">0</th>
-                                                <th id="sum-npk-formula-text">0</th>
-                                                <th id="sum-organik-text">0</th>
-                                                <!-- Sum Sisa Alokasi -->
-                                                <th id="sum-sisa-urea-text">0</th>
-                                                <th id="sum-sisa-npk-text">0</th>
-                                                <th id="sum-sisa-npk-formula-text">0</th>
-                                                <th id="sum-sisa-organik-text">0</th>
-                                                <!-- Sum Tebusan -->
-                                                <th id="sum-tebus-urea-text">0</th>
-                                                <th id="sum-tebus-npk-text">0</th>
-                                                <th id="sum-tebus-npk-formula-text">0</th>
-                                                <th id="sum-tebus-organik-text">0</th>
-
-                                                <th id="sum-jan-urea">0</th>
-                                                <th id="sum-jan-npk">0</th>
-                                                <th id="sum-jan-npk-formula">0</th>
-                                                <th id="sum-jan-organik">0</th>
-
-                                                <th id="sum-feb-urea">0</th>
-                                                <th id="sum-feb-npk">0</th>
-                                                <th id="sum-feb-npk-formula">0</th>
-                                                <th id="sum-feb-organik">0</th>
-
-                                                <th id="sum-mar-urea">0</th>
-                                                <th id="sum-mar-npk">0</th>
-                                                <th id="sum-mar-npk-formula">0</th>
-                                                <th id="sum-mar-organik">0</th>
-
-                                                <th id="sum-apr-urea">0</th>
-                                                <th id="sum-apr-npk">0</th>
-                                                <th id="sum-apr-npk-formula">0</th>
-                                                <th id="sum-apr-organik">0</th>
-
-                                                <th id="sum-mei-urea">0</th>
-                                                <th id="sum-mei-npk">0</th>
-                                                <th id="sum-mei-npk-formula">0</th>
-                                                <th id="sum-mei-organik">0</th>
-
-                                                <th id="sum-jun-urea">0</th>
-                                                <th id="sum-jun-npk">0</th>
-                                                <th id="sum-jun-npk-formula">0</th>
-                                                <th id="sum-jun-organik">0</th>
-
-                                                <th id="sum-jul-urea">0</th>
-                                                <th id="sum-jul-npk">0</th>
-                                                <th id="sum-jul-npk-formula">0</th>
-                                                <th id="sum-jul-organik">0</th>
-
-                                                <th id="sum-agu-urea">0</th>
-                                                <th id="sum-agu-npk">0</th>
-                                                <th id="sum-agu-npk-formula">0</th>
-                                                <th id="sum-agu-organik">0</th>
-
-                                                <th id="sum-sep-urea">0</th>
-                                                <th id="sum-sep-npk">0</th>
-                                                <th id="sum-sep-npk-formula">0</th>
-                                                <th id="sum-sep-organik">0</th>
-
-                                                <th id="sum-okt-urea">0</th>
-                                                <th id="sum-okt-npk">0</th>
-                                                <th id="sum-okt-npk-formula">0</th>
-                                                <th id="sum-okt-organik">0</th>
-
-                                                <th id="sum-nov-urea">0</th>
-                                                <th id="sum-nov-npk">0</th>
-                                                <th id="sum-nov-npk-formula">0</th>
-                                                <th id="sum-nov-organik">0</th>
-
-                                                <th id="sum-des-urea">0</th>
-                                                <th id="sum-des-npk">0</th>
-                                                <th id="sum-des-npk-formula">0</th>
-                                                <th id="sum-des-organik">0</th>
-                                            </tr>
-                                        </tfoot>
-                                        <tbody id="dataTable">
-                                            <!-- Data akan dimasukkan melalui JavaScript -->
-                                        </tbody>
-                                    </table>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table id="summary-verval-table" class="table" aria-describedby="table-description">
+                                            <caption id="table-description" class="visually-hidden">
+                                                Tabel data summary petani dengan informasi alokasi, sisa alokasi, penyaluran, dan data bulanan untuk berbagai jenis pupuk
+                                            </caption>
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col" rowspan="2">Kabupaten</th>
+                                                    <th scope="col" rowspan="2">Kecamatan</th>
+                                                    <th scope="col" rowspan="2">Desa</th>
+                                                    <th scope="col" rowspan="2">Nama Poktan</th>
+                                                    <th scope="col" rowspan="2">NIK</th>
+                                                    <th scope="col" rowspan="2">Nama Petani</th>
+                                                    <th scope="col" rowspan="2">Kode Kios</th>
+                                                    <th scope="col" rowspan="2">Nama Kios</th>
+                                                    
+                                                    <!-- Alokasi -->
+                                                    <th scope="col" colspan="4" class="text-center bg-primary text-white">Alokasi</th>
+                                                    
+                                                    <!-- Sisa Alokasi -->
+                                                    <th scope="col" colspan="4" class="text-center bg-warning text-dark">Sisa Alokasi</th>
+                                                    
+                                                    <!-- Penyaluran -->
+                                                    <th scope="col" colspan="4" class="text-center bg-secondary text-white">Penyaluran</th>
+                                                    
+                                                    <!-- Monthly Data Headers -->
+                                                    <% 
+                                                    const months = [
+                                                        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                                                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+                                                    ];
+                                                    
+                                                    months.forEach(month => { %>
+                                                        <th scope="col" colspan="4" class="text-center bg-success text-white"><%= month %></th>
+                                                    <% }); %>
+                                                </tr>
+                                                <tr>
+                                                    <!-- Alokasi Subheaders -->
+                                                    <th scope="col">Urea</th>
+                                                    <th scope="col">NPK</th>
+                                                    <th scope="col">NPK Formula</th>
+                                                    <th scope="col">Organik</th>
+                                                    
+                                                    <!-- Sisa Alokasi Subheaders -->
+                                                    <th scope="col">Urea</th>
+                                                    <th scope="col">NPK</th>
+                                                    <th scope="col">NPK Formula</th>
+                                                    <th scope="col">Organik</th>
+                                                    
+                                                    <!-- Penyaluran Subheaders -->
+                                                    <th scope="col">Urea</th>
+                                                    <th scope="col">NPK</th>
+                                                    <th scope="col">NPK Formula</th>
+                                                    <th scope="col">Organik</th>
+                                                    
+                                                    <!-- Monthly Subheaders (repeated for each month) -->
+                                                    <% for (let i = 0; i < 12; i++) { %>
+                                                        <th scope="col">Urea</th>
+                                                        <th scope="col">NPK</th>
+                                                        <th scope="col">NPK Formula</th>
+                                                        <th scope="col">Organik</th>
+                                                    <% } %>
+                                                </tr>
+                                            </thead>
+                                            <tfoot>
+                                                <tr class="bg-light">
+                                                    <th scope="row" colspan="8" class="text-center bg-danger text-white">TOTAL</th>
+                                                    
+                                                    <!-- Sum Alokasi -->
+                                                    <th id="sum-urea-text">0</th>
+                                                    <th id="sum-npk-text">0</th>
+                                                    <th id="sum-npk-formula-text">0</th>
+                                                    <th id="sum-organik-text">0</th>
+                                                    
+                                                    <!-- Sum Sisa Alokasi -->
+                                                    <th id="sum-sisa-urea-text">0</th>
+                                                    <th id="sum-sisa-npk-text">0</th>
+                                                    <th id="sum-sisa-npk-formula-text">0</th>
+                                                    <th id="sum-sisa-organik-text">0</th>
+                                                    
+                                                    <!-- Sum Penyaluran -->
+                                                    <th id="sum-tebus-urea-text">0</th>
+                                                    <th id="sum-tebus-npk-text">0</th>
+                                                    <th id="sum-tebus-npk-formula-text">0</th>
+                                                    <th id="sum-tebus-organik-text">0</th>
+                                                    
+                                                    <!-- Monthly Sums -->
+                                                    <% 
+                                                    const monthIds = [
+                                                        'jan', 'feb', 'mar', 'apr', 'mei', 'jun',
+                                                        'jul', 'agu', 'sep', 'okt', 'nov', 'des'
+                                                    ];
+                                                    
+                                                    monthIds.forEach(id => { %>
+                                                        <th id="sum-<%= id %>-urea">0</th>
+                                                        <th id="sum-<%= id %>-npk">0</th>
+                                                        <th id="sum-<%= id %>-npk-formula">0</th>
+                                                        <th id="sum-<%= id %>-organik">0</th>
+                                                    <% }); %>
+                                                </tr>
+                                            </tfoot>
+                                            <tbody id="dataTable">
+                                                <!-- Data akan dimasukkan melalui JavaScript -->
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </section>
             </div>
-        </div>
+        </main>
 
         <%- include('./partials/footer'); %>
     </div>
