@@ -109,11 +109,20 @@
           <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Kabupaten</label>
           <div class="relative">
             <select x-model="kabupatenInput" class="select-custom w-full pl-4 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none">
-              <option value="">-- Pilih Kabupaten --</option>
-              <template x-for="kabupaten in kabupatenList" :key="kabupaten">
-                <option :value="kabupaten" x-text="kabupaten"></option>
-              </template>
-            </select>
+  <option value="">-- Pilih Kabupaten --</option>
+  <option value="KOTA YOGYAKARTA">KOTA YOGYAKARTA</option>
+  <option value="SLEMAN">SLEMAN</option>
+  <option value="BANTUL">BANTUL</option>
+  <option value="GUNUNG KIDUL">GUNUNG KIDUL</option>
+  <option value="KULON PROGO">KULON PROGO</option>
+  <option value="SRAGEN">SRAGEN</option>
+  <option value="BOYOLALI">BOYOLALI</option>
+  <option value="KLATEN">KLATEN</option>
+  <option value="WONOGIRI">WONOGIRI</option>
+  <option value="KARANGANYAR">KARANGANYAR</option>
+  <option value="KOTA SURAKARTA">KOTA SURAKARTA</option>
+  <option value="SUKOHARJO">SUKOHARJO</option>
+</select>
           </div>
         </div>
         
@@ -145,7 +154,7 @@
           <div>
             <h2 class="text-xl font-bold text-gray-800" x-text="'Data Sisa Alokasi Pupuk - ' + selectedKabupaten"></h2>
             <p class="text-gray-600 mt-1">Tahun 2025</p>
-            <p class="text-sm text-green-600 mt-1" x-text="'Total Data: ' + totalItems + ' petani'"></p>
+            <p class="text-sm text-green-600 mt-1" x-text="'Total Data: ' + totalItems + ' petani di kios berbeda'"></p>
             <p class="text-sm text-blue-600 mt-1" x-text="'Jumlah Kecamatan: ' + kecamatanList.length"></p>
           </div>
           <button @click="selectedKabupaten = null; resetData();" class="mt-4 md:mt-0 flex items-center text-blue-600 hover:text-blue-800 transition duration-200">
