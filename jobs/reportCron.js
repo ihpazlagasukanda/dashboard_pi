@@ -38,27 +38,27 @@ const baseDir = path.join(__dirname, '../temp_exports');
 //     console.log('[MANUAL] Semua laporan selesai diproses.');
 // })();
 
-(async () => {
-    const tahun = 2025;
-    const kabupatenList = [
-        'BOYOLALI'
-    ];
+// (async () => {
+//     const tahun = 2025;
+//     const kabupatenList = [
+//         'BOYOLALI'
+//     ];
 
-    for (const kabupaten of kabupatenList) {
-        try {
-            console.log(`[MANUAL] Mulai generate report untuk ${kabupaten} - ${tahun}`);
-            await generateReport(kabupaten, tahun, baseDir);
-            console.log(`[MANUAL] Selesai generate report untuk ${kabupaten}`);
-        } catch (error) {
-            console.error(`[MANUAL ERROR] Gagal generate report untuk ${kabupaten}:`, error);
-        }
+//     for (const kabupaten of kabupatenList) {
+//         try {
+//             console.log(`[MANUAL] Mulai generate report untuk ${kabupaten} - ${tahun}`);
+//             await generateReport(kabupaten, tahun, baseDir);
+//             console.log(`[MANUAL] Selesai generate report untuk ${kabupaten}`);
+//         } catch (error) {
+//             console.error(`[MANUAL ERROR] Gagal generate report untuk ${kabupaten}:`, error);
+//         }
 
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
-    }
+//         await new Promise(resolve => setTimeout(resolve, 1000));
+//     }
 
-    console.log('[MANUAL] Semua laporan selesai diproses.');
-})();
+//     console.log('[MANUAL] Semua laporan selesai diproses.');
+// })();
 
 
 // ========== CRON JOB ==========
@@ -88,10 +88,10 @@ cron.schedule('30 2 * * *', async () => {
 });
 
 // Cron: jam 03:15 → ALL
-cron.schedule('0 3 * * *', async () => {
-  console.log('[CRON] Menjalankan Report ALL - jam 03:15');
-  await runGroup('all');
-});
+// cron.schedule('0 3 * * *', async () => {
+//   console.log('[CRON] Menjalankan Report ALL - jam 03:15');
+//   await runGroup('all');
+// });
 
 async function runGroup(group) {
   try {
