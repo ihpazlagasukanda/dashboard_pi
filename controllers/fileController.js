@@ -387,7 +387,6 @@ exports.uploadFile = async (req, res) => {
                         if (batch.length > 0) {
                             await saveWithRetry(batch);
                             totalInserted += batch.length;
-                            log(`Berhasil menyimpan batch ${batch.length} data`);
                         }
                     } catch (err) {
                         logError('Gagal menyimpan batch data', err);

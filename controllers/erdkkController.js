@@ -142,10 +142,6 @@ exports.uploadErdkk = async (req, res) => {
                 continue;
             }
 
-            console.log('Isi nama_petani:', namaPetani);
-            console.log('Panjang nama_petani:', String(namaPetani).length);
-
-
             const parseExcelNumber = (value) => {
                 if (value === null || value === undefined) return 0;
 

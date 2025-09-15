@@ -12,14 +12,14 @@ const baseDir = path.join(__dirname, '../temp_exports');
         'SLEMAN',
         'BANTUL',
         'GUNUNG KIDUL',
-        'KULON PROGO',
-        'SRAGEN',
+        'KULON PROGO'
+        // 'SRAGEN',
         // 'BOYOLALI',
-        'KLATEN',
-        'WONOGIRI',
-        'KARANGANYAR',
-        'KOTA SURAKARTA',
-        'SUKOHARJO'
+        // 'KLATEN',
+        // 'WONOGIRI',
+        // 'KARANGANYAR',
+        // 'KOTA SURAKARTA',
+        // 'SUKOHARJO'
     ];
 
     for (const kabupaten of kabupatenList) {
