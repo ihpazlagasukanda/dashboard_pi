@@ -1,16 +1,23 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const farmerController = require("../controllers/farmerController");
+const farmerController = require('../controllers/farmerController');
 
-// Generate JSON manual
-router.get("/generate-farmers", farmerController.generateFarmersJSON);
+// Refresh data dari database (bisa dipanggil periodik via cron)
+router.post('/refresh', farmerController.refreshData);
 
-// Ambil data JSON
-router.get("/farmers", farmerController.getFarmers);
+// Get data dengan pagination dan filter
+router.get('/farmers', farmerController.getFarmers);
 
-// routes.js - Tambahkan route baru
-router.get('/all-farmers', farmerController.getAllFarmersByKabupaten);
+// Get semua data by kabupaten (tanpa pagination)
+router.get('/by-kabupaten', farmerController.getAllFarmersByKabupaten);
 
+// Get daftar kabupaten
 router.get('/kabupaten-list', farmerController.getKabupatenList);
+
+// Get statistik data
+router.get('/stats', farmerController.getStats);
+
+// Export data ke CSV
+router.get('/export', farmerController.exportData);
 
 module.exports = router;

@@ -201,57 +201,6 @@
         </div>
       </div>
 
-      <!-- Stats Summary -->
-      <!-- <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-xl p-4 shadow-lg border-l-4 border-blue-500">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-blue-100 p-3 rounded-lg">
-              <i class="fas fa-tint text-blue-600 text-xl"></i>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600">Sisa Urea</p>
-              <p class="text-xl font-semibold text-gray-900" x-text="formatNumber(stats.sisa_urea)"></p>
-            </div>
-          </div>
-        </div>
-        
-        <div class="bg-white rounded-xl p-4 shadow-lg border-l-4 border-green-500">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-green-100 p-3 rounded-lg">
-              <i class="fas fa-seedling text-green-600 text-xl"></i>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600">Sisa NPK</p>
-              <p class="text-xl font-semibold text-gray-900" x-text="formatNumber(stats.sisa_npk)"></p>
-            </div>
-          </div>
-        </div>
-        
-        <div class="bg-white rounded-xl p-4 shadow-lg border-l-4 border-yellow-500">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-yellow-100 p-3 rounded-lg">
-              <i class="fas fa-flask text-yellow-600 text-xl"></i>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600">Sisa NPK Formula</p>
-              <p class="text-xl font-semibold text-gray-900" x-text="formatNumber(stats.sisa_npk_formula)"></p>
-            </div>
-          </div>
-        </div>
-        
-        <div class="bg-white rounded-xl p-4 shadow-lg border-l-4 border-purple-500">
-          <div class="flex items-center">
-            <div class="flex-shrink-0 bg-purple-100 p-3 rounded-lg">
-              <i class="fas fa-leaf text-purple-600 text-xl"></i>
-            </div>
-            <div class="ml-4">
-              <p class="text-sm font-medium text-gray-600">Sisa Organik</p>
-              <p class="text-xl font-semibold text-gray-900" x-text="formatNumber(stats.sisa_organik)"></p>
-            </div>
-          </div>
-        </div>
-      </div> -->
-
       <!-- Data Table -->
       <div class="card rounded-xl overflow-hidden shadow-lg">
         <div class="overflow-x-auto">
@@ -280,7 +229,7 @@
                 </tr>
               </template>
               
-              <template x-for="farmer in paginatedFarmers" :key="farmer.nik + '-' + farmer.nama_petani">
+              <template x-for="farmer in paginatedFarmers" :key="farmer.nik + '-' + farmer.nama_petani + farmer.kode_kios">
                 <tr class="table-row hover:bg-blue-50 transition duration-150">
                   <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700" x-text="farmer.kecamatan || '-'"></td>
                   <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-700" x-text="farmer.desa || '-'"></td>
@@ -464,9 +413,10 @@
             
             try {
               // Coba endpoint khusus untuk semua data
-              const response = await fetch(`/data/all-farmers?kabupaten=${encodeURIComponent(this.selectedKabupaten)}`);
+              const response = await fetch(`/data/by-kabupaten?kabupaten=${encodeURIComponent(this.selectedKabupaten)}`);
               if (response.ok) {
-                allData = await response.json();
+                const json = await response.json();
+                allData = json.data || [];
               } else {
                 throw new Error('Endpoint khusus tidak tersedia');
               }

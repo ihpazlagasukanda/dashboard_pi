@@ -1,171 +1,181 @@
-const pool = require("../config/db");
-const fs = require("fs");
-const path = require("path");
+const farmerService = require('../services/farmerService');
+const csv = require('csv-stringify');
+const fs = require('fs');
+const path = require('path');
 
-const jsonFilePath = path.join(__dirname, "../data/farmers.json");
-
-// Generate file JSON dari query sisa
-exports.generateFarmersJSON = async (req, res) => {
+exports.refreshData = async (req, res) => {
   try {
-    const query = `
-    SELECT 
-        COALESCE(e.kabupaten, v.kabupaten) AS kabupaten, 
-        COALESCE(e.kecamatan, v.kecamatan) AS kecamatan,
-        COALESCE(e.nik, v.nik) AS nik, 
-        COALESCE(e.nama_petani, '') AS nama_petani, 
-        COALESCE(e.kode_kios, v.kode_kios) AS kode_kios,
-        COALESCE(e.desa, '') AS desa,
-        COALESCE(e.poktan, '') AS poktan,
-        COALESCE(e.tahun, v.tahun) AS tahun, 
-
-        (COALESCE(e.urea,0) - COALESCE(v.tebus_urea,0)) AS sisa_urea,
-        (COALESCE(e.npk,0) - COALESCE(v.tebus_npk,0)) AS sisa_npk,
-        (COALESCE(e.npk_formula,0) - COALESCE(v.tebus_npk_formula,0)) AS sisa_npk_formula,
-        (COALESCE(e.organik,0) - COALESCE(v.tebus_organik,0)) AS sisa_organik,
-        (
-            (COALESCE(e.urea,0) - COALESCE(v.tebus_urea,0)) +
-            (COALESCE(e.npk,0) - COALESCE(v.tebus_npk,0)) +
-            (COALESCE(e.npk_formula,0) - COALESCE(v.tebus_npk_formula,0)) +
-            (COALESCE(e.organik,0) - COALESCE(v.tebus_organik,0))
-        ) AS total_sisa
-
-    FROM (
-        -- Data dari ERDKK
-        SELECT 
-            e.kabupaten, e.kecamatan, e.nik, e.nama_petani, e.kode_kios,
-            e.tahun, e.desa, e.poktan,
-            SUM(e.urea) AS urea, 
-            SUM(e.npk) AS npk, 
-            SUM(e.npk_formula) AS npk_formula, 
-            SUM(e.organik) AS organik
-        FROM erdkk e
-        WHERE e.tahun = 2025
-          AND e.kabupaten IN ('BOYOLALI', 'KLATEN', 'SUKOHARJO', 'KARANGANYAR', 'WONOGIRI', 'SRAGEN', 
-       'KOTA SURAKARTA', 'SLEMAN', 'BANTUL', 'GUNUNG KIDUL', 'KULON PROGO', 'KOTA YOGYAKARTA')
-        GROUP BY e.kabupaten, e.kecamatan, e.nik, e.nama_petani, e.kode_kios, e.tahun, e.desa, e.poktan
-        
-        UNION ALL
-        
-        -- Data dari VERVAL yang tidak ada di ERDKK (alokasi = 0)
-        SELECT 
-            v.kabupaten, v.kecamatan, v.nik, '' AS nama_petani, v.kode_kios,
-            v.tahun, '' AS desa, '' AS poktan,
-            0 AS urea, 0 AS npk, 0 AS npk_formula, 0 AS organik
-        FROM verval_summary v
-        LEFT JOIN erdkk e 
-            ON e.nik = v.nik
-           AND e.kabupaten = v.kabupaten
-           AND e.tahun = v.tahun
-           AND e.kode_kios = v.kode_kios
-        WHERE v.tahun = 2025
-          AND v.kabupaten IN ('BOYOLALI', 'KLATEN', 'SUKOHARJO', 'KARANGANYAR', 'WONOGIRI', 'SRAGEN', 
-       'KOTA SURAKARTA', 'SLEMAN', 'BANTUL', 'GUNUNG KIDUL', 'KULON PROGO', 'KOTA YOGYAKARTA')
-          AND e.nik IS NULL
-     ) AS combined
-
-    LEFT JOIN verval_summary v 
-        ON combined.nik = v.nik
-       AND combined.kabupaten = v.kabupaten
-       AND combined.tahun = v.tahun
-       AND combined.kode_kios = v.kode_kios
-
-    LEFT JOIN erdkk e 
-        ON combined.nik = e.nik
-       AND combined.kabupaten = e.kabupaten
-       AND combined.tahun = e.tahun
-       AND combined.kode_kios = e.kode_kios
-
-    WHERE combined.tahun = 2025
-      AND combined.kabupaten IN ('BOYOLALI', 'KLATEN', 'SUKOHARJO', 'KARANGANYAR', 'WONOGIRI', 'SRAGEN', 
-       'KOTA SURAKARTA', 'SLEMAN', 'BANTUL', 'GUNUNG KIDUL', 'KULON PROGO', 'KOTA YOGYAKARTA');
-    `;
-
-    const [rows] = await pool.query(query);
-
-    fs.writeFileSync(jsonFilePath, JSON.stringify(rows, null, 2));
-
+    console.log('Memulai proses refresh data...');
+    const result = await farmerService.refreshSummary();
+    
     res.json({
-      message: "File JSON berhasil dibuat",
-      count: rows.length,
+      success: true,
+      message: 'Data berhasil direfresh',
+      timestamp: new Date().toISOString(),
+      data: result
     });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Gagal membuat file JSON" });
+  } catch (error) {
+    console.error('Error refreshing data:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Gagal merefresh data',
+      details: error.message 
+    });
   }
 };
 
-// API untuk ambil data JSON
-exports.getFarmers = (req, res) => {
+exports.getFarmers = async (req, res) => {
   try {
-    const { page = 1, limit = 20, kabupaten, nik, nama } = req.query;
-
-    // Baca data dari file JSON
-    const rawData = fs.readFileSync(jsonFilePath, "utf8");
-    let data = JSON.parse(rawData);
-
-    // Filter data
-    let filtered = data;
-
-    if (kabupaten) {
-      filtered = filtered.filter(f => f.kabupaten && f.kabupaten.toLowerCase() === kabupaten.toLowerCase());
-    }
-
-    if (nik) {
-      filtered = filtered.filter(f => f.nik && f.nik.toString().includes(nik));
-    }
-
-    if (nama) {
-      const namaLower = nama.toLowerCase();
-      filtered = filtered.filter(f => f.nama_petani && f.nama_petani.toLowerCase().includes(namaLower));
-    }
-
-    // Pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + parseInt(limit);
-    const paginatedData = filtered.slice(startIndex, endIndex);
-
+    const { page = 1, limit = 20, kabupaten, nik, nama, kode_kios, sortBy = 'nik', sortOrder = 'asc' } = req.query;
+    
+    const filters = {};
+    if (kabupaten) filters.kabupaten = kabupaten;
+    if (nik) filters.nik = nik;
+    if (nama) filters.nama = nama;
+    if (kode_kios) filters.kode_kios = kode_kios;
+    
+    const sort = { field: sortBy, order: sortOrder };
+    
+    const result = await farmerService.getFarmers(filters, page, limit, sort);
+    
     res.json({
-      total: filtered.length,
-      page: parseInt(page),
-      limit: parseInt(limit),
-      data: paginatedData
+      success: true,
+      ...result,
+      filters: filters,
+      sort: sort
     });
-  } catch (err) {
-    console.error("Error in getFarmers:", err);
-    res.status(500).json({ error: "Gagal membaca data JSON" });
+  } catch (error) {
+    console.error('Error in getFarmers:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Gagal mengambil data petani',
+      details: error.message 
+    });
   }
 };
 
-exports.getAllFarmersByKabupaten = (req, res) => {
+exports.getAllFarmersByKabupaten = async (req, res) => {
   try {
     const { kabupaten } = req.query;
-
-    const rawData = fs.readFileSync(jsonFilePath, "utf8");
-    let data = JSON.parse(rawData);
-
-    // Filter by kabupaten only
-    if (kabupaten) {
-      data = data.filter(f => f.kabupaten && f.kabupaten.toLowerCase() === kabupaten.toLowerCase());
+    
+    if (!kabupaten) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Parameter kabupaten diperlukan' 
+      });
     }
-
-    res.json(data);
-  } catch (err) {
-    console.error("Error in getAllFarmersByKabupaten:", err);
-    res.status(500).json({ error: "Gagal membaca data JSON" });
+    
+    const data = await farmerService.getFarmersByKabupaten(kabupaten);
+    
+    res.json({
+      success: true,
+      kabupaten: kabupaten,
+      count: data.length,
+      data: data
+    });
+  } catch (error) {
+    console.error('Error in getAllFarmersByKabupaten:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Gagal mengambil data petani by kabupaten',
+      details: error.message 
+    });
   }
 };
 
-exports.getKabupatenList = (req, res) => {
+exports.getKabupatenList = async (req, res) => {
   try {
-    const rawData = fs.readFileSync(jsonFilePath, "utf8");
-    const data = JSON.parse(rawData);
+    const kabupatenList = await farmerService.getKabupatenList();
     
-    // Ekstrak daftar kabupaten unik
-    const kabupatenList = [...new Set(data.map(item => item.kabupaten).filter(Boolean))].sort();
+    res.json({
+      success: true,
+      count: kabupatenList.length,
+      data: kabupatenList
+    });
+  } catch (error) {
+    console.error('Error in getKabupatenList:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Gagal mengambil daftar kabupaten',
+      details: error.message 
+    });
+  }
+};
+
+exports.getStats = async (req, res) => {
+  try {
+    const stats = await farmerService.getStats();
     
-    res.json(kabupatenList);
-  } catch (err) {
-    console.error("Error in getKabupatenList:", err);
-    res.status(500).json({ error: "Gagal membaca data JSON" });
+    res.json({
+      success: true,
+      data: stats
+    });
+  } catch (error) {
+    console.error('Error in getStats:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Gagal mengambil statistik',
+      details: error.message 
+    });
+  }
+};
+
+exports.exportData = async (req, res) => {
+  try {
+    const { kabupaten, format = 'json' } = req.query;
+    
+    let data;
+    if (kabupaten) {
+      data = await farmerService.getFarmersByKabupaten(kabupaten);
+    } else {
+      // Untuk export semua data, kita ambil tanpa pagination
+      const result = await farmerService.getFarmers({}, 1, 1000000);
+      data = result.data;
+    }
+    
+    if (format === 'csv') {
+      // Set header untuk download CSV
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename=petani-${kabupaten || 'all'}-${new Date().toISOString().split('T')[0]}.csv`);
+      
+      // Convert data to CSV
+      const csvData = data.map(item => ({
+        kabupaten: item.kabupaten,
+        kecamatan: item.kecamatan,
+        nik: item.nik,
+        nama_petani: item.nama_petani,
+        kode_kios: item.kode_kios,
+        desa: item.desa,
+        poktan: item.poktan,
+        tahun: item.tahun,
+        sisa_urea: item.sisa_urea,
+        sisa_npk: item.sisa_npk,
+        sisa_npk_formula: item.sisa_npk_formula,
+        sisa_organik: item.sisa_organik,
+        total_sisa: item.total_sisa
+      }));
+      
+      csv.stringify(csvData, { header: true }, (err, output) => {
+        if (err) {
+          throw err;
+        }
+        res.send(output);
+      });
+    } else {
+      // Default JSON export
+      res.json({
+        success: true,
+        kabupaten: kabupaten || 'all',
+        count: data.length,
+        data: data
+      });
+    }
+  } catch (error) {
+    console.error('Error in exportData:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Gagal export data',
+      details: error.message 
+    });
   }
 };
