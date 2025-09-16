@@ -2,6 +2,63 @@
 <html>
   <head>
     <%- include('./partials/head'); %>
+    <style>
+      /* CSS untuk spinner */
+      .spinner-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100px;
+      }
+      
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      .filter-spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #3498db;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+      
+      .card-spinner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 10;
+      }
+      
+      .card-content {
+        position: relative;
+      }
+      
+      .blur-content {
+        filter: blur(2px);
+        opacity: 0.7;
+        pointer-events: none;
+      }
+      
+      .filter-loading {
+        position: relative;
+      }
+    </style>
   </head>
   <body>
     <div class="wrapper">
@@ -25,7 +82,7 @@
                 <div
                   class="col-md-auto d-flex align-items-center gap-3 flex-wrap"
                 >
-                <div>
+                <div class="filter-loading">
                   <label
                     for="tahunSelect"
                     class="text-sm font-medium text-gray-700"
@@ -43,7 +100,7 @@
                 </div>
 
                 <!-- Provinsi Select -->
-                <div>
+                <div class="filter-loading">
                 <label for="provinsiSelect" class="text-sm font-medium text-gray-700">Provinsi:</label>
                 <select id="provinsiSelect" class="form-select" style="min-width: 180px">
                   <% if (user.kabupaten) { %>
@@ -59,7 +116,7 @@
               </div>
 
               <!-- Kabupaten Select -->
-              <div>
+              <div class="filter-loading">
                 <label for="kabupatenSelect" class="text-sm font-medium text-gray-700">Kabupaten:</label>
                 <select id="kabupatenSelect" class="form-select" style="min-width: 180px">
                   <option value="">Pilih Kabupaten</option>
@@ -70,7 +127,7 @@
               </div>
 
                   <!-- Kecamatan Select -->
-                  <div>
+                  <div class="filter-loading">
                     <label
                       for="kecamatanSelect"
                       class="text-sm font-medium text-gray-700"
@@ -85,7 +142,7 @@
                     </select>
                   </div>
 
-                  <div>
+                  <div class="filter-loading">
                     <label
                       for="jenisAlokasi"
                       class="text-sm font-medium text-gray-700"
@@ -117,7 +174,10 @@
             <!-- Urea Card -->
             <div class="col-sm-6 col-md-3">
               <div class="card card-stats card-round">
-                <div class="card-body">
+                <div class="card-body card-content">
+                  <div class="card-spinner" style="display: none;">
+                    <div class="spinner"></div>
+                  </div>
                   <div class="row align-items-center">
                     <div class="col-icon">
                       <div
@@ -187,7 +247,10 @@
             <!-- NPK Card -->
             <div class="col-sm-6 col-md-3">
               <div class="card card-stats card-round">
-                <div class="card-body">
+                <div class="card-body card-content">
+                  <div class="card-spinner" style="display: none;">
+                    <div class="spinner"></div>
+                  </div>
                   <div class="row align-items-center">
                     <div class="col-icon">
                       <div
@@ -253,7 +316,10 @@
             <!-- NPK Formula Card -->
             <div class="col-sm-6 col-md-3">
               <div class="card card-stats card-round">
-                <div class="card-body">
+                <div class="card-body card-content">
+                  <div class="card-spinner" style="display: none;">
+                    <div class="spinner"></div>
+                  </div>
                   <div class="row align-items-center">
                     <div class="col-icon">
                       <div
@@ -325,7 +391,10 @@
             <!-- Organik Card -->
             <div class="col-sm-6 col-md-3">
               <div class="card card-stats card-round">
-                <div class="card-body">
+                <div class="card-body card-content">
+                  <div class="card-spinner" style="display: none;">
+                    <div class="spinner"></div>
+                  </div>
                   <div class="row align-items-center">
                     <div class="col-icon">
                       <div
@@ -555,8 +624,66 @@
 
   console.log("Semua elemen dropdown ditemukan. Memulai fetch...");
 
+  // Fungsi untuk menampilkan/menyembunyikan spinner
+  function toggleSpinner(show, element = null) {
+    if (element) {
+      // Untuk filter dropdown
+      const spinner = element.querySelector('.filter-spinner') || 
+                     (element.nextElementSibling && element.nextElementSibling.classList.contains('filter-spinner') ? 
+                      element.nextElementSibling : null);
+      
+      if (show && !spinner) {
+        const newSpinner = document.createElement('div');
+        newSpinner.className = 'filter-spinner';
+        element.parentNode.insertBefore(newSpinner, element.nextSibling);
+      } else if (spinner) {
+        spinner.style.display = show ? 'inline-block' : 'none';
+      }
+    } else {
+      // Untuk card content
+      const cards = document.querySelectorAll('.card-content');
+      cards.forEach(card => {
+        const spinner = card.querySelector('.card-spinner');
+        const content = card.querySelector('.bg-light');
+        
+        if (spinner) {
+          spinner.style.display = show ? 'block' : 'none';
+        }
+        
+        if (content) {
+          if (show) {
+            content.classList.add('blur-content');
+          } else {
+            content.classList.remove('blur-content');
+          }
+        }
+      });
+    }
+  }
+
+  // Fungsi untuk menampilkan spinner pada filter tertentu
+  function showFilterSpinner(filterElement) {
+    toggleSpinner(true, filterElement);
+  }
+
+  // Fungsi untuk menyembunyikan semua spinner filter
+  function hideAllFilterSpinners() {
+    document.querySelectorAll('.filter-spinner').forEach(spinner => {
+      spinner.style.display = 'none';
+    });
+  }
+
   // 🔹 Fetch SUM berdasarkan filter (Kabupaten, Kecamatan, Tahun)
   function fetchSum() {
+    // Tampilkan spinner di semua card
+    toggleSpinner(true);
+    
+    // Tampilkan spinner di filter yang sedang berubah
+    const activeFilter = document.activeElement;
+    if (activeFilter && activeFilter.classList.contains('form-select')) {
+      showFilterSpinner(activeFilter);
+    }
+
     let selectedKabupaten = kabupatenSelect.value;
     let selectedKecamatan = kecamatanSelect.value;
     let selectedTahun = tahunSelect.value;
@@ -572,222 +699,187 @@
 
     console.log("Fetching SUM dengan filter:", queryParams.toString());
 
-    // Fetch SUM penebusan dari /verval/summary
-    fetch(`/api/verval/summary?${queryParams}`)
-      .then((res) => res.json())
-      .then((vervalData) => {
-        console.log("SUM Penebusan:", vervalData);
+    // Menggunakan Promise.all untuk menjalankan semua fetch secara paralel
+    Promise.all([
+      // Fetch SUM penebusan
+      fetch(`/api/verval/summary?${queryParams}`).then(res => res.json()),
+      
+      // Fetch COUNT penebusan
+      fetch(`/api/verval/count?${queryParams}`).then(res => res.json()),
+      
+      // Tentukan endpoint alokasi berdasarkan jenis alokasi yang dipilih
+      selectedJenisAlokasi === "sk_bupati" 
+        ? fetch(`/api/sk-bupati/alokasi?${queryParams}`).then(res => res.json())
+        : fetch(`/api/erdkk/summary?${queryParams}`).then(res => res.json()),
+      
+      // Tentukan endpoint count alokasi
+      selectedJenisAlokasi === "sk_bupati" 
+        ? fetch(`/api/sk-bupati/count?${queryParams}`).then(res => res.json())
+        : fetch(`/api/erdkk/count?${queryParams}`).then(res => res.json())
+    ])
+    .then(([vervalData, vervalCountData, alokasiData, alokasiCountData]) => {
+      console.log("Data diterima:", {vervalData, vervalCountData, alokasiData, alokasiCountData});
 
-        // Tentukan endpoint alokasi berdasarkan jenis alokasi yang dipilih
-        const alokasiEndpoint = selectedJenisAlokasi === "sk_bupati" 
-          ? `/api/sk-bupati/alokasi?${queryParams}` 
-          : `/api/erdkk/summary?${queryParams}`;
+      const calculatePercentage = (tebus, alokasi) => {
+        if (alokasi === 0) return "0%";
+        return ((tebus / alokasi) * 100).toFixed(2) + "%";
+      };
 
-        // Fetch SUM alokasi
-        fetch(alokasiEndpoint)
-          .then((res) => res.json())
-          .then((alokasiData) => {
-            console.log("SUM Alokasi:", alokasiData);
+      // Update data Urea
+      const totalUrea = vervalData.total_urea || 0;
+      const totalUreaAlokasi = alokasiData.total_urea || 0;
+      document.getElementById("sum-urea").textContent =
+        `${totalUrea.toLocaleString("id-ID")} (${calculatePercentage(totalUrea, totalUreaAlokasi)})`;
 
-            const calculatePercentage = (tebus, alokasi) => {
-              if (alokasi === 0) return "0%";
-              return ((tebus / alokasi) * 100).toFixed(2) + "%";
-            };
+      const countUrea = vervalCountData.count_urea || 0;
+      const countUreaAlokasi = alokasiCountData.count_urea || 0;
+      document.getElementById("count-urea").textContent =
+        `${countUrea.toLocaleString("id-ID")} (${calculatePercentage(countUrea, countUreaAlokasi)})`;
 
-            // Urea
-            const totalUrea = vervalData.total_urea || 0;
-            const totalUreaAlokasi = alokasiData.total_urea || 0;
-            document.getElementById("sum-urea").textContent =
-              `${totalUrea.toLocaleString("id-ID")} (${calculatePercentage(totalUrea, totalUreaAlokasi)})`;
+      // Update data NPK
+      const totalNpk = vervalData.total_npk || 0;
+      const totalNpkAlokasi = alokasiData.total_npk || 0;
+      document.getElementById("sum-npk").textContent =
+        `${totalNpk.toLocaleString("id-ID")} (${calculatePercentage(totalNpk, totalNpkAlokasi)})`;
 
-            // NPK
-            const totalNpk = vervalData.total_npk || 0;
-            const totalNpkAlokasi = alokasiData.total_npk || 0;
-            document.getElementById("sum-npk").textContent =
-              `${totalNpk.toLocaleString("id-ID")} (${calculatePercentage(totalNpk, totalNpkAlokasi)})`;
+      const countNpk = vervalCountData.count_npk || 0;
+      const countNpkAlokasi = alokasiCountData.count_npk || 0;
+      document.getElementById("count-npk").textContent =
+        `${countNpk.toLocaleString("id-ID")} (${calculatePercentage(countNpk, countNpkAlokasi)})`;
 
-            // NPK Formula
-            const totalNpkFormula = vervalData.total_npk_formula || 0;
-            const totalNpkFormulaAlokasi = alokasiData.total_npk_formula || 0;
-            document.getElementById("sum-npk-formula").textContent =
-              `${totalNpkFormula.toLocaleString("id-ID")} (${calculatePercentage(totalNpkFormula, totalNpkFormulaAlokasi)})`;
+      // Update data NPK Formula
+      const totalNpkFormula = vervalData.total_npk_formula || 0;
+      const totalNpkFormulaAlokasi = alokasiData.total_npk_formula || 0;
+      document.getElementById("sum-npk-formula").textContent =
+        `${totalNpkFormula.toLocaleString("id-ID")} (${calculatePercentage(totalNpkFormula, totalNpkFormulaAlokasi)})`;
 
-            // Organik
-            const totalOrganik = vervalData.total_organik || 0;
-            const totalOrganikAlokasi = alokasiData.total_organik || 0;
-            document.getElementById("sum-organik").textContent =
-              `${totalOrganik.toLocaleString("id-ID")} (${calculatePercentage(totalOrganik, totalOrganikAlokasi)})`;
-          })
-          .catch((error) =>
-            console.error("Error fetching sum alokasi:", error)
-          );
-      })
-      .catch((error) =>
-        console.error("Error fetching sum penebusan:", error)
-      );
+      const countNpkFormula = vervalCountData.count_npk_formula || 0;
+      const countNpkFormulaAlokasi = alokasiCountData.count_npk_formula || 0;
+      document.getElementById("count-npk-formula").textContent =
+        `${countNpkFormula.toLocaleString("id-ID")} (${calculatePercentage(countNpkFormula, countNpkFormulaAlokasi)})`;
 
-    fetch(`/api/verval/count?${queryParams}`)
-      .then((res) => res.json())
-      .then((vervalData) => {
-        console.log("Count Penebusan:", vervalData);
+      // Update data Organik
+      const totalOrganik = vervalData.total_organik || 0;
+      const totalOrganikAlokasi = alokasiData.total_organik || 0;
+      document.getElementById("sum-organik").textContent =
+        `${totalOrganik.toLocaleString("id-ID")} (${calculatePercentage(totalOrganik, totalOrganikAlokasi)})`;
 
-        // Fetch count alokasi
-        fetch(`/api/erdkk/count?${queryParams}`)
-          .then((res) => res.json())
-          .then((alokasiData) => {
-            console.log("Count Alokasi:", alokasiData);
+      const countOrganik = vervalCountData.count_organik || 0;
+      const countOrganikAlokasi = alokasiCountData.count_organik || 0;
+      document.getElementById("count-organik").textContent =
+        `${countOrganik.toLocaleString("id-ID")} (${calculatePercentage(countOrganik, countOrganikAlokasi)})`;
 
-            const calculatePercentage = (tebus, alokasi) => {
-              if (alokasi === 0) return "0%";
-              return ((tebus / alokasi) * 100).toFixed(2) + "%";
-            };
+      // Update data alokasi
+      document.getElementById("sum-urea-alokasi").textContent =
+        parseFloat(alokasiData.total_urea || 0).toLocaleString("id-ID");
 
-            // Urea
-            const countUrea = vervalData.count_urea || 0;
-            const countUreaAlokasi = alokasiData.count_urea || 0;
-            document.getElementById("count-urea").textContent =
-              `${countUrea.toLocaleString("id-ID")} (${calculatePercentage(countUrea, countUreaAlokasi)})`;
+      document.getElementById("sum-npk-alokasi").textContent =
+        parseFloat(alokasiData.total_npk || 0).toLocaleString("id-ID");
 
-            // NPK
-            const countNpk = vervalData.count_npk || 0;
-            const countNpkAlokasi = alokasiData.count_npk || 0;
-            document.getElementById("count-npk").textContent =
-              `${countNpk.toLocaleString("id-ID")} (${calculatePercentage(countNpk, countNpkAlokasi)})`;
+      document.getElementById("sum-npk-formula-alokasi").textContent =
+        parseFloat(alokasiData.total_npk_formula || 0).toLocaleString("id-ID");
 
-            // NPK Formula
-            const countNpkFormula = vervalData.count_npk_formula || 0;
-            const countNpkFormulaAlokasi = alokasiData.count_npk_formula || 0;
-            document.getElementById("count-npk-formula").textContent =
-              `${countNpkFormula.toLocaleString("id-ID")} (${calculatePercentage(countNpkFormula, countNpkFormulaAlokasi)})`;
+      document.getElementById("sum-organik-alokasi").textContent =
+        parseFloat(alokasiData.total_organik || 0).toLocaleString("id-ID");
 
-            // Organik
-            const countOrganik = vervalData.count_organik || 0;
-            const countOrganikAlokasi = alokasiData.count_organik || 0;
-            document.getElementById("count-organik").textContent =
-              `${countOrganik.toLocaleString("id-ID")} (${calculatePercentage(countOrganik, countOrganikAlokasi)})`;
-          })
-          .catch((error) =>
-            console.error("Error fetching count alokasi:", error)
-          );
-      })
-      .catch((error) =>
-        console.error("Error fetching count penebusan:", error)
-      );
+      // Update count alokasi
+      document.getElementById("count-urea-alokasi").textContent = (
+        alokasiCountData.count_urea || 0
+      ).toLocaleString("id-ID");
 
-    // Tentukan endpoint alokasi untuk menampilkan data alokasi saja
-    const alokasiSummaryEndpoint = selectedJenisAlokasi === "sk_bupati" 
-      ? `/api/sk-bupati/alokasi?${queryParams}` 
-      : `/api/erdkk/summary?${queryParams}`;
+      document.getElementById("count-npk-alokasi").textContent = (
+        alokasiCountData.count_npk || 0
+      ).toLocaleString("id-ID");
 
-    // Fetch SUM alokasi untuk menampilkan data alokasi saja
-    fetch(alokasiSummaryEndpoint)
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("SUM Alokasi:", data);
+      document.getElementById("count-npk-formula-alokasi").textContent =
+        (alokasiCountData.count_npk_formula || 0).toLocaleString("id-ID");
 
-        document.getElementById("sum-urea-alokasi").textContent =
-          parseFloat(data.total_urea || 0).toLocaleString("id-ID");
+      document.getElementById("count-organik-alokasi").textContent = (
+        alokasiCountData.count_organik || 0
+      ).toLocaleString("id-ID");
 
-        document.getElementById("sum-npk-alokasi").textContent =
-          parseFloat(data.total_npk || 0).toLocaleString("id-ID");
-
-        document.getElementById("sum-npk-formula-alokasi").textContent =
-          parseFloat(data.total_npk_formula || 0).toLocaleString("id-ID");
-
-        document.getElementById("sum-organik-alokasi").textContent =
-          parseFloat(data.total_organik || 0).toLocaleString("id-ID");
-      })
-      .catch((error) =>
-        console.error("Error fetching sum alokasi:", error)
-      );
-
-    // Tentukan endpoint count alokasi untuk menampilkan data alokasi saja
-    const alokasiCountEndpoint = selectedJenisAlokasi === "sk_bupati" 
-      ? `/api/sk-bupati/count?${queryParams}` 
-      : `/api/erdkk/count?${queryParams}`;
-
-    fetch(alokasiCountEndpoint)
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Count Alokasi:", data);
-
-        document.getElementById("count-urea-alokasi").textContent = (
-          data.count_urea || 0
-        ).toLocaleString("id-ID");
-
-        document.getElementById("count-npk-alokasi").textContent = (
-          data.count_npk || 0
-        ).toLocaleString("id-ID");
-
-        document.getElementById("count-npk-formula-alokasi").textContent =
-          (data.count_npk_formula || 0).toLocaleString("id-ID");
-
-        document.getElementById("count-organik-alokasi").textContent = (
-          data.count_organik || 0
-        ).toLocaleString("id-ID");
-      })
-      .catch((error) =>
-        console.error("Error fetching count alokasi:", error)
-      );
+      // Sembunyikan semua spinner setelah selesai
+      toggleSpinner(false);
+      hideAllFilterSpinners();
+    })
+    .catch((error) => {
+      console.error("Error fetching data:", error);
+      // Sembunyikan semua spinner jika terjadi error
+      toggleSpinner(false);
+      hideAllFilterSpinners();
+    });
   }
 
-        // 🔹 Update Dropdown Kabupaten & Kecamatan
-        function updateDropdowns() {
-          fetch("/api/filters")
-            .then((res) => res.json())
-            .then((data) => {
-              console.log("Data Filters:", data);
-
-              // Populate Kecamatan Dropdown
-              kecamatanSelect.innerHTML =
-                '<option value="">Semua Kecamatan</option>';
-              data.kecamatan.forEach((kec) => {
-                kecamatanSelect.innerHTML += `<option value="${kec}">${kec}</option>`;
-              });
-            })
-            .catch((error) => console.error("Error fetching filters:", error));
-        }
-
-        // 🔹 Event Listener untuk Filter
-        kabupatenSelect.addEventListener("change", fetchSum);
-        kecamatanSelect.addEventListener("change", fetchSum);
-        tahunSelect.addEventListener("change", fetchSum);
-        provinsiSelect.addEventListener("change", fetchSum);
-        jenisAlokasiSelect.addEventListener("change", fetchSum);
-  
-
-        // 🔹 Jalankan fetch saat halaman dimuat
-        updateDropdowns();
-
-        async function loadLastUpdatedGlobal() {
-        try {
-          const res = await fetch('/api/lastupdated/global');
-          const data = await res.json();
+  // 🔹 Update Dropdown Kabupaten & Kecamatan
+  function updateDropdowns() {
+    showFilterSpinner(kecamatanSelect);
     
-          if (data.lastUpdated) {
-            const date = new Date(data.lastUpdated);
-            const formatter = new Intl.DateTimeFormat('id-ID', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            });
-            document.getElementById('lastUpdatedGlobal').innerText =
-              'Realisasi Terakhir: ' + formatter.format(date);
-          } else {
-            document.getElementById('lastUpdatedGlobal').innerText =
-              'Realisasi Terakhir: tidak tersedia';
-          }
-        } catch (err) {
-          document.getElementById('lastUpdatedGlobal').innerText =
-            'Realisasi Terakhir: gagal memuat';
-          console.error(err);
-        }
+    fetch("/api/filters")
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Data Filters:", data);
+
+        // Populate Kecamatan Dropdown
+        kecamatanSelect.innerHTML =
+          '<option value="">Semua Kecamatan</option>';
+        data.kecamatan.forEach((kec) => {
+          kecamatanSelect.innerHTML += `<option value="${kec}">${kec}</option>`;
+        });
+        
+        hideAllFilterSpinners();
+      })
+      .catch((error) => {
+        console.error("Error fetching filters:", error);
+        hideAllFilterSpinners();
+      });
+  }
+
+  // 🔹 Event Listener untuk Filter dengan debounce
+  let fetchTimeout;
+  function debouncedFetchSum() {
+    clearTimeout(fetchTimeout);
+    fetchTimeout = setTimeout(fetchSum, 300); // Debounce 300ms
+  }
+
+  kabupatenSelect.addEventListener("change", debouncedFetchSum);
+  kecamatanSelect.addEventListener("change", debouncedFetchSum);
+  tahunSelect.addEventListener("change", debouncedFetchSum);
+  provinsiSelect.addEventListener("change", debouncedFetchSum);
+  jenisAlokasiSelect.addEventListener("change", debouncedFetchSum);
+
+  // 🔹 Jalankan fetch saat halaman dimuat
+  updateDropdowns();
+  fetchSum(); // Load data awal
+
+  async function loadLastUpdatedGlobal() {
+    try {
+      const res = await fetch('/api/lastupdated/global');
+      const data = await res.json();
+
+      if (data.lastUpdated) {
+        const date = new Date(data.lastUpdated);
+        const formatter = new Intl.DateTimeFormat('id-ID', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+        document.getElementById('lastUpdatedGlobal').innerText =
+          'Realisasi Terakhir: ' + formatter.format(date);
+      } else {
+        document.getElementById('lastUpdatedGlobal').innerText =
+          'Realisasi Terakhir: tidak tersedia';
       }
-      
-      // === LAST UPDATED PER KABUPATEN ===
-document.getElementById('lastUpdatedGlobal').addEventListener('click', async () => {
+    } catch (err) {
+      document.getElementById('lastUpdatedGlobal').innerText =
+        'Realisasi Terakhir: gagal memuat';
+      console.error(err);
+    }
+  }
+
+  // === LAST UPDATED PER KABUPATEN ===
+  document.getElementById('lastUpdatedGlobal').addEventListener('click', async () => {
     const container = document.getElementById('kabupatenLastUpdateList');
-    container.innerHTML = '<div class="text-center text-muted">Loading...</div>';
+    container.innerHTML = '<div class="text-center text-muted"><div class="spinner-container"><div class="spinner"></div></div></div>';
 
     try {
         const res = await fetch('/api/lastupdated/kabupaten');
@@ -820,15 +912,16 @@ document.getElementById('lastUpdatedGlobal').addEventListener('click', async () 
         container.innerHTML = '<div class="text-danger">Gagal memuat data.</div>';
         console.error(err);
     }
-});
+  });
 
-// Pastikan modal-backdrop dihilangkan saat ditutup
-$('#modalLastUpdated, #modalPetunjuk').on('hidden.bs.modal', function () {
-        $('body').removeClass('modal-open');
-        $('.modal-backdrop').remove();
-    });
-      loadLastUpdatedGlobal();
-      });
+  // Pastikan modal-backdrop dihilangkan saat ditutup
+  $('#modalLastUpdated, #modalPetunjuk').on('hidden.bs.modal', function () {
+    $('body').removeClass('modal-open');
+    $('.modal-backdrop').remove();
+  });
+  
+  loadLastUpdatedGlobal();
+  });
     </script>
   </body>
 </html>

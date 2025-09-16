@@ -518,7 +518,6 @@ WHERE 1=1
             }
 
             offset += batchSize;
-            console.log(`Memproses batch ${offset / batchSize}...`);
         }
 
        // ===================== 6. UPDATE BARIS TOTAL DENGAN DATA AKTUAL =====================
