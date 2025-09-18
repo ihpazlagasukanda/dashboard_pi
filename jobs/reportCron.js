@@ -6,7 +6,7 @@ console.log('[INIT] Cron job siap...');
 const baseDir = path.join(__dirname, '../temp_exports');
 
 (async () => {
-    const tahun = 2024;
+    const tahun = 2025;
     const kabupatenList = [
         'KOTA YOGYAKARTA',
         'SLEMAN',
