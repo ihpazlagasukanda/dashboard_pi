@@ -8,18 +8,18 @@ const baseDir = path.join(__dirname, '../temp_exports');
 (async () => {
     const tahun = 2023;
     const kabupatenList = [
-        'KOTA YOGYAKARTA',
-        'SLEMAN',
-        // 'BANTUL',
-        'GUNUNG KIDUL',
-        'KULON PROGO',
-        'SRAGEN',
-        'BOYOLALI',
-        'KLATEN',
-        'WONOGIRI',
-        'KARANGANYAR',
-        'KOTA SURAKARTA',
-        'SUKOHARJO'
+        // 'KOTA YOGYAKARTA',
+        // 'SLEMAN',
+        'BANTUL',
+        // 'GUNUNG KIDUL',
+        // 'KULON PROGO',
+        // 'SRAGEN',
+        'BOYOLALI'
+        // 'KLATEN',
+        // 'WONOGIRI',
+        // 'KARANGANYAR',
+        // 'KOTA SURAKARTA',
+        // 'SUKOHARJO'
     ];
 
     for (const kabupaten of kabupatenList) {
