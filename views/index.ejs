@@ -156,7 +156,7 @@
                     >
                       <option value="">Jenis Alokasi</option>
                       <option value="erdkk">E-alokasi</option>
-                      <option value="sk_bupati">SK Bupati</option>
+                      <option value="skbupati">SK Bupati</option>
                     </select>
                   </div>
 
@@ -678,6 +678,7 @@
   function fetchSum() {
     // Tampilkan spinner di semua card
     toggleSpinner(true);
+    console.log("Jenis Alokasi:",jenisAlokasiSelect.value)
     
     // Tampilkan spinner di filter yang sedang berubah
     const activeFilter = document.activeElement;
@@ -709,14 +710,16 @@
       fetch(`/api/verval/count?${queryParams}`).then(res => res.json()),
       
       // Tentukan endpoint alokasi berdasarkan jenis alokasi yang dipilih
-      selectedJenisAlokasi === "sk_bupati" 
+      selectedJenisAlokasi === "skbupati" 
         ? fetch(`/api/sk-bupati/alokasi?${queryParams}`).then(res => res.json())
         : fetch(`/api/erdkk/summary?${queryParams}`).then(res => res.json()),
       
       // Tentukan endpoint count alokasi
-      selectedJenisAlokasi === "sk_bupati" 
-        ? fetch(`/api/sk-bupati/count?${queryParams}`).then(res => res.json())
-        : fetch(`/api/erdkk/count?${queryParams}`).then(res => res.json())
+      // selectedJenisAlokasi === "skbupati" 
+      //   ? fetch(`/api/sk-bupati/count?${queryParams}`).then(res => res.json())
+      //   : fetch(`/api/erdkk/count?${queryParams}`).then(res => res.json())
+      fetch(`/api/erdkk/count?${queryParams}`).then(res => res.json())
+
     ])
     .then(([vervalData, vervalCountData, alokasiData, alokasiCountData]) => {
       console.log("Data diterima:", {vervalData, vervalCountData, alokasiData, alokasiCountData});
