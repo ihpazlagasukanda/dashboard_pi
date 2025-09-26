@@ -263,13 +263,23 @@
                         </div>
 
                         <!-- Informasi Proses -->
-                        <div class="condition-info">
-                            <h6><i class="fas fa-info-circle me-2"></i>Informasi Proses</h6>
-                            <p class="mb-0 small">
-                                Sistem akan menghapus data petani yang memenuhi kondisi "Tidak Tebus" pada tahun yang dipilih. 
-                                Data akan dipertahankan jika tidak memenuhi kondisi atau tidak ditemukan di database.
-                            </p>
-                        </div>
+                        <div class="condition-info p-3 mb-3" style="background: #f8f9fa; border-left: 4px solid #0d6efd; border-radius: 6px;">
+    <h6 class="mb-2 text-primary">
+        <i class="fas fa-info-circle me-2"></i>Informasi Penting
+    </h6>
+    <p class="mb-1 small">
+        Sistem ini hanya berlaku untuk Provinsi DIY & Solo Raya:
+    </p>
+    <div class="p-2 mb-2 small fw-semibold text-dark" style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;">
+        Kulon Progo, Sleman, Kota Yogyakarta, Bantul, Gunung Kidul, Boyolali, 
+        Klaten, Karanganyar, Sragen, Wonogiri, Sukoharjo, Kota Surakarta
+    </div>
+    <p class="mb-0 small fst-italic text-muted">
+        Sistem akan menghapus data petani yang memenuhi kondisi <b>"Tidak Tebus"</b> pada tahun yang dipilih. 
+        Data akan dipertahankan jika tidak memenuhi kondisi atau tidak ditemukan di database.
+    </p>
+</div>
+
 
                         <!-- Step 1: Pilih Kondisi -->
                         <div class="mb-4" id="step1-content">
@@ -339,6 +349,13 @@
                                     <button type="button" class="btn-close" onclick="clearFile()"></button>
                                 </div>
                             </div>
+                            <div class="alert alert-warning d-flex align-items-center p-2 mb-3" role="alert">
+    <i class="fas fa-exclamation-triangle me-2"></i>
+    <div class="small">
+        Ukuran file upload maksimal <b>20 MB</b>. Pastikan juga file sesuai template sebelum diunggah.
+    </div>
+</div>
+
 
                             <div class="mt-3">
                                 <a href="/api/remove/template" class="btn btn-outline-success btn-sm">
