@@ -18,7 +18,8 @@ const triggerCron = require("./routes/triggerCron");
 const uploadPenyaluranDoRoutes = require("./routes/penyaluranDoRoutes");
 const checkAkses = require('./middlewares/checkAkses');
 const logAksesMenu = require('./middlewares/logAksesMenu');
-
+const belumtebusRoutes = require('./routes/belumtebusRoutes');
+const removePetaniRoutes = require('./routes/remove-petani');
 require('./logger');
 
 const methodOverride = require('method-override');
@@ -148,6 +149,10 @@ app.get('/manualymachine', authMiddleware, requireLevel(2), checkAkses(['B']), (
     res.render('manualymachine', { user: req.user });
 });
 
+app.get('/remove-petani', (req, res) => {
+    res.render('remove-petani');
+});
+
 
 // Routes untuk halaman lain
 app.get('/erdkk', authMiddleware, checkAkses(['C4']), (req, res) => {
@@ -178,6 +183,10 @@ app.get('/rekap-petani', authMiddleware, checkAkses(['A3']), (req, res) => {
     res.render('rekap-petani', { user: req.user });
 });
 
+app.get('/rekap-petani-tebus', authMiddleware, checkAkses(['A3']), (req, res) => {
+    res.render('rekap-petani-tebus', { user: req.user });
+});
+
 app.get('/wcmvsverval', authMiddleware, checkAkses(['D4']), (req, res) => {
     res.render('wcmvsverval', { user: req.user });
 });
@@ -198,6 +207,9 @@ app.get('/visualisasi', authMiddleware, checkAkses(['A4']), (req, res) => {
     res.render('visulisasi', { user: req.user });
 });
 
+app.use(belumtebusRoutes);
+app.use('/api/remove', removePetaniRoutes);
+
 
 // API Routes
 app.use('/api/files', authMiddleware, fileRoutes);
@@ -213,7 +225,7 @@ app.use('/delete', authMiddleware, deleteRoutes);
 app.use('/admin', authMiddleware, userRoutes);
 app.use("/data", farmerRoutes);
 app.use("/download", kiosRoutes);
-
+ 
 app.use(express.json({ limit: '50mb' })); // Sesuaikan ukuran jika perlu
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 

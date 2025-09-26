@@ -5,33 +5,46 @@ class FarmerService {
   constructor() {
     this.CACHE_PREFIX = 'farmers:cache';
     this.CACHE_TTL = 3600; // 1 jam
+    this.CURRENT_YEAR = 2025; // Tahun default
   }
 
-  // Refresh data summary
+  // Set tahun yang aktif
+  setActiveYear(year) {
+    this.activeYear = parseInt(year) || this.CURRENT_YEAR;
+    return this.activeYear;
+  }
+
+  // Get tahun aktif
+  getActiveYear() {
+    return this.activeYear || this.CURRENT_YEAR;
+  }
+
+  // Refresh data summary untuk semua tahun
   async refreshSummary() {
     try {
-      console.log('Memulai refresh data farmer summary...');
+      console.log('Memulai refresh data farmer summary untuk semua tahun...');
       
-      // Panggil stored procedure
+      // Panggil stored procedure untuk semua tahun
       await pool.query('CALL RefreshFarmerSummary()');
       
-      // Hapus cache lama
+      // Hapus cache lama untuk semua tahun
       const cacheKeys = await client.keys(`${this.CACHE_PREFIX}:*`);
       if (cacheKeys.length > 0) {
         await client.del(cacheKeys);
       }
       
-      console.log('Refresh data selesai');
-      return { success: true, message: 'Data berhasil direfresh' };
+      console.log('Refresh data selesai untuk semua tahun');
+      return { success: true, message: 'Data berhasil direfresh untuk semua tahun' };
     } catch (error) {
       console.error('Error refreshing summary:', error);
       throw error;
     }
   }
 
-  // Get statistics
-  async getStats() {
-    const cacheKey = `${this.CACHE_PREFIX}:stats`;
+  // Get statistics untuk tahun tertentu
+  async getStats(year = null) {
+    const activeYear = year || this.getActiveYear();
+    const cacheKey = `${this.CACHE_PREFIX}:stats:${activeYear}`;
     
     // Cek cache
     const cachedData = await client.get(cacheKey);
@@ -39,25 +52,27 @@ class FarmerService {
       return JSON.parse(cachedData);
     }
     
+    // Tentukan tabel berdasarkan tahun
+    const tableName = this.getTableName(activeYear);
+    
     // Query untuk statistik
-    const [totalResult] = await pool.query('SELECT COUNT(*) as total FROM farmer_summary WHERE tahun = 2025');
+    const [totalResult] = await pool.query(`SELECT COUNT(*) as total FROM ${tableName}`);
     const [kabupatenResult] = await pool.query(`
       SELECT kabupaten, COUNT(*) as count 
-      FROM farmer_summary 
-      WHERE tahun = 2025 
+      FROM ${tableName}
       GROUP BY kabupaten 
       ORDER BY count DESC
     `);
     const [kiosResult] = await pool.query(`
       SELECT kode_kios, COUNT(*) as count 
-      FROM farmer_summary 
-      WHERE tahun = 2025 
+      FROM ${tableName}
       GROUP BY kode_kios 
       ORDER BY count DESC 
       LIMIT 10
     `);
     
     const stats = {
+      year: activeYear,
       total: totalResult[0].total,
       byKabupaten: kabupatenResult,
       topKios: kiosResult,
@@ -70,11 +85,13 @@ class FarmerService {
     return stats;
   }
 
-  // Get farmers dengan sorting
-  async getFarmers(filters = {}, page = 1, limit = 20, sort = { field: 'nik', order: 'asc' }) {
+  // Get farmers dengan sorting untuk tahun tertentu
+  async getFarmers(filters = {}, page = 1, limit = 20, sort = { field: 'nik', order: 'asc' }, year = null) {
     try {
-      // Generate cache key berdasarkan filter dan sorting
-      const cacheKey = this.generateCacheKey(filters, page, limit, sort);
+      const activeYear = year || this.getActiveYear();
+      
+      // Generate cache key berdasarkan filter, sorting, dan tahun
+      const cacheKey = this.generateCacheKey(filters, page, limit, sort, activeYear);
       
       // Cek cache dulu
       const cachedData = await client.get(cacheKey);
@@ -85,18 +102,24 @@ class FarmerService {
       
       console.log('Cache MISS untuk:', cacheKey);
       
+      // Tentukan tabel berdasarkan tahun
+      const tableName = this.getTableName(activeYear);
+      
       // Jika tidak ada di cache, query database
-      let query = `SELECT * FROM farmer_summary WHERE tahun = 2025`;
-      let countQuery = `SELECT COUNT(*) as total FROM farmer_summary WHERE tahun = 2025`;
+      let query = `SELECT * FROM ${tableName}`;
+      let countQuery = `SELECT COUNT(*) as total FROM ${tableName}`;
       const params = [];
       const countParams = [];
       
       // Tambahkan filter
       if (filters.kabupaten) {
-        query += ` AND kabupaten = ?`;
-        countQuery += ` AND kabupaten = ?`;
+        query += ` WHERE kabupaten = ?`;
+        countQuery += ` WHERE kabupaten = ?`;
         params.push(filters.kabupaten);
         countParams.push(filters.kabupaten);
+      } else {
+        query += ` WHERE 1=1`;
+        countQuery += ` WHERE 1=1`;
       }
       
       if (filters.nik) {
@@ -137,6 +160,7 @@ class FarmerService {
       const total = countResult[0].total;
       
       const result = {
+        year: activeYear,
         total,
         page: parseInt(page),
         limit: parseInt(limit),
@@ -154,9 +178,9 @@ class FarmerService {
     }
   }
 
-  // Generate cache key dengan sorting
-  generateCacheKey(filters, page, limit, sort) {
-    let key = `${this.CACHE_PREFIX}:page:${page}:limit:${limit}:sort:${sort.field}:${sort.order}`;
+  // Generate cache key dengan sorting dan tahun
+  generateCacheKey(filters, page, limit, sort, year) {
+    let key = `${this.CACHE_PREFIX}:year:${year}:page:${page}:limit:${limit}:sort:${sort.field}:${sort.order}`;
     
     if (filters.kabupaten) key += `:kabupaten:${filters.kabupaten}`;
     if (filters.nik) key += `:nik:${filters.nik}`;
@@ -166,9 +190,10 @@ class FarmerService {
     return key;
   }
 
-  // Dapatkan daftar kabupaten
-  async getKabupatenList() {
-    const cacheKey = `${this.CACHE_PREFIX}:kabupaten-list`;
+  // Dapatkan daftar kabupaten untuk tahun tertentu
+  async getKabupatenList(year = null) {
+    const activeYear = year || this.getActiveYear();
+    const cacheKey = `${this.CACHE_PREFIX}:kabupaten-list:${activeYear}`;
     
     // Cek cache
     const cachedData = await client.get(cacheKey);
@@ -176,11 +201,13 @@ class FarmerService {
       return JSON.parse(cachedData);
     }
     
+    // Tentukan tabel berdasarkan tahun
+    const tableName = this.getTableName(activeYear);
+    
     // Query database
     const [rows] = await pool.query(`
       SELECT DISTINCT kabupaten 
-      FROM farmer_summary 
-      WHERE tahun = 2025 
+      FROM ${tableName}
       ORDER BY kabupaten
     `);
     
@@ -192,9 +219,10 @@ class FarmerService {
     return kabupatenList;
   }
 
-  // Dapatkan semua data by kabupaten
-  async getFarmersByKabupaten(kabupaten) {
-    const cacheKey = `${this.CACHE_PREFIX}:kabupaten:${kabupaten}`;
+  // Dapatkan semua data by kabupaten untuk tahun tertentu
+  async getFarmersByKabupaten(kabupaten, year = null) {
+    const activeYear = year || this.getActiveYear();
+    const cacheKey = `${this.CACHE_PREFIX}:kabupaten:${kabupaten}:year:${activeYear}`;
     
     // Cek cache
     const cachedData = await client.get(cacheKey);
@@ -202,10 +230,13 @@ class FarmerService {
       return JSON.parse(cachedData);
     }
     
+    // Tentukan tabel berdasarkan tahun
+    const tableName = this.getTableName(activeYear);
+    
     // Query database
     const [rows] = await pool.query(`
-      SELECT * FROM farmer_summary 
-      WHERE tahun = 2025 AND kabupaten = ?
+      SELECT * FROM ${tableName}
+      WHERE kabupaten = ?
       ORDER BY nik, kode_kios
     `, [kabupaten]);
     
@@ -213,6 +244,54 @@ class FarmerService {
     await client.setEx(cacheKey, this.CACHE_TTL, JSON.stringify(rows));
     
     return rows;
+  }
+
+  // Helper untuk mendapatkan nama tabel berdasarkan tahun
+  getTableName(year) {
+    if (year === 2023) return 'farmer_summary_2023';
+    if (year === 2024) return 'farmer_summary_2024';
+    if (year === 2025) return 'farmer_summary';
+    return 'farmer_summary'; // default
+  }
+
+  // Dapatkan daftar tahun yang tersedia
+  async getAvailableYears() {
+    const cacheKey = `${this.CACHE_PREFIX}:available-years`;
+    
+    // Cek cache
+    const cachedData = await client.get(cacheKey);
+    if (cachedData) {
+      return JSON.parse(cachedData);
+    }
+    
+    // Cek tabel yang ada di database
+    const years = [2025]; // Default
+    
+    try {
+      // Cek apakah tabel 2023 dan 2024 ada
+      const [tables] = await pool.query(`
+        SELECT TABLE_NAME 
+        FROM INFORMATION_SCHEMA.TABLES 
+        WHERE TABLE_SCHEMA = DATABASE() 
+        AND TABLE_NAME IN ('farmer_summary_2023', 'farmer_summary_2024')
+      `);
+      
+      tables.forEach(table => {
+        if (table.TABLE_NAME === 'farmer_summary_2023') years.push(2023);
+        if (table.TABLE_NAME === 'farmer_summary_2024') years.push(2024);
+      });
+      
+      // Urutkan tahun dari yang terbaru
+      years.sort((a, b) => b - a);
+      
+      // Simpan ke cache
+      await client.setEx(cacheKey, this.CACHE_TTL * 24, JSON.stringify(years));
+      
+      return years;
+    } catch (error) {
+      console.error('Error checking available years:', error);
+      return years; // Return default jika error
+    }
   }
 }
 

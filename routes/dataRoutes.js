@@ -5,6 +5,7 @@ const dataController = require("../controllers/dataController");
 const monitoringController = require("../controllers/monitoringController");
 const rekapRealisasiController = require("../controllers/rekapRealisasiController");
 const rekapPetaniController = require("../controllers/rekapPetaniController");
+const rekapPetaniTebusController = require("../controllers/rekapPetaniTebusController");
 const f5Controller = require("../controllers/f5Controller");
 const { getAllData } = require("../controllers/dataController");
 const { getSummaryData } = require("../controllers/dataController");
@@ -32,6 +33,11 @@ router.get('/download/summary-pupuk', rekapRealisasiController.downloadSummaryPu
 // Menu Rekap Jumlah Petani
 router.get('/rekap/petani', rekapPetaniController.rekapPetani);
 router.get('/download/rekap-petani', rekapPetaniController.downloadRekapPetani);
+// End Rekap Jumlah Petani
+
+// Menu Rekap Jumlah Petani
+router.get('/rekap/petani/all', rekapPetaniTebusController.rekapPetaniAll);
+router.get('/download/rekap-petani/all', rekapPetaniTebusController.downloadRekapPetaniAll);
 // End Rekap Jumlah Petani
 
 //Menu F5

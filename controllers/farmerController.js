@@ -10,7 +10,7 @@ exports.refreshData = async (req, res) => {
     
     res.json({
       success: true,
-      message: 'Data berhasil direfresh',
+      message: 'Data berhasil direfresh untuk semua tahun',
       timestamp: new Date().toISOString(),
       data: result
     });
@@ -26,7 +26,12 @@ exports.refreshData = async (req, res) => {
 
 exports.getFarmers = async (req, res) => {
   try {
-    const { page = 1, limit = 20, kabupaten, nik, nama, kode_kios, sortBy = 'nik', sortOrder = 'asc' } = req.query;
+    const { page = 1, limit = 20, kabupaten, nik, nama, kode_kios, sortBy = 'nik', sortOrder = 'asc', year } = req.query;
+    
+    // Set tahun aktif jika disediakan
+    if (year) {
+      farmerService.setActiveYear(year);
+    }
     
     const filters = {};
     if (kabupaten) filters.kabupaten = kabupaten;
@@ -36,7 +41,7 @@ exports.getFarmers = async (req, res) => {
     
     const sort = { field: sortBy, order: sortOrder };
     
-    const result = await farmerService.getFarmers(filters, page, limit, sort);
+    const result = await farmerService.getFarmers(filters, page, limit, sort, year);
     
     res.json({
       success: true,
@@ -56,7 +61,7 @@ exports.getFarmers = async (req, res) => {
 
 exports.getAllFarmersByKabupaten = async (req, res) => {
   try {
-    const { kabupaten } = req.query;
+    const { kabupaten, year } = req.query;
     
     if (!kabupaten) {
       return res.status(400).json({ 
@@ -65,10 +70,16 @@ exports.getAllFarmersByKabupaten = async (req, res) => {
       });
     }
     
-    const data = await farmerService.getFarmersByKabupaten(kabupaten);
+    // Set tahun aktif jika disediakan
+    if (year) {
+      farmerService.setActiveYear(year);
+    }
+    
+    const data = await farmerService.getFarmersByKabupaten(kabupaten, year);
     
     res.json({
       success: true,
+      year: farmerService.getActiveYear(),
       kabupaten: kabupaten,
       count: data.length,
       data: data
@@ -85,10 +96,18 @@ exports.getAllFarmersByKabupaten = async (req, res) => {
 
 exports.getKabupatenList = async (req, res) => {
   try {
-    const kabupatenList = await farmerService.getKabupatenList();
+    const { year } = req.query;
+    
+    // Set tahun aktif jika disediakan
+    if (year) {
+      farmerService.setActiveYear(year);
+    }
+    
+    const kabupatenList = await farmerService.getKabupatenList(year);
     
     res.json({
       success: true,
+      year: farmerService.getActiveYear(),
       count: kabupatenList.length,
       data: kabupatenList
     });
@@ -104,7 +123,14 @@ exports.getKabupatenList = async (req, res) => {
 
 exports.getStats = async (req, res) => {
   try {
-    const stats = await farmerService.getStats();
+    const { year } = req.query;
+    
+    // Set tahun aktif jika disediakan
+    if (year) {
+      farmerService.setActiveYear(year);
+    }
+    
+    const stats = await farmerService.getStats(year);
     
     res.json({
       success: true,
@@ -122,24 +148,30 @@ exports.getStats = async (req, res) => {
 
 exports.exportData = async (req, res) => {
   try {
-    const { kabupaten, format = 'json' } = req.query;
+    const { kabupaten, format = 'json', year } = req.query;
+    
+    // Set tahun aktif jika disediakan
+    if (year) {
+      farmerService.setActiveYear(year);
+    }
     
     let data;
     if (kabupaten) {
-      data = await farmerService.getFarmersByKabupaten(kabupaten);
+      data = await farmerService.getFarmersByKabupaten(kabupaten, year);
     } else {
       // Untuk export semua data, kita ambil tanpa pagination
-      const result = await farmerService.getFarmers({}, 1, 1000000);
+      const result = await farmerService.getFarmers({}, 1, 1000000, { field: 'nik', order: 'asc' }, year);
       data = result.data;
     }
     
     if (format === 'csv') {
       // Set header untuk download CSV
       res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', `attachment; filename=petani-${kabupaten || 'all'}-${new Date().toISOString().split('T')[0]}.csv`);
+      res.setHeader('Content-Disposition', `attachment; filename=petani-${kabupaten || 'all'}-${farmerService.getActiveYear()}-${new Date().toISOString().split('T')[0]}.csv`);
       
       // Convert data to CSV
       const csvData = data.map(item => ({
+        tahun: item.tahun || farmerService.getActiveYear(),
         kabupaten: item.kabupaten,
         kecamatan: item.kecamatan,
         nik: item.nik,
@@ -147,7 +179,6 @@ exports.exportData = async (req, res) => {
         kode_kios: item.kode_kios,
         desa: item.desa,
         poktan: item.poktan,
-        tahun: item.tahun,
         sisa_urea: item.sisa_urea,
         sisa_npk: item.sisa_npk,
         sisa_npk_formula: item.sisa_npk_formula,
@@ -165,6 +196,7 @@ exports.exportData = async (req, res) => {
       // Default JSON export
       res.json({
         success: true,
+        year: farmerService.getActiveYear(),
         kabupaten: kabupaten || 'all',
         count: data.length,
         data: data
@@ -175,6 +207,55 @@ exports.exportData = async (req, res) => {
     res.status(500).json({ 
       success: false,
       error: 'Gagal export data',
+      details: error.message 
+    });
+  }
+};
+
+// Endpoint baru untuk mendapatkan daftar tahun yang tersedia
+exports.getAvailableYears = async (req, res) => {
+  try {
+    const years = await farmerService.getAvailableYears();
+    
+    res.json({
+      success: true,
+      data: years,
+      currentYear: farmerService.getActiveYear()
+    });
+  } catch (error) {
+    console.error('Error in getAvailableYears:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Gagal mengambil daftar tahun',
+      details: error.message 
+    });
+  }
+};
+
+// Endpoint untuk mengubah tahun aktif
+exports.setActiveYear = async (req, res) => {
+  try {
+    const { year } = req.body;
+    
+    if (!year) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Parameter year diperlukan' 
+      });
+    }
+    
+    const activeYear = farmerService.setActiveYear(year);
+    
+    res.json({
+      success: true,
+      message: `Tahun aktif diubah menjadi ${activeYear}`,
+      activeYear: activeYear
+    });
+  } catch (error) {
+    console.error('Error in setActiveYear:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Gagal mengubah tahun aktif',
       details: error.message 
     });
   }

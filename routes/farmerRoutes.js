@@ -20,4 +20,10 @@ router.get('/stats', farmerController.getStats);
 // Export data ke CSV
 router.get('/export', farmerController.exportData);
 
+// Endpoint baru untuk mendapatkan daftar tahun yang tersedia
+router.get('/available-years', farmerController.getAvailableYears);
+
+// Endpoint untuk mengubah tahun aktif
+router.post('/set-active-year', farmerController.setActiveYear);
+
 module.exports = router;
