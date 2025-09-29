@@ -232,9 +232,183 @@
             font-size: 0.8rem;
             margin-left: 5px;
         }
+        
+        /* Popup Tutorial Styles */
+        .tutorial-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .tutorial-content {
+            background-color: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.4s ease-out;
+        }
+        
+        .tutorial-header {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 1.5rem;
+            position: relative;
+        }
+        
+        .tutorial-header h4 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .tutorial-header h4 i {
+            margin-right: 10px;
+        }
+        
+        .close-tutorial {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .close-tutorial:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .tutorial-body {
+            padding: 1.5rem;
+        }
+        
+        .tutorial-body p {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        
+        .tutorial-footer {
+            padding: 1rem 1.5rem;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .tutorial-footer .btn {
+            min-width: 120px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .tutorial-highlight {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            margin: 1rem 0;
+        }
+        
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            border: none;
+        }
+        
+        .tutorial-video-section {
+            display: none;
+        }
+          .dropdown-menu-scroll {
+    max-height: 250px; /* batas tinggi dropdown */
+    overflow-y: auto;  /* muncul scroll kalau kepanjangan */
+  }
     </style>
 </head>
 <body>
+    <!-- Popup Tutorial -->
+    <div class="tutorial-popup" id="tutorialPopup">
+        <div class="tutorial-content">
+            <div class="tutorial-header">
+                <h4><i class="fas fa-graduation-cap"></i> Tutorial Singkat</h4>
+                <button class="close-tutorial" onclick="closeTutorial()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="tutorial-body">
+                <!-- Bagian Intro -->
+                <div id="tutorialIntro">
+                    <p>Selamat datang di sistem <strong>Filter Petani Belum Tebus</strong>. Ingin Menonton Video Tutorial?</p>
+                </div>
+                
+                <!-- Bagian Video -->
+                <div id="tutorialVideo" class="tutorial-video-section">
+                    <h5><i class="fas fa-video me-2"></i>Video Tutorial</h5>
+                    <div class="video-container">
+                        <iframe id="tutorialIframe" src="https://www.youtube.com/embed/iOVvcWEDzLo?si=Rf4WKrie0N2lElFG" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                    </div>
+                    <p class="text-muted small mt-2">Video akan diputar otomatis setelah Anda memilih "Putar Video"</p>
+                </div>
+            </div>
+            <div class="tutorial-footer">
+                <button class="btn btn-outline-secondary" id="skipTutorialBtn" onclick="skipTutorial()">
+                    <i class="fas fa-forward me-1"></i> Skip
+                </button>
+                <button class="btn btn-primary" id="continueTutorialBtn" onclick="continueTutorial()">
+                    <i class="fas fa-play me-1"></i> Lanjutkan
+                </button>
+                <button class="btn btn-success" id="startVideoBtn" onclick="startVideo()" style="display: none;">
+                    <i class="fas fa-play-circle me-1"></i> Putar Video
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="container-fluid py-4">
         <div class="row justify-content-center">
             <div class="col-lg-10">
@@ -264,22 +438,47 @@
 
                         <!-- Informasi Proses -->
                         <div class="condition-info p-3 mb-3" style="background: #f8f9fa; border-left: 4px solid #0d6efd; border-radius: 6px;">
-    <h6 class="mb-2 text-primary">
-        <i class="fas fa-info-circle me-2"></i>Informasi Penting
-    </h6>
-    <p class="mb-1 small">
-        Sistem ini hanya berlaku untuk Provinsi DIY & Solo Raya:
-    </p>
-    <div class="p-2 mb-2 small fw-semibold text-dark" style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;">
-        Kulon Progo, Sleman, Kota Yogyakarta, Bantul, Gunung Kidul, Boyolali, 
-        Klaten, Karanganyar, Sragen, Wonogiri, Sukoharjo, Kota Surakarta
-    </div>
-    <p class="mb-0 small fst-italic text-muted">
-        Sistem akan menghapus data petani yang memenuhi kondisi <b>"Tidak Tebus"</b> pada tahun yang dipilih. 
-        Data akan dipertahankan jika tidak memenuhi kondisi atau tidak ditemukan di database.
-    </p>
-</div>
+                            <h6 class="mb-2 text-primary">
+                                <i class="fas fa-info-circle me-2"></i>Informasi Penting
+                            </h6>
+                            <p class="mb-1 small">
+                                Sistem ini hanya berlaku untuk Provinsi DIY & Solo Raya:
+                            </p>
+                            <div class="p-2 mb-2 small fw-semibold text-dark" style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px;">
+                                Kulon Progo, Sleman, Kota Yogyakarta, Bantul, Gunung Kidul, Boyolali, 
+                                Klaten, Karanganyar, Sragen, Wonogiri, Sukoharjo, Kota Surakarta
+                            </div>
+                            <p class="mb-0 small fst-italic text-muted">
+                                Sistem akan menghapus data petani yang memenuhi kondisi <b>"Tidak Tebus"</b> pada tahun yang dipilih. 
+                                Data akan dipertahankan jika tidak memenuhi kondisi atau tidak ditemukan di database.
+                            </p>
+                            <div class="dropdown mt-3">
+  <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownDownload" data-bs-toggle="dropdown" aria-expanded="false">
+    Download Petani Belum Tebus
+  </button>
+  <ul class="dropdown-menu dropdown-menu-scroll" aria-labelledby="dropdownDownload">
+    <!-- DIY -->
+    <li><h6 class="dropdown-header">DIY</h6></li>
+    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1X_O1vlj-eLMyVHWSP9bma1LQNICpTnxH/export?format=xlsx">Bantul</a></li>
+    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1j7J4VhBKnv1KcghrJBP7WbOcA1yjm64J/export?format=xlsx">Gunung Kidul</a></li>
+    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1OsXzEWEfRYPCDxHgjlpGWKjVRIIGtE8o/export?format=xlsx">Kota Yogyakarta</a></li>
+    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1mfFGrBgekiM2OJgMJtkoe7KFgYjEDusw/export?format=xlsx">Kulon Progo</a></li>
+    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1w1H3x7IItM-x4iQ7EvxvVqne4DU2qpjg/export?format=xlsx">Sleman</a></li>
+    
+    <li><hr class="dropdown-divider"></li>
 
+    <!-- Solo Raya -->
+    <li><h6 class="dropdown-header">Solo Raya</h6></li>
+    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1OTvfts9FD3F7nAtAEalD9_Iuj5-40apJ/export?format=xlsx">Boyolali</a></li>
+    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1SQKY1p-m_mHel5cFXzY7LNJr0ege1x7p/export?format=xlsx">Karanganyar</a></li>
+    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1V0AtVoJREV19Yi21JhzhpKVJk_u7Ntnb/export?format=xlsx">Klaten</a></li>
+    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1mM0NEE6fq7OGfDT6AZsDa7mR3IJbvQyM/export?format=xlsx">Kota Surakarta</a></li>
+    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1NCnp_GTz01LRnc6fejoiuET_QRnA0TXZ/export?format=xlsx">Sragen</a></li>
+    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1HdrQPgWuHWsb8Jd4zN1aH3AjYf7DkmzA/export?format=xlsx">Sukoharjo</a></li>
+    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1BVqonVUeGi9tZbxTaRx-nUzG17lOc2O8/export?format=xlsx">Wonogiri</a></li>
+  </ul>
+</div>
+                        </div>
 
                         <!-- Step 1: Pilih Kondisi -->
                         <div class="mb-4" id="step1-content">
@@ -307,7 +506,7 @@
                                 <div class="col-md-6">
                                     <div class="alert alert-warning small">
                                         <i class="fas fa-exclamation-triangle me-2"></i>
-                                        <strong>Perhatian:</strong> Petani yang terdaftar di 2025 tidak menjadi parameter data yang dihapus atau cleansing
+                                        <strong>Perhatian:</strong> Petani yang terdaftar di 2025 tidak menjadi parameter data yang dihapus
                                     </div>
                                 </div>
                             </div>
@@ -350,12 +549,11 @@
                                 </div>
                             </div>
                             <div class="alert alert-warning d-flex align-items-center p-2 mb-3" role="alert">
-    <i class="fas fa-exclamation-triangle me-2"></i>
-    <div class="small">
-        Ukuran file upload maksimal <b>20 MB</b>. Pastikan juga file sesuai template sebelum diunggah.
-    </div>
-</div>
-
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <div class="small">
+                                    Ukuran file upload maksimal <b>20 MB</b>. Pastikan juga file sesuai template sebelum diunggah.
+                                </div>
+                            </div>
 
                             <div class="mt-3">
                                 <a href="/api/remove/template" class="btn btn-outline-success btn-sm">
@@ -410,13 +608,10 @@
                             </div>
                             
                             <div class="text-center mt-4">
-    <button type="button" class="btn btn-outline-secondary me-2" onclick="location.reload()">
-        <i class="fas fa-redo me-2"></i>Proses Ulang
-    </button>
-    <!-- <button type="button" class="btn btn-outline-primary" onclick="showStep(1)">
-        <i class="fas fa-cog me-2"></i>Ubah Pengaturan
-    </button> -->
-</div>
+                                <button type="button" class="btn btn-outline-secondary me-2" onclick="location.reload()">
+                                    <i class="fas fa-redo me-2"></i>Proses Ulang
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -433,6 +628,87 @@
         let selectedFile = null;
         let downloadUrl = null;
         let selectedConditions = []; // Menyimpan kondisi yang dipilih
+        let tutorialVideoUrl = "https://www.youtube.com/embed/iOVvcWEDzLo?si=Rf4WKrie0N2lElFG"; // URL video tutorial
+        let videoStarted = false; // Status apakah video sudah dimulai
+
+        // Fungsi untuk menampilkan/menyembunyikan popup tutorial
+        function showTutorialPopup() {
+            // Reset tampilan tutorial ke bagian intro
+            document.getElementById('tutorialIntro').style.display = 'block';
+            document.getElementById('tutorialVideo').style.display = 'none';
+            document.getElementById('continueTutorialBtn').style.display = 'block';
+            document.getElementById('startVideoBtn').style.display = 'none';
+            
+            // Reset video
+            resetVideo();
+            
+            // Tampilkan popup
+            document.getElementById('tutorialPopup').style.display = 'flex';
+        }
+        
+        function closeTutorial() {
+            // Hentikan video jika sedang diputar
+            resetVideo();
+            
+            // Sembunyikan popup
+            document.getElementById('tutorialPopup').style.display = 'none';
+            localStorage.setItem('tutorialClosed', 'true');
+        }
+        
+        function skipTutorial() {
+            closeTutorial();
+            // Opsi: tambahkan logika untuk menandai bahwa user tidak ingin melihat tutorial lagi
+        }
+        
+        function continueTutorial() {
+            // Sembunyikan bagian intro, tampilkan bagian video
+            document.getElementById('tutorialIntro').style.display = 'none';
+            document.getElementById('tutorialVideo').style.display = 'block';
+            
+            // Ganti tombol
+            document.getElementById('continueTutorialBtn').style.display = 'none';
+            document.getElementById('startVideoBtn').style.display = 'block';
+        }
+        
+        function startVideo() {
+            // Set iframe source dengan autoplay
+            const iframe = document.getElementById('tutorialIframe');
+            iframe.src = tutorialVideoUrl + "&autoplay=1&mute=0";
+            
+            // Tandai bahwa video sudah dimulai
+            videoStarted = true;
+            
+            // Ubah teks tombol
+            document.getElementById('startVideoBtn').innerHTML = '<i class="fas fa-pause-circle me-1"></i> Jeda Video';
+            document.getElementById('startVideoBtn').setAttribute('onclick', 'pauseVideo()');
+            
+            // Setelah video dimulai, tutup popup setelah beberapa detik (opsional)
+            // setTimeout(() => {
+            //     closeTutorial();
+            // }, 30000); // Tutup setelah 30 detik (bisa disesuaikan)
+        }
+        
+        function pauseVideo() {
+            // Hentikan video dengan mengubah src ke versi tanpa autoplay
+            const iframe = document.getElementById('tutorialIframe');
+            iframe.src = tutorialVideoUrl;
+            
+            // Reset status video
+            videoStarted = false;
+            
+            // Ubah tombol kembali
+            document.getElementById('startVideoBtn').innerHTML = '<i class="fas fa-play-circle me-1"></i> Putar Video';
+            document.getElementById('startVideoBtn').setAttribute('onclick', 'startVideo()');
+        }
+        
+        function resetVideo() {
+            // Hentikan video dengan mengosongkan src
+            const iframe = document.getElementById('tutorialIframe');
+            iframe.src = "";
+            
+            // Reset status video
+            videoStarted = false;
+        }
 
         // Fungsi untuk menampilkan step tertentu
         function showStep(stepNumber) {
@@ -473,7 +749,7 @@
             
             // Jika kembali ke step 1 dari step 3 (ubah pengaturan), jangan reset form
             if (stepNumber === 1 && !event.target.classList.contains('btn-outline-secondary')) {
-                // Hanya reset jika bukan dari tombol "Ubah Pengaturan"
+                // Hanya reset jika bukan dari tombol "Kembali"
                 const isFromStep3 = document.getElementById('step3-content').style.display !== 'none';
                 if (!isFromStep3) {
                     // Reset hanya jika bukan dari step 3
@@ -838,6 +1114,14 @@
                     processRemove();
                 }
             }
+            
+            // ESC untuk menutup tutorial
+            if (e.key === 'Escape') {
+                const tutorialPopup = document.getElementById('tutorialPopup');
+                if (tutorialPopup.style.display === 'flex') {
+                    closeTutorial();
+                }
+            }
         });
 
         // Health check saat load halaman
@@ -856,6 +1140,13 @@
             
             // Tampilkan step 1 saat halaman pertama kali dimuat
             showStep(1);
+            
+            // Tampilkan popup tutorial saat halaman dimuat
+            // Cek apakah user sudah pernah menutup tutorial sebelumnya
+            const tutorialClosed = localStorage.getItem('tutorialClosed');
+            if (!tutorialClosed) {
+                showTutorialPopup();
+            }
         });
     </script>
 </body>
