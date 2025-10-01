@@ -1056,22 +1056,17 @@
 
             // Format stats sesuai dengan response backend
             resultsStats.innerHTML = `
-                <div class="col-md-3 text-center">
+                <div class="col-md-4 text-center">
                     <h3>${result.stats.total_data_file}</h3>
-                    <small>Total Data dalam File</small>
+                    <small>Total Data/Baris dalam File</small>
                 </div>
-                <div class="col-md-3 text-center">
+                <div class="col-md-4 text-center">
                     <h3 class="status-success">${result.stats.data_dipertahankan}</h3>
                     <small>Data Dipertahankan</small>
                 </div>
-                <div class="col-md-3 text-center">
+                <div class="col-md-4 text-center">
                     <h3 class="status-danger">${result.stats.data_dihapus}</h3>
-                    <small>Data Dihapus</small>
-                </div>
-                <div class="col-md-3 text-center">
-                    <h3 class="status-warning">${result.stats.unique_nik_dihapus}</h3>
-                    <small>Unique NIK Dihapus</small>
-                </div>
+                    <small>Data Dihapus Per NIK/Petani</small>
             `;
 
             // Informasi kondisi yang diterapkan
