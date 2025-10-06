@@ -20,6 +20,7 @@ const checkAkses = require('./middlewares/checkAkses');
 const logAksesMenu = require('./middlewares/logAksesMenu');
 const belumtebusRoutes = require('./routes/belumtebusRoutes');
 const removePetaniRoutes = require('./routes/remove-petani');
+const removePetaniSumatraRoutes = require('./routes/remove-petani-sumatra');
 require('./logger');
 
 const methodOverride = require('method-override');
@@ -154,6 +155,11 @@ app.get('/remove-petani', (req, res) => {
 });
 
 
+app.get('/sumatra/remover', (req, res) => {
+    res.render('remove-petani-sumatra');
+});
+
+
 // Routes untuk halaman lain
 app.get('/erdkk', authMiddleware, checkAkses(['C4']), (req, res) => {
     res.render('erdkk', { user: req.user });
@@ -209,6 +215,7 @@ app.get('/visualisasi', authMiddleware, checkAkses(['A4']), (req, res) => {
 
 app.use(belumtebusRoutes);
 app.use('/api/remove', removePetaniRoutes);
+app.use('/api/sumatra', removePetaniSumatraRoutes);
 
 
 // API Routes
