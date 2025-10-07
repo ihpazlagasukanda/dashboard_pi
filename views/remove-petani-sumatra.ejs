@@ -368,6 +368,71 @@
     max-height: 250px; /* batas tinggi dropdown */
     overflow-y: auto;  /* muncul scroll kalau kepanjangan */
   }
+    .card {
+    border-radius: 1rem;
+  }
+
+  /* --- FILTER OPTION --- */
+  .filter-option {
+    display: flex;
+    align-items: center;
+    background: #f9fafb;
+    border: 1px solid #e2e6ea;
+    border-radius: 0.6rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .filter-option:hover {
+    background: #f0f4ff;
+    border-color: #b6cffd;
+  }
+
+  .filter-option label {
+    margin: 0;
+    cursor: pointer;
+    flex: 1;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .filter-option .form-check-input {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-right: 0.6rem;
+    cursor: pointer;
+  }
+
+  .filter-option .form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+  }
+
+  /* --- BUTTON MODERN --- */
+  .btn-modern {
+    background: linear-gradient(135deg, #062f6c, #0365ce);
+    border: none;
+    border-radius: 50px;
+    padding: 0.6rem 1.4rem;
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: all 0.25s ease;
+  }
+
+  .btn-modern:hover {
+    background: linear-gradient(135deg, #007bff, #0dcaf0);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(13, 110, 253, 0.25);
+  }
+
+  /* --- RESPONSIVE --- */
+  @media (max-width: 768px) {
+    .filter-option {
+      padding: 0.65rem 0.9rem;
+    }
+  }
     </style>
 </head>
 <body>
@@ -436,13 +501,13 @@
                             </div>
                         </div>
                         <div>
-    <p class="mb-1 text-dark p-3 rounded" style="background-color: #fff3cd;">
-        Sistem ini dibuat untuk membantu PPL dalam menyusun erdkk 2026
-        dengan menyajikan data petani tidak menebus tahun 2023 sd 2025. 
-        Diharapkan petani yang tidak pernah menebus / tidak aktif tidak masuk lagi sebagai 
-        daftar penerima pupuk subsidi 2026 sehingga data erdkk menjadi lebih valid dan tepat sasaran.
-    </p>
-</div>
+                            <p class="mb-1 text-dark p-3 rounded" style="background-color: #fff3cd;">
+                                Sistem ini dibuat untuk membantu PPL dalam menyusun erdkk 2026
+                                dengan menyajikan data petani tidak menebus tahun 2023 sd 2025. 
+                                Diharapkan petani yang tidak pernah menebus / tidak aktif tidak masuk lagi sebagai 
+                                daftar penerima pupuk subsidi 2026 sehingga data erdkk menjadi lebih valid dan tepat sasaran.
+                            </p>
+                        </div>
 
 
                         <!-- Informasi Proses -->
@@ -461,35 +526,10 @@
                                 Sistem akan menghapus data petani yang memenuhi kondisi <b>"Tidak Tebus"</b> pada tahun yang dipilih. 
                                 Data akan dipertahankan jika tidak memenuhi kondisi atau tidak ditemukan di database.
                             </p>
-                            <!-- <div class="dropdown mt-3">
-                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="dropdownDownload" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Download Petani Belum Tebus
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-scroll" aria-labelledby="dropdownDownload">
-
-                                    <li><h6 class="dropdown-header">DIY</h6></li>
-                                    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1X_O1vlj-eLMyVHWSP9bma1LQNICpTnxH/export?format=xlsx">Bantul</a></li>
-                                    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1j7J4VhBKnv1KcghrJBP7WbOcA1yjm64J/export?format=xlsx">Gunung Kidul</a></li>
-                                    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1OsXzEWEfRYPCDxHgjlpGWKjVRIIGtE8o/export?format=xlsx">Kota Yogyakarta</a></li>
-                                    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1mfFGrBgekiM2OJgMJtkoe7KFgYjEDusw/export?format=xlsx">Kulon Progo</a></li>
-                                    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1w1H3x7IItM-x4iQ7EvxvVqne4DU2qpjg/export?format=xlsx">Sleman</a></li>
-                                    
-                                    <li><hr class="dropdown-divider"></li>
-
-                                    <li><h6 class="dropdown-header">Solo Raya</h6></li>
-                                    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1OTvfts9FD3F7nAtAEalD9_Iuj5-40apJ/export?format=xlsx">Boyolali</a></li>
-                                    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1SQKY1p-m_mHel5cFXzY7LNJr0ege1x7p/export?format=xlsx">Karanganyar</a></li>
-                                    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1V0AtVoJREV19Yi21JhzhpKVJk_u7Ntnb/export?format=xlsx">Klaten</a></li>
-                                    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1mM0NEE6fq7OGfDT6AZsDa7mR3IJbvQyM/export?format=xlsx">Kota Surakarta</a></li>
-                                    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1NCnp_GTz01LRnc6fejoiuET_QRnA0TXZ/export?format=xlsx">Sragen</a></li>
-                                    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1HdrQPgWuHWsb8Jd4zN1aH3AjYf7DkmzA/export?format=xlsx">Sukoharjo</a></li>
-                                    <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1BVqonVUeGi9tZbxTaRx-nUzG17lOc2O8/export?format=xlsx">Wonogiri</a></li>
-                                </ul>
-                            </div> -->
                         </div>
 
                         <!-- Step 1: Pilih Kondisi -->
-                        <div class="mb-4" id="step1-content">
+                        <!-- <div class="mb-4" id="step1-content">
                             <h5 class="mb-3">
                                 <i class="fas fa-filter me-2"></i>Pilih Kondisi Filter
                                 <span id="selectedConditionsBadge" style="display: none;">
@@ -527,6 +567,58 @@
                                     <i class="fas fa-arrow-right me-2"></i>Lanjut ke Upload File
                                 </button>
                             </div>
+                        </div> -->
+                        <div id="step1-content" class="card shadow-sm border-0 mb-4">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-3">
+                            <div class="me-2 border-start border-4 border-primary rounded-end">&nbsp;</div>
+                            <h5 class="fw-semibold text-dark mb-0 d-flex align-items-center">
+                                <i class="fas fa-sliders-h text-primary me-2"></i> Pilih Kondisi Filter
+                                <span id="selectedConditionsBadge" class="ms-2" style="display:none;">
+                                <span id="conditionsCount" class="badge bg-light text-primary border border-primary">0 kondisi</span>
+                                </span>
+                            </h5>
+                            </div>
+
+                            <div class="row g-2">
+                            <div class="col-md-4">
+                                <div class="filter-option">
+                                <input class="form-check-input condition-checkbox" type="checkbox" id="condition2023" value="2023">
+                                <label class="form-check-label" for="condition2023">
+                                    <i class="fas fa-calendar-xmark me-2 text-warning"></i>Tidak Tebus 2023
+                                </label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="filter-option">
+                                <input class="form-check-input condition-checkbox" type="checkbox" id="condition2024" value="2024">
+                                <label class="form-check-label" for="condition2024">
+                                    <i class="fas fa-calendar-xmark me-2 text-warning"></i>Tidak Tebus 2024
+                                </label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="filter-option">
+                                <input class="form-check-input condition-checkbox" type="checkbox" id="condition2025" value="2025">
+                                <label class="form-check-label" for="condition2025">
+                                    <i class="fas fa-calendar-xmark me-2 text-warning"></i>Tidak Tebus 2025
+                                </label>
+                                </div>
+                            </div>
+                            </div>
+
+                            <small class="text-muted d-block mt-3">
+                            <i class="fas fa-lightbulb text-warning me-1"></i>Pilih minimal satu kondisi untuk melanjutkan.
+                            </small>
+
+                            <div class="text-end mt-4">
+                            <button type="button" id="nextToStep2" onclick="showStep(2)" class="btn btn-modern">
+                                Lanjut ke Upload File <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                            </div>
+                        </div>
                         </div>
 
                         <!-- Step 2: Upload File dan Proses -->
@@ -604,20 +696,76 @@
                                 <div id="resultsStats" class="row mt-3"></div>
                             </div>
                             
-                            <!-- Download Section -->
-                            <div class="download-section">
-                                <i class="fas fa-file-download feature-icon"></i>
-                                <h5>File hasil telah siap untuk diunduh</h5>
-                                <p class="text-muted">Klik tombol di bawah untuk mengunduh file hasil filter</p>
-                                <button type="button" id="downloadBtn" class="btn btn-success btn-lg">
-                                    <i class="fas fa-download me-2"></i>Download Hasil
-                                </button>
-                                <p class="small text-muted mt-2">File temporary akan dihapus dalam 5 menit setelah download</p>
+                            <!-- Download Section - Clean Design -->
+                            <div class="download-section text-center">
+                                <div class="download-header mb-4">
+                                    <i class="fas fa-cloud-download-alt feature-icon text-primary mb-3"></i>
+                                    <h4>File Hasil Siap Diunduh</h4>
+                                    <p class="text-muted">Pilih file yang Anda butuhkan</p>
+                                </div>
+                                
+                                <div class="download-options row g-3 justify-content-center">
+                                    <!-- Download Hasil Filter -->
+                                    <div class="col-md-5">
+                                        <div class="download-card card h-100 border-0 shadow-sm">
+                                            <div class="card-body text-center p-4">
+                                                <div class="download-icon mb-3">
+                                                    <i class="fas fa-check-circle text-success fa-3x"></i>
+                                                </div>
+                                                <h5 class="card-title">Data Bersih</h5>
+                                                <p class="card-text text-muted small">
+                                                    Data petani yang lolos filter dan siap digunakan
+                                                </p>
+                                                <div class="download-info mb-3">
+                                                    <span class="badge bg-success bg-opacity-10 text-success">
+                                                        <i class="fas fa-file-excel me-1"></i>
+                                                        Excel File
+                                                    </span>
+                                                </div>
+                                                <button type="button" id="downloadBtn" class="btn btn-success w-100">
+                                                    <i class="fas fa-download me-2"></i>Download
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Download Data yang Dihapus -->
+                                    <div class="col-md-5">
+                                        <div class="download-card card h-100 border-0 shadow-sm">
+                                            <div class="card-body text-center p-4">
+                                                <div class="download-icon mb-3">
+                                                    <i class="fas fa-times-circle text-danger fa-3x"></i>
+                                                </div>
+                                                <h5 class="card-title">Data Dihapus</h5>
+                                                <p class="card-text text-muted small">
+                                                    Data petani yang dihapus
+                                                </p>
+                                                <div class="download-info mb-3">
+                                                    <span class="badge bg-danger bg-opacity-10 text-danger">
+                                                        <i class="fas fa-file-excel me-1"></i>
+                                                        Excel File
+                                                    </span>
+                                                </div>
+                                                <button type="button" id="downloadRemovedBtn" class="btn btn-outline-danger w-100">
+                                                    <i class="fas fa-download me-2"></i>Download
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="download-footer mt-4">
+                                    <p class="small text-muted">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        File akan otomatis terhapus dalam 5 menit setelah diunduh
+                                    </p>
+                                </div>
                             </div>
                             
-                            <div class="text-center mt-4">
-                                <button type="button" class="btn btn-outline-secondary me-2" onclick="location.reload()">
-                                    <i class="fas fa-redo me-2"></i>Proses Ulang
+                            <!-- Action Buttons -->
+                            <div class="text-center mt-5">
+                                <button type="button" class="btn btn-outline-primary" onclick="showStep(1)">
+                                    <i class="fas fa-arrow-left me-2"></i>Ulangi Proses
                                 </button>
                             </div>
                         </div>
@@ -636,6 +784,7 @@
     <script>
         let selectedFile = null;
         let downloadUrl = null;
+        let removedDataUrl = null;
         let selectedConditions = []; // Menyimpan kondisi yang dipilih
         let tutorialVideoUrl = "https://www.youtube.com/embed/iOVvcWEDzLo?si=Rf4WKrie0N2lElFG"; // URL video tutorial
         let videoStarted = false; // Status apakah video sudah dimulai
@@ -920,11 +1069,12 @@
         document.querySelectorAll('.condition-checkbox').forEach(checkbox => {
             checkbox.addEventListener('change', function() {
                 // Validasi: Hanya izinkan 2023 dan 2024
-                if (this.value === '2025') {
-                    this.checked = false;
-                    showAlert('Kondisi 2025 tidak tersedia. Hanya 2023 dan 2024 yang didukung.', 'warning');
-                    return;
-                }
+                //nonaktif
+                // if (this.value === '2025') {
+                //     this.checked = false;
+                //     showAlert('Kondisi 2025 tidak tersedia. Hanya 2023 dan 2024 yang didukung.', 'warning');
+                //     return;
+                // }
                 
                 // Simpan kondisi yang dipilih
                 saveSelectedConditions();
@@ -965,11 +1115,11 @@
                 showAlert('Pilih minimal satu kondisi filter', 'warning');
                 return;
             }
-
-            if (conditions.includes('2025')) {
-                showAlert('Kondisi 2025 tidak didukung. Hanya 2023 dan 2024 yang tersedia.', 'danger');
-                return;
-            }
+            //nonaktif
+            // if (conditions.includes('2025')) {
+            //     showAlert('Kondisi 2025 tidak didukung. Hanya 2023 dan 2024 yang tersedia.', 'danger');
+            //     return;
+            // }
 
             if (!selectedFile) {
                 showAlert('Pilih file Excel terlebih dahulu', 'warning');
@@ -1031,6 +1181,7 @@
                 if (result.success) {
                     // Simpan URL download untuk digunakan nanti
                     downloadUrl = result.download_url;
+                    removedDataUrl = result.removed_data_url;
                     
                     // Tampilkan hasil
                     showResults(result);
@@ -1099,6 +1250,18 @@
                 showAlert('File hasil berhasil diunduh!', 'success');
             } else {
                 showAlert('Tidak ada file yang tersedia untuk diunduh', 'warning');
+            }
+        });
+
+        document.getElementById('downloadRemovedBtn').addEventListener('click', function() {
+            if (removedDataUrl) {
+                // Buka URL download di tab baru
+                window.open(removedDataUrl, '_blank');
+                
+                // Tampilkan konfirmasi
+                showAlert('File data yang dihapus berhasil diunduh!', 'success');
+            } else {
+                showAlert('Tidak ada file data yang dihapus tersedia', 'warning');
             }
         });
 

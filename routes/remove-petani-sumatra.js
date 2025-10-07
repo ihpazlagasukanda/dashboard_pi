@@ -132,6 +132,7 @@ router.post('/', upload.single('file'), handleUploadError, async (req, res) => {
   console.log('✅ Received POST request to /api/sumatra');
   
   let tempFilePath = null;
+  let removedDataFilePath = null;
   
   try {
     const { conditions } = req.body;
@@ -266,6 +267,7 @@ router.post('/', upload.single('file'), handleUploadError, async (req, res) => {
 
     // **PERBAIKAN 3: Identifikasi NIK yang harus dihapus (berdasarkan kondisi database) - MENGGUNAKAN LOGIKA AND**
     const niksToRemove = new Set();
+    const removedRowsData = []; // Data yang di-remove
     
     dbConditions.forEach((condition, nik) => {
       // **PERUBAHAN PENTING: Gunakan logika AND (setiap kondisi harus terpenuhi)**
@@ -298,18 +300,23 @@ router.post('/', upload.single('file'), handleUploadError, async (req, res) => {
         return false;
       });
       
+      // Simpan data yang di-remove
+      if (shouldRemove) {
+        removedRowsData.push(row);
+      }
+      
       return !shouldRemove; // false = hapus, true = pertahankan
     });
 
-    // **PERBAIKAN 5: Buat workbook hasil dengan struktur persis seperti file asli**
+    // **BUAT FILE HASIL FILTER (DATA YANG DIPERTAHANKAN)**
     const resultWorkbook = new ExcelJS.Workbook();
     const resultWorksheet = resultWorkbook.addWorksheet('Hasil Filter');
 
-    // **PERBAIKAN 6: Copy header persis seperti file asli (tanpa tambahan kolom)**
+    // Copy header persis seperti file asli (tanpa tambahan kolom)
     const originalHeaders = headers.filter(header => header !== undefined);
     resultWorksheet.addRow(originalHeaders);
 
-    // **PERBAIKAN 7: Copy data yang difilter dengan struktur persis sama**
+    // Copy data yang difilter dengan struktur persis sama
     filteredRows.forEach(row => {
       const newRow = originalHeaders.map(header => {
         // Handle khusus untuk kolom KTP - pertahankan format asli
@@ -327,7 +334,7 @@ router.post('/', upload.single('file'), handleUploadError, async (req, res) => {
       resultWorksheet.addRow(newRow);
     });
 
-    // **PERBAIKAN 8: Pertahankan lebar kolom seperti aslinya**
+    // Pertahankan lebar kolom seperti aslinya
     worksheet.columns.forEach((col, index) => {
       if (col.width) {
         resultWorksheet.getColumn(index + 1).width = col.width;
@@ -344,6 +351,55 @@ router.post('/', upload.single('file'), handleUploadError, async (req, res) => {
       };
     }
 
+    // **BUAT FILE DATA YANG DI-REMOVE**
+    const removedWorkbook = new ExcelJS.Workbook();
+    const removedWorksheet = removedWorkbook.addWorksheet('Data yang Dihapus');
+
+    // Tambahkan header dengan kolom tambahan untuk informasi kondisi
+    const removedHeaders = [...originalHeaders, 'Kondisi Dihapus', 'Alasan Penghapusan'];
+    removedWorksheet.addRow(removedHeaders);
+
+    // Isi data yang di-remove
+    removedRowsData.forEach(row => {
+      const dbRecord = dbConditions.get(row.nik);
+      const kondisiTerpenuhi = conditionList.filter(cond => {
+        if (cond === '2023') return dbRecord.tidak_tebus_2023 === 1;
+        if (cond === '2024') return dbRecord.tidak_tebus_2024 === 1;
+        if (cond === '2025') return dbRecord.tidak_tebus_2025 === 1;
+        return false;
+      });
+
+      const newRow = originalHeaders.map(header => {
+        if (header.toLowerCase().includes('ktp') && row.data[header]) {
+          const originalValue = row.data[header];
+          if (typeof originalValue === 'string' && originalValue.startsWith("'")) {
+            return originalValue;
+          }
+          return `${extractNIKFromCell(originalValue)}`;
+        }
+        return row.data[header] || '';
+      });
+
+      // Tambahkan kolom informasi
+      newRow.push(kondisiTerpenuhi.join(', '));
+      newRow.push(`Memenuhi semua kondisi: ${conditionList.join(' AND ')}`);
+
+      removedWorksheet.addRow(newRow);
+    });
+
+    // Styling untuk file removed data
+    if (removedWorksheet.getRow(1)) {
+      removedWorksheet.getRow(1).font = { bold: true };
+      removedWorksheet.getRow(1).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFFFE6E6' } // Warna merah muda untuk data yang dihapus
+      };
+    }
+
+    // Set lebar kolom untuk file removed data
+    removedWorksheet.columns = removedHeaders.map(() => ({ width: 20 }));
+
     // Statistik proses
     const stats = {
       total_data_file: allRowsData.length,
@@ -356,33 +412,49 @@ router.post('/', upload.single('file'), handleUploadError, async (req, res) => {
 
     console.log('✅ Proses filter selesai dengan statistik:', stats);
 
-    // Simpan file hasil
+    // Simpan kedua file
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `hasil_filter_${timestamp}.xlsx`;
     const tempDir = path.join(__dirname, '../temp');
     
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
     }
-    
-    tempFilePath = path.join(tempDir, filename);
+
+    // File hasil filter (data yang dipertahankan)
+    const resultFilename = `hasil_filter_${timestamp}.xlsx`;
+    tempFilePath = path.join(tempDir, resultFilename);
     await resultWorkbook.xlsx.writeFile(tempFilePath);
+
+    // File data yang di-remove
+    const removedFilename = `data_dihapus_${timestamp}.xlsx`;
+    removedDataFilePath = path.join(tempDir, removedFilename);
+    await removedWorkbook.xlsx.writeFile(removedDataFilePath);
 
     res.json({
       success: true,
       message: `Proses filter selesai. ${stats.data_dipertahankan} data dipertahankan, ${stats.data_dihapus} data dihapus.`,
       stats: stats,
-      download_url: `/api/sumatra/download/${filename}`
+      download_url: `/api/sumatra/download/${resultFilename}`,
+      removed_data_url: `/api/sumatra/download-removed/${removedFilename}` // URL baru untuk download data yang dihapus
     });
 
   } catch (error) {
     console.error('❌ Error dalam proses filter:', error);
     
+    // Cleanup file temporary jika ada error
     if (tempFilePath && fs.existsSync(tempFilePath)) {
       try {
         fs.unlinkSync(tempFilePath);
       } catch (cleanupError) {
-        console.error('Error cleanup:', cleanupError);
+        console.error('Error cleanup result file:', cleanupError);
+      }
+    }
+    
+    if (removedDataFilePath && fs.existsSync(removedDataFilePath)) {
+      try {
+        fs.unlinkSync(removedDataFilePath);
+      } catch (cleanupError) {
+        console.error('Error cleanup removed file:', cleanupError);
       }
     }
     
@@ -445,6 +517,61 @@ router.get('/download/:filename', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Error downloading file: ' + error.message
+    });
+  }
+});
+
+router.get('/download-removed/:filename', async (req, res) => {
+  try {
+    const filename = req.params.filename;
+    
+    if (!filename.match(/^data_dihapus_[a-zA-Z0-9_-]+\.xlsx$/)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Nama file tidak valid'
+      });
+    }
+
+    const filepath = path.join(__dirname, '../temp', filename);
+    
+    if (!fs.existsSync(filepath)) {
+      return res.status(404).json({
+        success: false,
+        error: 'File tidak ditemukan'
+      });
+    }
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    
+    const fileStream = fs.createReadStream(filepath);
+    fileStream.pipe(res);
+    
+    fileStream.on('end', () => {
+      setTimeout(() => {
+        try {
+          if (fs.existsSync(filepath)) {
+            fs.unlinkSync(filepath);
+          }
+        } catch (cleanupError) {
+          console.error('Cleanup error:', cleanupError);
+        }
+      }, 5000);
+    });
+    
+    fileStream.on('error', (error) => {
+      console.error('File stream error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error streaming file'
+      });
+    });
+
+  } catch (error) {
+    console.error('Download removed data error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error downloading removed data file: ' + error.message
     });
   }
 });
