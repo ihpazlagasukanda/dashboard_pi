@@ -102,7 +102,7 @@ const getDatabaseConditions = async (nikList) => {
       const placeholders = batch.map(() => '?').join(',');
       
       const query = `
-        SELECT nik, tidak_tebus_2023, tidak_tebus_2024 
+        SELECT nik, tidak_tebus_2023, tidak_tebus_2024, tidak_tebus_2025 
         FROM petani_belum_tebus_sumatra
         WHERE nik IN (${placeholders})
       `;
@@ -112,7 +112,8 @@ const getDatabaseConditions = async (nikList) => {
       rows.forEach(row => {
         conditionMap.set(normalizeNIK(row.nik), {
           tidak_tebus_2023: row.tidak_tebus_2023,
-          tidak_tebus_2024: row.tidak_tebus_2024
+          tidak_tebus_2024: row.tidak_tebus_2024,
+          tidak_tebus_2025: row.tidak_tebus_2025
         });
       });
     }
@@ -124,7 +125,7 @@ const getDatabaseConditions = async (nikList) => {
   }
 };
 
-const allowedConditions = ['2023', '2024'];
+const allowedConditions = ['2023', '2024', '2025'];
 
 // **ENDPOINT UTAMA YANG DIPERBAIKI: POST /api/sumatra**
 router.post('/', upload.single('file'), handleUploadError, async (req, res) => {
@@ -263,34 +264,37 @@ router.post('/', upload.single('file'), handleUploadError, async (req, res) => {
     const dbConditions = await getDatabaseConditions(uniqueNiksFromFile);
     console.log(`📊 Mendapatkan ${dbConditions.size} data kondisi dari database`);
 
-    // **PERBAIKAN 3: Identifikasi NIK yang harus dihapus (berdasarkan kondisi database)**
+    // **PERBAIKAN 3: Identifikasi NIK yang harus dihapus (berdasarkan kondisi database) - MENGGUNAKAN LOGIKA AND**
     const niksToRemove = new Set();
     
     dbConditions.forEach((condition, nik) => {
-      const meetsCondition = conditionList.some(cond => {
+      // **PERUBAHAN PENTING: Gunakan logika AND (setiap kondisi harus terpenuhi)**
+      const meetsAllConditions = conditionList.every(cond => {
         if (cond === '2023') return condition.tidak_tebus_2023 === 1;
         if (cond === '2024') return condition.tidak_tebus_2024 === 1;
+        if (cond === '2025') return condition.tidak_tebus_2025 === 1;
         return false;
       });
       
-      if (meetsCondition) {
+      if (meetsAllConditions) {
         niksToRemove.add(nik);
       }
     });
 
-    console.log(`🗑️  Akan menghapus ${niksToRemove.size} NIK yang memenuhi kondisi`);
+    console.log(`🗑️  Akan menghapus ${niksToRemove.size} NIK yang memenuhi SEMUA kondisi: ${conditionList.join(' AND ')}`);
 
-    // **PERBAIKAN 4: Filter data - hapus hanya jika NIK ada di database dan memenuhi kondisi**
+    // **PERBAIKAN 4: Filter data - hapus hanya jika NIK ada di database dan memenuhi SEMUA kondisi**
     const filteredRows = allRowsData.filter(row => {
       if (!row.nik) return true; // Pertahankan baris tanpa NIK
       
       const dbRecord = dbConditions.get(row.nik);
       if (!dbRecord) return true; // Pertahankan jika tidak ada di database
       
-      // Hapus hanya jika memenuhi kondisi
-      const shouldRemove = conditionList.some(cond => {
+      // **PERUBAHAN PENTING: Hapus hanya jika memenuhi SEMUA kondisi (AND)**
+      const shouldRemove = conditionList.every(cond => {
         if (cond === '2023') return dbRecord.tidak_tebus_2023 === 1;
         if (cond === '2024') return dbRecord.tidak_tebus_2024 === 1;
+        if (cond === '2025') return dbRecord.tidak_tebus_2025 === 1;
         return false;
       });
       
@@ -346,7 +350,8 @@ router.post('/', upload.single('file'), handleUploadError, async (req, res) => {
       data_dipertahankan: filteredRows.length,
       data_dihapus: allRowsData.length - filteredRows.length,
       unique_nik_dihapus: niksToRemove.size,
-      kondisi_diterapkan: conditionList
+      kondisi_diterapkan: conditionList,
+      logika: 'AND (Semua kondisi harus terpenuhi)'
     };
 
     console.log('✅ Proses filter selesai dengan statistik:', stats);
@@ -354,7 +359,7 @@ router.post('/', upload.single('file'), handleUploadError, async (req, res) => {
     // Simpan file hasil
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const filename = `hasil_filter_${timestamp}.xlsx`;
-    const tempDir = path.join(__dirname, '../temp-sumatra');
+    const tempDir = path.join(__dirname, '../temp');
     
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
@@ -400,7 +405,7 @@ router.get('/download/:filename', async (req, res) => {
       });
     }
 
-    const filepath = path.join(__dirname, '../temp-sumatra', filename);
+    const filepath = path.join(__dirname, '../temp', filename);
     
     if (!fs.existsSync(filepath)) {
       return res.status(404).json({

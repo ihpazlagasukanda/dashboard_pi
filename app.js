@@ -44,8 +44,6 @@ if (process.env.NODE_ENV === 'production' && cluster.isMaster) {
     console.log(`Worker ${worker.process.pid} died. Restarting...`);
     cluster.fork();
   });
-  
-  // Jangan jalankan kode aplikasi lebih lanjut di master process
   return;
 }
 
