@@ -21,6 +21,8 @@ const logAksesMenu = require('./middlewares/logAksesMenu');
 const belumtebusRoutes = require('./routes/belumtebusRoutes');
 const removePetaniRoutes = require('./routes/remove-petani');
 const removePetaniSumatraRoutes = require('./routes/remove-petani-sumatra');
+const removePetaniJatengRoutes = require('./routes/remove-petani-jateng');
+const removePetaniRegion2aRoutes = require('./routes/remove-petani-region2a');
 require('./logger');
 
 const methodOverride = require('method-override');
@@ -148,15 +150,36 @@ app.get('/manualymachine', authMiddleware, requireLevel(2), checkAkses(['B']), (
     res.render('manualymachine', { user: req.user });
 });
 
-app.get('/remove-petani', (req, res) => {
+app.get('/remover/jateng3diy', (req, res) => {
     res.render('remove-petani');
 });
-
 
 app.get('/sumatra/remover', (req, res) => {
     res.render('remove-petani-sumatra');
 });
 
+app.get('/remover/jateng1', (req, res) => {
+    res.render('remove-petani-jateng1');
+});
+
+app.get('/remover/jateng2', (req, res) => {
+    res.render('remove-petani-jateng2');
+});
+
+app.get('/remover/jateng4', (req, res) => {
+    res.render('remove-petani-jateng4');
+});
+app.get('/remover/region2a', (req, res) => {
+    res.render('remove-petani-region2a');
+});
+
+app.get('/remover/2a', (req, res) => {
+    res.render('remover-region2a');
+});
+
+app.get('/remover', (req, res) => {
+    res.render('remover');
+});
 
 // Routes untuk halaman lain
 app.get('/erdkk', authMiddleware, checkAkses(['C4']), (req, res) => {
@@ -214,6 +237,8 @@ app.get('/visualisasi', authMiddleware, checkAkses(['A4']), (req, res) => {
 app.use(belumtebusRoutes);
 app.use('/api/remove', removePetaniRoutes);
 app.use('/api/sumatra', removePetaniSumatraRoutes);
+app.use('/api/jateng', removePetaniJatengRoutes);
+app.use('/api/region2a', removePetaniRegion2aRoutes);
 
 
 // API Routes

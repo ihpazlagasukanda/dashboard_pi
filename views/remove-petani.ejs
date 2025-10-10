@@ -233,8 +233,7 @@
             margin-left: 5px;
         }
         
-        /* Popup Tutorial Styles */
-        .tutorial-popup {
+                .tutorial-popup {
             position: fixed;
             top: 0;
             left: 0;
@@ -347,8 +346,7 @@
             position: relative;
             width: 100%;
             height: 0;
-            padding-bottom: 56.25%; /* 16:9 aspect ratio */
-            margin: 1rem 0;
+            padding-bottom: 56.25%;             margin: 1rem 0;
         }
         
         .video-container iframe {
@@ -365,15 +363,12 @@
             display: none;
         }
           .dropdown-menu-scroll {
-    max-height: 250px; /* batas tinggi dropdown */
-    overflow-y: auto;  /* muncul scroll kalau kepanjangan */
-  }
+    max-height: 250px;     overflow-y: auto;    }
     .card {
     border-radius: 1rem;
   }
 
-  /* --- FILTER OPTION --- */
-  .filter-option {
+    .filter-option {
     display: flex;
     align-items: center;
     background: #f9fafb;
@@ -409,8 +404,7 @@
     border-color: #0d6efd;
   }
 
-  /* --- BUTTON MODERN --- */
-  .btn-modern {
+    .btn-modern {
     background: linear-gradient(135deg, #0d6efd, #007bff);
     border: none;
     border-radius: 50px;
@@ -427,8 +421,7 @@
     box-shadow: 0 6px 14px rgba(13, 110, 253, 0.25);
   }
 
-  /* --- RESPONSIVE --- */
-  @media (max-width: 768px) {
+    @media (max-width: 768px) {
     .filter-option {
       padding: 0.65rem 0.9rem;
     }
@@ -436,7 +429,7 @@
     </style>
 </head>
 <body>
-    <!-- Popup Tutorial -->
+    
     <div class="tutorial-popup" id="tutorialPopup">
         <div class="tutorial-content">
             <div class="tutorial-header">
@@ -446,16 +439,16 @@
                 </button>
             </div>
             <div class="tutorial-body">
-                <!-- Bagian Intro -->
+                
                 <div id="tutorialIntro">
                     <p>Selamat datang di sistem <strong>Filter Petani Belum Tebus</strong>. Ingin Menonton Video Tutorial?</p>
                 </div>
                 
-                <!-- Bagian Video -->
+                
                 <div id="tutorialVideo" class="tutorial-video-section">
                     <h5><i class="fas fa-video me-2"></i>Video Tutorial</h5>
                     <div class="video-container">
-                        <iframe id="tutorialIframe" src="https://www.youtube.com/embed/zBvDSXeip0Y?si=RPgyti_2QCvPfXU7" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                        <iframe id="tutorialIframe" src="https://www.youtube.com/embed/3jVLwsYHghk?si=86zW2aIRSvsgAkxE" allow="autoplay; encrypted-media" allowfullscreen></iframe>
                     </div>
                     <p class="text-muted small mt-2">Video akan diputar otomatis setelah Anda memilih "Putar Video"</p>
                 </div>
@@ -482,10 +475,10 @@
                         <h4 class="mb-0"><i class="fas fa-users-slash me-2"></i>Filter Petani Belum Tebus</h4>
                     </div>
                     <div class="card-body">
-                        <!-- Alert Messages -->
+                        
                         <div id="alertContainer"></div>
 
-                        <!-- Step Indicator (3 tahap) -->
+                        
                         <div class="step-indicator">
                             <div class="step active" id="step1">
                                 <div class="step-number">1</div>
@@ -509,7 +502,7 @@
                             </p>
                         </div>
 
-                        <!-- Informasi Proses -->
+                        
                         <div class="condition-info p-3 mb-3" style="background: #f8f9fa; border-left: 4px solid #0d6efd; border-radius: 6px;">
                             <h6 class="mb-2 text-primary">
                                 <i class="fas fa-info-circle me-2"></i>Informasi Penting
@@ -530,7 +523,7 @@
                                 Download Petani Belum Tebus
                             </button>
                             <ul class="dropdown-menu dropdown-menu-scroll" aria-labelledby="dropdownDownload">
-                                <!-- DIY -->
+                                
                                 <li><h6 class="dropdown-header">DIY</h6></li>
                                 <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1X_O1vlj-eLMyVHWSP9bma1LQNICpTnxH/export?format=xlsx">Bantul</a></li>
                                 <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1j7J4VhBKnv1KcghrJBP7WbOcA1yjm64J/export?format=xlsx">Gunung Kidul</a></li>
@@ -540,7 +533,7 @@
                                 
                                 <li><hr class="dropdown-divider"></li>
 
-                                <!-- Solo Raya -->
+                                
                                 <li><h6 class="dropdown-header">Solo Raya</h6></li>
                                 <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1OTvfts9FD3F7nAtAEalD9_Iuj5-40apJ/export?format=xlsx">Boyolali</a></li>
                                 <li><a class="dropdown-item" href="https://docs.google.com/spreadsheets/d/1SQKY1p-m_mHel5cFXzY7LNJr0ege1x7p/export?format=xlsx">Karanganyar</a></li>
@@ -553,7 +546,7 @@
                             </div>
                         </div>
 
-                        <!-- Step 1: Pilih Kondisi -->
+                        
                         <div id="step1-content" class="card shadow-sm border-0 mb-4">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center mb-3">
@@ -607,7 +600,7 @@
                         </div>
                         </div>
 
-                        <!-- Step 2: Upload File dan Proses -->
+                        
                         <div class="mb-4" id="step2-content" style="display: none;">
                             <h5 class="mb-3">
                                 <i class="fas fa-upload me-2"></i>Upload File Excel
@@ -648,7 +641,7 @@
                                 <small class="text-muted ms-2">Template sudah termasuk kolom "Nama Penyuluh" sebagai kolom pertama</small>
                             </div>
                             
-                            <!-- Proses Section -->
+                            
                             <div class="process-section" id="processSection" style="display: none;">
                                 <h5 class="mb-3"><i class="fas fa-cogs me-2"></i>Proses Filter</h5>
                                 
@@ -658,7 +651,7 @@
                                     </button>
                                 </div>
 
-                                <!-- Progress Bar -->
+                                
                                 <div id="progressContainer" class="mt-3" style="display: none;">
                                     <div class="progress" style="height: 20px;">
                                         <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
@@ -675,14 +668,14 @@
                             </div>
                         </div>
 
-                        <!-- Step 3: Hasil & Download -->
+                        
                         <div id="step3-content" style="display: none;">
                             <div class="stats-card">
                                 <h5><i class="fas fa-check-circle me-2"></i>Proses Filter Selesai!</h5>
                                 <div id="resultsStats" class="row mt-3"></div>
                             </div>
                             
-                            <!-- Download Section - Clean Design -->
+                            
                             <div class="download-section text-center">
                                 <div class="download-header mb-4">
                                     <i class="fas fa-cloud-download-alt feature-icon text-primary mb-3"></i>
@@ -691,7 +684,7 @@
                                 </div>
                                 
                                 <div class="download-options row g-3 justify-content-center">
-                                    <!-- Download Hasil Filter -->
+                                    
                                     <div class="col-md-5">
                                         <div class="download-card card h-100 border-0 shadow-sm">
                                             <div class="card-body text-center p-4">
@@ -715,7 +708,7 @@
                                         </div>
                                     </div>
                                     
-                                    <!-- Download Data yang Dihapus -->
+                                    
                                     <div class="col-md-5">
                                         <div class="download-card card h-100 border-0 shadow-sm">
                                             <div class="card-body text-center p-4">
@@ -748,7 +741,7 @@
                                 </div>
                             </div>
                             
-                            <!-- Action Buttons -->
+                            
                             <div class="text-center mt-5">
                                 <button type="button" class="btn btn-outline-primary" onclick="showStep(1)">
                                     <i class="fas fa-arrow-left me-2"></i>Ulangi Proses
@@ -772,91 +765,91 @@
         let downloadUrl = null;
         let removedDataUrl = null;
         let selectedConditions = [];
-        let tutorialVideoUrl = "https://www.youtube.com/embed/iOVvcWEDzLo?si=Rf4WKrie0N2lElFG"; // URL video tutorial
-        let videoStarted = false; // Status apakah video sudah dimulai
+        let tutorialVideoUrl = "https://www.youtube.com/embed/iOVvcWEDzLo?si=Rf4WKrie0N2lElFG"; 
+        let videoStarted = false; 
 
-        // Fungsi untuk menampilkan/menyembunyikan popup tutorial
+        
         function showTutorialPopup() {
-            // Reset tampilan tutorial ke bagian intro
+            
             document.getElementById('tutorialIntro').style.display = 'block';
             document.getElementById('tutorialVideo').style.display = 'none';
             document.getElementById('continueTutorialBtn').style.display = 'block';
             document.getElementById('startVideoBtn').style.display = 'none';
             
-            // Reset video
+            
             resetVideo();
             
-            // Tampilkan popup
+            
             document.getElementById('tutorialPopup').style.display = 'flex';
         }
         
         function closeTutorial() {
-            // Hentikan video jika sedang diputar
+            
             resetVideo();
             
-            // Sembunyikan popup
+            
             document.getElementById('tutorialPopup').style.display = 'none';
             localStorage.setItem('tutorialClosed', 'true');
         }
         
         function skipTutorial() {
             closeTutorial();
-            // Opsi: tambahkan logika untuk menandai bahwa user tidak ingin melihat tutorial lagi
+            
         }
         
         function continueTutorial() {
-            // Sembunyikan bagian intro, tampilkan bagian video
+            
             document.getElementById('tutorialIntro').style.display = 'none';
             document.getElementById('tutorialVideo').style.display = 'block';
             
-            // Ganti tombol
+            
             document.getElementById('continueTutorialBtn').style.display = 'none';
             document.getElementById('startVideoBtn').style.display = 'block';
         }
         
         function startVideo() {
-            // Set iframe source dengan autoplay
+            
             const iframe = document.getElementById('tutorialIframe');
             iframe.src = tutorialVideoUrl + "&autoplay=1&mute=0";
             
-            // Tandai bahwa video sudah dimulai
+            
             videoStarted = true;
             
-            // Ubah teks tombol
+            
             document.getElementById('startVideoBtn').innerHTML = '<i class="fas fa-pause-circle me-1"></i> Jeda Video';
             document.getElementById('startVideoBtn').setAttribute('onclick', 'pauseVideo()');
             
-            // Setelah video dimulai, tutup popup setelah beberapa detik (opsional)
-            // setTimeout(() => {
-            //     closeTutorial();
-            // }, 30000); // Tutup setelah 30 detik (bisa disesuaikan)
+            
+            
+            
+            
         }
         
         function pauseVideo() {
-            // Hentikan video dengan mengubah src ke versi tanpa autoplay
+            
             const iframe = document.getElementById('tutorialIframe');
             iframe.src = tutorialVideoUrl;
             
-            // Reset status video
+            
             videoStarted = false;
             
-            // Ubah tombol kembali
+            
             document.getElementById('startVideoBtn').innerHTML = '<i class="fas fa-play-circle me-1"></i> Putar Video';
             document.getElementById('startVideoBtn').setAttribute('onclick', 'startVideo()');
         }
         
         function resetVideo() {
-            // Hentikan video dengan mengosongkan src
+            
             const iframe = document.getElementById('tutorialIframe');
             iframe.src = "";
             
-            // Reset status video
+            
             videoStarted = false;
         }
 
-        // Fungsi untuk menampilkan step tertentu
+        
         function showStep(stepNumber) {
-            // Validasi sebelum pindah step
+            
             if (stepNumber === 2) {
                 const conditions = document.querySelectorAll('.condition-checkbox:checked');
                 if (conditions.length === 0) {
@@ -865,20 +858,20 @@
                 }
             }
             
-            // Sembunyikan semua konten step
+            
             document.getElementById('step1-content').style.display = 'none';
             document.getElementById('step2-content').style.display = 'none';
             document.getElementById('step3-content').style.display = 'none';
             
-            // Reset status step
+            
             document.querySelectorAll('.step').forEach(step => {
                 step.classList.remove('active', 'completed');
             });
             
-            // Tampilkan konten step yang dipilih
+            
             document.getElementById(`step${stepNumber}-content`).style.display = 'block';
             
-            // Update status step
+            
             for (let i = 1; i <= 3; i++) {
                 const stepElement = document.getElementById(`step${i}`);
                 if (i < stepNumber) {
@@ -888,26 +881,26 @@
                 }
             }
             
-            // Update tampilan kondisi di setiap step
+            
             updateConditionsDisplay();
             
-            // Jika kembali ke step 1 dari step 3 (ubah pengaturan), jangan reset form
+            
             if (stepNumber === 1 && !event.target.classList.contains('btn-outline-secondary')) {
-                // Hanya reset jika bukan dari tombol "Kembali"
+                
                 const isFromStep3 = document.getElementById('step3-content').style.display !== 'none';
                 if (!isFromStep3) {
-                    // Reset hanya jika bukan dari step 3
+                    
                     resetStep1Only();
                 }
             }
         }
 
-        // Fungsi untuk update tampilan kondisi yang dipilih
+        
         function updateConditionsDisplay() {
             const selectedCount = selectedConditions.length;
             const conditionsText = `${selectedCount} kondisi`;
             
-            // Update badge di step 1
+            
             const badge1 = document.getElementById('selectedConditionsBadge');
             const count1 = document.getElementById('conditionsCount');
             if (selectedCount > 0) {
@@ -917,11 +910,11 @@
                 badge1.style.display = 'none';
             }
             
-            // Update badge di step 2
+            
             const badge2 = document.getElementById('step2ConditionsBadge');
             badge2.textContent = conditionsText;
             
-            // Tampilkan kondisi yang dipilih di step 2
+            
             const conditionsList = document.getElementById('step2ConditionsList');
             if (conditionsList) {
                 conditionsList.innerHTML = selectedConditions.map(cond => 
@@ -930,22 +923,22 @@
             }
         }
 
-        // Fungsi untuk menyimpan kondisi yang dipilih
+        
         function saveSelectedConditions() {
             selectedConditions = Array.from(document.querySelectorAll('.condition-checkbox:checked'))
                                    .map(cb => cb.value);
             
-            // Simpan ke localStorage untuk persistensi
+            
             localStorage.setItem('selectedConditions', JSON.stringify(selectedConditions));
         }
 
-        // Fungsi untuk memuat kondisi yang disimpan
+        
         function loadSelectedConditions() {
             const savedConditions = localStorage.getItem('selectedConditions');
             if (savedConditions) {
                 selectedConditions = JSON.parse(savedConditions);
                 
-                // Set checkbox sesuai dengan kondisi yang disimpan
+                
                 document.querySelectorAll('.condition-checkbox').forEach(checkbox => {
                     checkbox.checked = selectedConditions.includes(checkbox.value);
                 });
@@ -953,51 +946,51 @@
             updateConditionsDisplay();
         }
 
-        // Reset hanya bagian step 1 (tanpa menghapus kondisi)
+        
         function resetStep1Only() {
-            // Hanya reset file upload, bukan kondisi
+            
             selectedFile = null;
             downloadUrl = null;
             fileInput.value = '';
             
-            // Reset UI file upload
+            
             document.getElementById('fileInfo').style.display = 'none';
             document.getElementById('processSection').style.display = 'none';
             document.getElementById('progressContainer').style.display = 'none';
         }
 
-        // Reset form lengkap (untuk proses baru)
+        
         function resetForm() {
-            // Reset semua variabel
+            
             selectedFile = null;
             downloadUrl = null;
             removedDataUrl = null;
             selectedConditions = [];
             fileInput.value = '';
             
-            // Reset UI
+            
             document.getElementById('fileInfo').style.display = 'none';
             document.getElementById('progressContainer').style.display = 'none';
             document.getElementById('processSection').style.display = 'none';
             
-            // Uncheck semua checkbox
+            
             document.querySelectorAll('.condition-checkbox').forEach(checkbox => {
                 checkbox.checked = false;
             });
             
-            // Hapus dari localStorage
+            
             localStorage.removeItem('selectedConditions');
             
-            // Update tampilan
+            
             updateConditionsDisplay();
             
-            // Kembali ke step 1
+            
             showStep(1);
             
             showAlert('Form telah direset. Silakan mulai proses baru.', 'info');
         }
 
-        // Drag and drop functionality
+        
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
 
@@ -1030,7 +1023,7 @@
                 return;
             }
 
-            // Validasi ukuran file (max 10MB)
+            
             if (file.size > 10 * 1024 * 1024) {
                 showAlert('Ukuran file maksimal 10MB', 'danger');
                 return;
@@ -1041,7 +1034,7 @@
             document.getElementById('fileSize').textContent = `Size: ${(file.size / 1024 / 1024).toFixed(2)} MB`;
             document.getElementById('fileInfo').style.display = 'block';
             
-            // Tampilkan section proses
+            
             document.getElementById('processSection').style.display = 'block';
         }
 
@@ -1052,15 +1045,15 @@
             document.getElementById('processSection').style.display = 'none';
         }
 
-        // Event listeners untuk checkbox conditions
+        
         document.querySelectorAll('.condition-checkbox').forEach(checkbox => {
             checkbox.addEventListener('change', function() {
-                // Validasi: Hanya izinkan 2023 dan 2024
-                // if (this.value === '2025') {
-                //     this.checked = false;
-                //     showAlert('Kondisi 2025 tidak tersedia. Hanya 2023 dan 2024 yang didukung.', 'warning');
-                //     return;
-                // }
+                
+                
+                
+                
+                
+                
                 
                 saveSelectedConditions();
                 updateConditionsDisplay();
@@ -1068,7 +1061,7 @@
         });
 
         function showAlert(message, type) {
-            // Hapus alert sebelumnya
+            
             const existingAlert = document.querySelector('.floating-alert');
             if (existingAlert) {
                 existingAlert.remove();
@@ -1083,7 +1076,7 @@
             `;
             document.body.appendChild(alert);
             
-            // Auto remove setelah 5 detik
+            
             setTimeout(() => {
                 if (alert.parentElement) {
                     alert.remove();
@@ -1092,19 +1085,19 @@
         }
 
         async function processRemove() {
-            // Gunakan kondisi yang sudah disimpan
+            
             const conditions = selectedConditions;
 
-            // Validasi kondisi
+            
             if (conditions.length === 0) {
                 showAlert('Pilih minimal satu kondisi filter', 'warning');
                 return;
             }
 
-            // if (conditions.includes('2025')) {
-            //     showAlert('Kondisi 2025 tidak didukung. Hanya 2023 dan 2024 yang tersedia.', 'danger');
-            //     return;
-            // }
+            
+            
+            
+            
 
             if (!selectedFile) {
                 showAlert('Pilih file Excel terlebih dahulu', 'warning');
@@ -1136,7 +1129,7 @@
 
                 console.log('Response status:', response.status);
                 
-                // Handle non-JSON responses
+                
                 const contentType = response.headers.get('content-type');
                 if (!contentType || !contentType.includes('application/json')) {
                     const text = await response.text();
@@ -1164,14 +1157,14 @@
                 progressText.textContent = 'Selesai!';
 
                 if (result.success) {
-                    // Simpan URL download untuk digunakan nanti
+                    
                     downloadUrl = result.download_url;
                     removedDataUrl = result.removed_data_url;
                     
-                    // Tampilkan hasil
+                    
                     showResults(result);
                     
-                    // Lanjut ke step 3 (hasil & download)
+                    
                     setTimeout(() => {
                         showStep(3);
                     }, 1000);
@@ -1189,7 +1182,7 @@
                 
                 showAlert('Error: ' + errorMessage, 'danger');
                 
-                // Reset progress
+                
                 progressContainer.style.display = 'none';
                 processBtn.disabled = false;
                 progressBar.style.width = '0%';
@@ -1199,7 +1192,7 @@
         function showResults(result) {
             const resultsStats = document.getElementById('resultsStats');
 
-            // Format stats sesuai dengan response backend
+            
             resultsStats.innerHTML = `
                 <div class="col-md-4 text-center">
                     <h3>${result.stats.total_data_file}</h3>
@@ -1214,7 +1207,7 @@
                     <small>Data Dihapus Per NIK/Petani</small>
             `;
 
-            // Informasi kondisi yang diterapkan
+            
             const conditionInfo = document.createElement('div');
             conditionInfo.className = 'col-12 mt-3';
             conditionInfo.innerHTML = `
@@ -1225,13 +1218,13 @@
             resultsStats.appendChild(conditionInfo);
         }
 
-        // Event listener untuk tombol download
+        
         document.getElementById('downloadBtn').addEventListener('click', function() {
             if (downloadUrl) {
-                // Buka URL download di tab baru
+                
                 window.open(downloadUrl, '_blank');
                 
-                // Tampilkan konfirmasi
+                
                 showAlert('File hasil berhasil diunduh!', 'success');
             } else {
                 showAlert('Tidak ada file yang tersedia untuk diunduh', 'warning');
@@ -1240,25 +1233,25 @@
 
         document.getElementById('downloadRemovedBtn').addEventListener('click', function() {
             if (removedDataUrl) {
-                // Buka URL download di tab baru
+                
                 window.open(removedDataUrl, '_blank');
                 
-                // Tampilkan konfirmasi
+                
                 showAlert('File data yang dihapus berhasil diunduh!', 'success');
             } else {
                 showAlert('Tidak ada file data yang dihapus tersedia', 'warning');
             }
         });
 
-        // Keyboard shortcuts
+        
         document.addEventListener('keydown', (e) => {
-            // Ctrl + R untuk reset form
+            
             if (e.ctrlKey && e.key === 'r') {
                 e.preventDefault();
                 resetForm();
             }
             
-            // Ctrl + Enter untuk proses
+            
             if (e.ctrlKey && e.key === 'Enter') {
                 e.preventDefault();
                 const processBtn = document.getElementById('processBtn');
@@ -1267,7 +1260,7 @@
                 }
             }
             
-            // ESC untuk menutup tutorial
+            
             if (e.key === 'Escape') {
                 const tutorialPopup = document.getElementById('tutorialPopup');
                 if (tutorialPopup.style.display === 'flex') {
@@ -1276,7 +1269,7 @@
             }
         });
 
-        // Health check saat load halaman
+        
         window.addEventListener('load', async () => {
             try {
                 const response = await fetch('/api/remove/health');
@@ -1287,14 +1280,14 @@
                 console.warn('⚠️ Backend health check failed:', error);
             }
             
-            // Load kondisi yang disimpan
+            
             loadSelectedConditions();
             
-            // Tampilkan step 1 saat halaman pertama kali dimuat
+            
             showStep(1);
             
-            // Tampilkan popup tutorial saat halaman dimuat
-            // Cek apakah user sudah pernah menutup tutorial sebelumnya
+            
+            
             const tutorialClosed = localStorage.getItem('tutorialClosed');
             if (!tutorialClosed) {
                 showTutorialPopup();
