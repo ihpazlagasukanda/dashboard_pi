@@ -154,7 +154,7 @@ app.get('/remover/jateng3diy', (req, res) => {
     res.render('remove-petani');
 });
 
-app.get('/sumatra/remover', (req, res) => {
+app.get('/sumatra/remover/petani', (req, res) => {
     res.render('remove-petani-sumatra');
 });
 
@@ -175,6 +175,10 @@ app.get('/remover/region2a', (req, res) => {
 
 app.get('/remover/2a', (req, res) => {
     res.render('remover-region2a');
+});
+
+app.get('/sumatra/remover', (req, res) => {
+    res.render('remover-sumatra');
 });
 
 app.get('/remover', (req, res) => {
