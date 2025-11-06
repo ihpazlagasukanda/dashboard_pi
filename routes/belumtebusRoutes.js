@@ -3,9 +3,6 @@ const router = express.Router();
 const pool = require('../config/db'); // koneksi mysql
 const ExcelJS = require('exceljs');
 
-const { exportBaruTebus } = require('../controllers/exportBaruTebus');
-router.get('/export-baru-tebus', exportBaruTebus);
-
 router.get('/export-belum-tebus', async (req, res) => {
   try {
     // Set headers first
@@ -58,7 +55,8 @@ router.get('/export-belum-tebus', async (req, res) => {
           tidak_tebus_2024,
           tidak_tebus_2025
         FROM petani_belum_tebus WHERE kabupaten IN 
-        ('BANTUL')
+        ('BOYOLALI','KLATEN','KARANGANYAR','SUKOHARJO','SRAGEN','WONOGIRI','KOTA SURAKARTA','BANTUL', 'SLEMAN',
+        'GUNUNG KIDUL','KULON PROGO', 'KOTA YOGYAKARTA')
         ORDER BY kabupaten, kecamatan, nik
         LIMIT ? OFFSET ?
       `, [chunkSize, offset]);
