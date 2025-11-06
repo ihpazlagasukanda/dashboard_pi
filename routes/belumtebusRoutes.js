@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../config/db'); // koneksi mysql
+const pool = require('../config/db');
 const ExcelJS = require('exceljs');
 
 const { exportBaruTebus } = require('../controllers/exportBaruTebus');
@@ -15,7 +15,7 @@ router.get('/export-belum-tebus-jateng3', async (req, res) => {
     );
     res.setHeader(
       'Content-Disposition',
-      'attachment; filename=petani_belum_tebus.xlsx'
+      'attachment; filename=petani_belum_tebus_jateng3.xlsx'
     );
 
     // Create workbook with streaming
@@ -57,8 +57,8 @@ router.get('/export-belum-tebus-jateng3', async (req, res) => {
           tidak_tebus_2023,
           tidak_tebus_2024,
           tidak_tebus_2025
-        FROM petani_belum_tebus WHERE kabupaten IN 
-        (''BOYOLALI','KLATEN','KARANGANYAR','SUKOHARJO','SRAGEN','WONOGIRI','KOTA SURAKARTA')
+        FROM petani_belum_tebus 
+        WHERE kabupaten IN ('BOYOLALI','KLATEN','KARANGANYAR','SUKOHARJO','SRAGEN','WONOGIRI','KOTA SURAKARTA')
         ORDER BY kabupaten, kecamatan, nik
         LIMIT ? OFFSET ?
       `, [chunkSize, offset]);
@@ -97,7 +97,7 @@ router.get('/export-belum-tebus-diy', async (req, res) => {
     );
     res.setHeader(
       'Content-Disposition',
-      'attachment; filename=petani_belum_tebus.xlsx'
+      'attachment; filename=petani_belum_tebus_diy.xlsx'
     );
 
     // Create workbook with streaming
@@ -139,8 +139,8 @@ router.get('/export-belum-tebus-diy', async (req, res) => {
           tidak_tebus_2023,
           tidak_tebus_2024,
           tidak_tebus_2025
-        FROM petani_belum_tebus WHERE kabupaten IN 
-        ('BANTUL, 'SLEMAN', 'GUNUNG KIDUL', 'KULON PROGO', 'KOTA YOGYAKARTA')
+        FROM petani_belum_tebus 
+        WHERE kabupaten IN ('BANTUL', 'SLEMAN', 'GUNUNG KIDUL', 'KULON PROGO', 'KOTA YOGYAKARTA')
         ORDER BY kabupaten, kecamatan, nik
         LIMIT ? OFFSET ?
       `, [chunkSize, offset]);
