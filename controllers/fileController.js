@@ -569,7 +569,7 @@ const saveWithRetry = async (values, retryCount = 0) => {
             const batch = values.slice(i, i + BATCH_SIZE);
             if (batch.length > 0) {
                 await connection.query(
-                    `INSERT INTO verval_test 
+                    `INSERT INTO verval
                     (kabupaten, kecamatan, poktan, kode_kios, nama_kios, nik, nama_petani, metode_penebusan, tanggal_tebus, 
                     urea, npk, sp36, za, npk_formula, organik, organik_cair, kakao, kode_transaksi, status) 
                     VALUES ?`, [batch]
@@ -634,7 +634,7 @@ exports.uploadFile = async (req, res) => {
 
         // 1. Load semua data referensi sekaligus di awal
         log('Memuat data referensi...');
-        const [existingTransactions] = await db.query('SELECT kode_transaksi FROM verval_test');
+        const [existingTransactions] = await db.query('SELECT kode_transaksi FROM verval');
         const existingTxSet = new Set(existingTransactions.map(tx => tx.kode_transaksi));
         const kodeKiosMappings = await getKodeKiosMappings();
         log('Data referensi berhasil dimuat');
