@@ -614,42 +614,42 @@
         }
 
         // Load data filter options
-        // function loadFilterOptions() {
+        function loadFilterOptions() {
 
-        //   $.ajax({
-        //     url: '/api/filters',
-        //     type: 'GET',
-        //     success: function(data) {
-        //       // Isi dropdown kabupaten
-        //       const kabupatenSelect = $('#filter-kabupaten');
-        //       data.kabupaten.forEach(item => {
-        //         kabupatenSelect.append(`<option value="${item}">${item}</option>`);
-        //       });
+          $.ajax({
+            url: '/api/filters',
+            type: 'GET',
+            success: function(data) {
+              // Isi dropdown kabupaten
+              const kabupatenSelect = $('#filter-kabupaten');
+              data.kabupaten.forEach(item => {
+                kabupatenSelect.append(`<option value="${item}">${item}</option>`);
+              });
 
-        //       // Isi dropdown kecamatan
-        //       const kecamatanSelect = $('#filter-kecamatan');
-        //       data.kecamatan.forEach(item => {
-        //         kecamatanSelect.append(`<option value="${item}">${item}</option>`);
-        //       });
+              // Isi dropdown kecamatan
+              const kecamatanSelect = $('#filter-kecamatan');
+              data.kecamatan.forEach(item => {
+                kecamatanSelect.append(`<option value="${item}">${item}</option>`);
+              });
 
-        //       // Isi dropdown metode penebusan
-        //       const metodeSelect = $('#filter-metode-penebusan');
-        //       data.metode_penebusan.forEach(item => {
-        //         metodeSelect.append(`<option value="${item}">${item}</option>`);
-        //       });
+              // Isi dropdown metode penebusan
+              const metodeSelect = $('#filter-metode-penebusan');
+              data.metode_penebusan.forEach(item => {
+                metodeSelect.append(`<option value="${item}">${item}</option>`);
+              });
 
-        //       // Inisialisasi DataTable setelah filter dimuat
-        //       initializeDataTable();
-        //       setupFilterEvents();
-        //     },
-        //     error: function() {
-        //       alert('Gagal memuat opsi filter');
-        //     },
-        //     complete: function() {
-        //       hideProcessing();
-        //     }
-        //   });
-        // }
+              // Inisialisasi DataTable setelah filter dimuat
+              initializeDataTable();
+              setupFilterEvents();
+            },
+            error: function() {
+              alert('Gagal memuat opsi filter');
+            },
+            complete: function() {
+              hideProcessing();
+            }
+          });
+        }
 
         // Download Excel
         $('#download-excel').on('click', function() {
