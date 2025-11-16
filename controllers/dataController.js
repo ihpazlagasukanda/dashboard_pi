@@ -774,102 +774,31 @@ exports.alokasiVsTebusan = async (req, res) => {
             jan: 1, feb: 2, mar: 3, apr: 4, mei: 5, jun: 6,
             jul: 7, agu: 8, sep: 9, okt: 10, nov: 11, des: 12
         };
-        const urutanBulan = Object.keys(bulanIndex);
+
+        // Parameter untuk stored procedure
+        const params = [
+            kabupaten || null,
+            tahun ? parseInt(tahun) : null,
+            bulan_awal ? parseInt(bulan_awal) : 1,
+            bulan_akhir ? parseInt(bulan_akhir) : 12,
+            parseInt(start) || 0,
+            parseInt(length) || 10
+        ];
+
+        // Panggil stored procedure
+        const [data] = await db.query('CALL sp_get_alokasi_vs_tebusan(?, ?, ?, ?, ?, ?)', params);
+        
+        // Data utama ada di result pertama, total records di result kedua
+        const resultData = data[0];
+        const recordsFiltered = data[1][0].recordsFiltered;
+
+        // Filter kolom bulan berdasarkan rentang
         const batasAwal = bulan_awal ? parseInt(bulan_awal) : 1;
         const batasAkhir = bulan_akhir ? parseInt(bulan_akhir) : 12;
-
-        // Query utama untuk mengambil data
-        let query = `
-            SELECT
-                e.kabupaten, 
-                e.kecamatan,
-                e.nik, 
-                e.nama_petani, 
-                e.kode_kios,
-                e.nama_kios,
-                e.tahun,
-                e.desa, 
-                e.poktan,
-                e.urea, 
-                e.npk, 
-                e.npk_formula, 
-                e.organik,
-                COALESCE(v.tebus_urea, 0) AS tebus_urea,
-                COALESCE(v.tebus_npk, 0) AS tebus_npk,
-                COALESCE(v.tebus_npk_formula, 0) AS tebus_npk_formula,
-                COALESCE(v.tebus_organik, 0) AS tebus_organik,
-                (e.urea - COALESCE(v.tebus_urea, 0)) AS sisa_urea,
-                (e.npk - COALESCE(v.tebus_npk, 0)) AS sisa_npk,
-                (e.npk_formula - COALESCE(v.tebus_npk_formula, 0)) AS sisa_npk_formula,
-                (e.organik - COALESCE(v.tebus_organik, 0)) AS sisa_organik,
-
-                -- Data tebusan per bulan
-                ${urutanBulan.map(bulan => `
-                    COALESCE(t.${bulan}_urea, 0) AS ${bulan}_urea,
-                    COALESCE(t.${bulan}_npk, 0) AS ${bulan}_npk,
-                    COALESCE(t.${bulan}_npk_formula, 0) AS ${bulan}_npk_formula,
-                    COALESCE(t.${bulan}_organik, 0) AS ${bulan}_organik
-                `).join(',')}
-            FROM erdkk e
-            LEFT JOIN verval_summary v 
-                ON e.nik = v.nik
-                AND e.kabupaten = v.kabupaten
-                AND e.tahun = v.tahun
-                AND e.kecamatan = v.kecamatan
-                AND e.kode_kios = v.kode_kios
-            LEFT JOIN tebusan_per_bulan t 
-                ON e.nik = t.nik
-                AND e.kabupaten = t.kabupaten
-                AND e.tahun = t.tahun
-                AND e.kecamatan = t.kecamatan
-                AND e.kode_kios = t.kode_kios
-            WHERE 1=1
-        `;
-
-        let countQuery = `
-            SELECT COUNT(*) AS total
-            FROM erdkk e
-            LEFT JOIN verval_summary v 
-                ON e.nik = v.nik
-                AND e.kabupaten = v.kabupaten
-                AND e.tahun = v.tahun
-                AND e.kecamatan = v.kecamatan
-                AND e.kode_kios = v.kode_kios
-            WHERE 1=1
-        `;
-
-        let params = [];
-        let countParams = [];
-
-        if (kabupaten) {
-            query += " AND e.kabupaten = ?";
-            countQuery += " AND e.kabupaten = ?";
-            params.push(kabupaten);
-            countParams.push(kabupaten);
-        }
-
-        if (tahun) {
-            query += " AND e.tahun = ?";
-            countQuery += " AND e.tahun = ?";
-            params.push(tahun);
-            countParams.push(tahun);
-        }
-
-        // Pagination
-        const startNum = parseInt(start) || 0;
-        const lengthNum = parseInt(length) || 10;
-        query += " LIMIT ?, ?";
-        params.push(startNum, lengthNum);
-
-        // Eksekusi query
-        const [data] = await db.query(query, params);
-        const [[{ total: recordsFiltered }]] = await db.query(countQuery, countParams);
-        const [[{ total: recordsTotal }]] = await db.query("SELECT COUNT(*) AS total FROM erdkk");
-
-        // Hapus kolom bulan di luar rentang
-        const filteredData = data.map(row => {
+        
+        const filteredData = resultData.map(row => {
             const newRow = { ...row };
-            urutanBulan.forEach(bulan => {
+            Object.keys(bulanIndex).forEach(bulan => {
                 const index = bulanIndex[bulan];
                 if (index < batasAwal || index > batasAkhir) {
                     delete newRow[`${bulan}_urea`];
@@ -881,16 +810,414 @@ exports.alokasiVsTebusan = async (req, res) => {
             return newRow;
         });
 
-        // Kirim respons
+        // Get total records
+        const [[{ total: recordsTotal }]] = await db.query("SELECT COUNT(*) AS total FROM erdkk");
+
         res.json({
             draw: draw ? parseInt(draw) : 1,
             recordsTotal: recordsTotal,
             recordsFiltered: recordsFiltered,
             data: filteredData
         });
+
     } catch (error) {
         console.error("Error fetching data:", error);
         res.status(500).json({ error: "Terjadi kesalahan dalam mengambil data" });
+    }
+};
+
+// download alokasi vs tebusan
+exports.exportAlokasiVsTebusan = async (req, res) => {
+    try {
+        const { kabupaten, tahun, bulan_awal, bulan_akhir } = req.query;
+
+        const bulanIndex = {
+            jan: 1, feb: 2, mar: 3, apr: 4, mei: 5, jun: 6,
+            jul: 7, agu: 8, sep: 9, okt: 10, nov: 11, des: 12
+        };
+
+        const bulanNama = {
+            jan: 'Januari', feb: 'Februari', mar: 'Maret', apr: 'April', 
+            mei: 'Mei', jun: 'Juni', jul: 'Juli', agu: 'Agustus', 
+            sep: 'September', okt: 'Oktober', nov: 'November', des: 'Desember'
+        };
+
+        // Ambil semua data tanpa pagination untuk export
+        const params = [
+            kabupaten || null,
+            tahun ? parseInt(tahun) : null,
+            bulan_awal ? parseInt(bulan_awal) : 1,
+            bulan_akhir ? parseInt(bulan_akhir) : 12,
+            0, // start
+            1000000 // length (angka besar untuk ambil semua data)
+        ];
+
+        // Panggil stored procedure
+        const [data] = await db.query('CALL sp_get_alokasi_vs_tebusan(?, ?, ?, ?, ?, ?)', params);
+        const resultData = data[0];
+
+        // Filter kolom bulan berdasarkan rentang
+        const batasAwal = bulan_awal ? parseInt(bulan_awal) : 1;
+        const batasAkhir = bulan_akhir ? parseInt(bulan_akhir) : 12;
+
+        const filteredData = resultData.map(row => {
+            const newRow = { ...row };
+            Object.keys(bulanIndex).forEach(bulan => {
+                const index = bulanIndex[bulan];
+                if (index < batasAwal || index > batasAkhir) {
+                    delete newRow[`${bulan}_urea`];
+                    delete newRow[`${bulan}_npk`];
+                    delete newRow[`${bulan}_npk_formula`];
+                    delete newRow[`${bulan}_organik`];
+                }
+            });
+            return newRow;
+        });
+
+        // Buat workbook dan worksheet
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Alokasi vs Tebusan');
+
+        // Define styles
+        const headerStyle = {
+            font: { bold: true, color: { argb: 'FFFFFF' } },
+            fill: {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: '4472C4' }
+            },
+            alignment: { vertical: 'middle', horizontal: 'center' },
+            border: {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+            }
+        };
+
+        const subHeaderStyle = {
+            font: { bold: true },
+            alignment: { vertical: 'middle', horizontal: 'center' },
+            border: {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+            }
+        };
+
+        const alokasiHeaderStyle = {
+            ...headerStyle,
+            fill: { ...headerStyle.fill, fgColor: { argb: '0070C0' } } // Biru
+        };
+
+        const sisaHeaderStyle = {
+            ...headerStyle,
+            fill: { ...headerStyle.fill, fgColor: { argb: 'FFC000' } }, // Kuning
+            font: { ...headerStyle.font, color: { argb: '000000' } } // Text hitam
+        };
+
+        const penyaluranHeaderStyle = {
+            ...headerStyle,
+            fill: { ...headerStyle.fill, fgColor: { argb: '7F7F7F' } } // Abu-abu
+        };
+
+        const bulanHeaderStyle = {
+            ...headerStyle,
+            fill: { ...headerStyle.fill, fgColor: { argb: '70AD47' } } // Hijau
+        };
+
+        const totalFooterStyle = {
+            font: { bold: true, color: { argb: 'FFFFFF' } },
+            fill: {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FF0000' } // Merah
+            },
+            border: {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+            }
+        };
+
+        // Row 1: Main Headers
+        const row1 = worksheet.addRow([]);
+        
+        // Basic columns (rowspan 2)
+        const basicColumns = [
+            'Kabupaten', 'Kecamatan', 'Desa', 'Nama Poktan', 'NIK', 
+            'Nama Petani', 'Kode Kios', 'Nama Kios'
+        ];
+
+        basicColumns.forEach((col, index) => {
+            const cell = worksheet.getCell(row1.number, index + 1);
+            cell.value = col;
+            Object.assign(cell, headerStyle);
+            worksheet.mergeCells(row1.number, index + 1, row1.number + 1, index + 1);
+        });
+
+        // Alokasi Header (colspan 4)
+        let colIndex = basicColumns.length + 1;
+        const alokasiCell = worksheet.getCell(row1.number, colIndex);
+        alokasiCell.value = 'Alokasi';
+        Object.assign(alokasiCell, alokasiHeaderStyle);
+        worksheet.mergeCells(row1.number, colIndex, row1.number, colIndex + 3);
+
+        // Sisa Alokasi Header (colspan 4)
+        colIndex += 4;
+        const sisaCell = worksheet.getCell(row1.number, colIndex);
+        sisaCell.value = 'Sisa Alokasi';
+        Object.assign(sisaCell, sisaHeaderStyle);
+        worksheet.mergeCells(row1.number, colIndex, row1.number, colIndex + 3);
+
+        // Penyaluran Header (colspan 4)
+        colIndex += 4;
+        const penyaluranCell = worksheet.getCell(row1.number, colIndex);
+        penyaluranCell.value = 'Penyaluran';
+        Object.assign(penyaluranCell, penyaluranHeaderStyle);
+        worksheet.mergeCells(row1.number, colIndex, row1.number, colIndex + 3);
+
+        // Monthly Headers
+        colIndex += 4;
+        Object.keys(bulanIndex).forEach(bulan => {
+            const index = bulanIndex[bulan];
+            if (index >= batasAwal && index <= batasAkhir) {
+                const bulanCell = worksheet.getCell(row1.number, colIndex);
+                bulanCell.value = bulanNama[bulan];
+                Object.assign(bulanCell, bulanHeaderStyle);
+                worksheet.mergeCells(row1.number, colIndex, row1.number, colIndex + 3);
+                colIndex += 4;
+            }
+        });
+
+        // Row 2: Sub Headers
+        const row2 = worksheet.addRow([]);
+
+        // Basic columns already merged, skip them
+
+        // Alokasi Sub Headers
+        colIndex = basicColumns.length + 1;
+        ['Urea', 'NPK', 'NPK Formula', 'Organik'].forEach(subHeader => {
+            const cell = worksheet.getCell(row2.number, colIndex);
+            cell.value = subHeader;
+            Object.assign(cell, subHeaderStyle);
+            colIndex++;
+        });
+
+        // Sisa Alokasi Sub Headers
+        ['Urea', 'NPK', 'NPK Formula', 'Organik'].forEach(subHeader => {
+            const cell = worksheet.getCell(row2.number, colIndex);
+            cell.value = subHeader;
+            Object.assign(cell, subHeaderStyle);
+            colIndex++;
+        });
+
+        // Penyaluran Sub Headers
+        ['Urea', 'NPK', 'NPK Formula', 'Organik'].forEach(subHeader => {
+            const cell = worksheet.getCell(row2.number, colIndex);
+            cell.value = subHeader;
+            Object.assign(cell, subHeaderStyle);
+            colIndex++;
+        });
+
+        // Monthly Sub Headers
+        Object.keys(bulanIndex).forEach(bulan => {
+            const index = bulanIndex[bulan];
+            if (index >= batasAwal && index <= batasAkhir) {
+                ['Urea', 'NPK', 'NPK Formula', 'Organik'].forEach(subHeader => {
+                    const cell = worksheet.getCell(row2.number, colIndex);
+                    cell.value = subHeader;
+                    Object.assign(cell, subHeaderStyle);
+                    colIndex++;
+                });
+            }
+        });
+
+        // Add Data Rows
+        filteredData.forEach((row, rowIndex) => {
+            const dataRow = worksheet.addRow([]);
+            
+            // Basic data
+            let col = 1;
+            dataRow.getCell(col++).value = row.kabupaten;
+            dataRow.getCell(col++).value = row.kecamatan;
+            dataRow.getCell(col++).value = row.desa;
+            dataRow.getCell(col++).value = row.poktan;
+            dataRow.getCell(col++).value = row.nik;
+            dataRow.getCell(col++).value = row.nama_petani;
+            dataRow.getCell(col++).value = row.kode_kios;
+            dataRow.getCell(col++).value = row.nama_kios;
+
+            // Alokasi
+            dataRow.getCell(col++).value = row.urea;
+            dataRow.getCell(col++).value = row.npk;
+            dataRow.getCell(col++).value = row.npk_formula;
+            dataRow.getCell(col++).value = row.organik;
+
+            // Sisa Alokasi
+            dataRow.getCell(col++).value = row.sisa_urea;
+            dataRow.getCell(col++).value = row.sisa_npk;
+            dataRow.getCell(col++).value = row.sisa_npk_formula;
+            dataRow.getCell(col++).value = row.sisa_organik;
+
+            // Penyaluran (tebusan)
+            dataRow.getCell(col++).value = row.tebus_urea;
+            dataRow.getCell(col++).value = row.tebus_npk;
+            dataRow.getCell(col++).value = row.tebus_npk_formula;
+            dataRow.getCell(col++).value = row.tebus_organik;
+
+            // Monthly data
+            Object.keys(bulanIndex).forEach(bulan => {
+                const index = bulanIndex[bulan];
+                if (index >= batasAwal && index <= batasAkhir) {
+                    dataRow.getCell(col++).value = row[`${bulan}_urea`] || 0;
+                    dataRow.getCell(col++).value = row[`${bulan}_npk`] || 0;
+                    dataRow.getCell(col++).value = row[`${bulan}_npk_formula`] || 0;
+                    dataRow.getCell(col++).value = row[`${bulan}_organik`] || 0;
+                }
+            });
+
+            // Apply borders to data row
+            for (let i = 1; i <= col; i++) {
+                dataRow.getCell(i).border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                };
+            }
+
+            // Alternate row color
+            if (rowIndex % 2 === 0) {
+                for (let i = 1; i <= col; i++) {
+                    dataRow.getCell(i).fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'F2F2F2' }
+                    };
+                }
+            }
+        });
+
+        // Add Footer Row with Totals
+        const footerRow = worksheet.addRow([]);
+        let footerCol = 1;
+
+        // "TOTAL" text
+        const totalCell = footerRow.getCell(footerCol);
+        totalCell.value = 'TOTAL';
+        Object.assign(totalCell, totalFooterStyle);
+        worksheet.mergeCells(footerRow.number, footerCol, footerRow.number, footerCol + 7);
+        footerCol += 8;
+
+        // Calculate totals
+        const totals = {
+            urea: 0, npk: 0, npk_formula: 0, organik: 0,
+            sisa_urea: 0, sisa_npk: 0, sisa_npk_formula: 0, sisa_organik: 0,
+            tebus_urea: 0, tebus_npk: 0, tebus_npk_formula: 0, tebus_organik: 0
+        };
+
+        // Monthly totals
+        const monthlyTotals = {};
+        Object.keys(bulanIndex).forEach(bulan => {
+            monthlyTotals[bulan] = {
+                urea: 0, npk: 0, npk_formula: 0, organik: 0
+            };
+        });
+
+        // Calculate all totals
+        filteredData.forEach(row => {
+            totals.urea += row.urea || 0;
+            totals.npk += row.npk || 0;
+            totals.npk_formula += row.npk_formula || 0;
+            totals.organik += row.organik || 0;
+            
+            totals.sisa_urea += row.sisa_urea || 0;
+            totals.sisa_npk += row.sisa_npk || 0;
+            totals.sisa_npk_formula += row.sisa_npk_formula || 0;
+            totals.sisa_organik += row.sisa_organik || 0;
+            
+            totals.tebus_urea += row.tebus_urea || 0;
+            totals.tebus_npk += row.tebus_npk || 0;
+            totals.tebus_npk_formula += row.tebus_npk_formula || 0;
+            totals.tebus_organik += row.tebus_organik || 0;
+
+            Object.keys(bulanIndex).forEach(bulan => {
+                monthlyTotals[bulan].urea += row[`${bulan}_urea`] || 0;
+                monthlyTotals[bulan].npk += row[`${bulan}_npk`] || 0;
+                monthlyTotals[bulan].npk_formula += row[`${bulan}_npk_formula`] || 0;
+                monthlyTotals[bulan].organik += row[`${bulan}_organik`] || 0;
+            });
+        });
+
+        // Add totals to footer
+        // Alokasi totals
+        footerRow.getCell(footerCol++).value = totals.urea;
+        footerRow.getCell(footerCol++).value = totals.npk;
+        footerRow.getCell(footerCol++).value = totals.npk_formula;
+        footerRow.getCell(footerCol++).value = totals.organik;
+
+        // Sisa totals
+        footerRow.getCell(footerCol++).value = totals.sisa_urea;
+        footerRow.getCell(footerCol++).value = totals.sisa_npk;
+        footerRow.getCell(footerCol++).value = totals.sisa_npk_formula;
+        footerRow.getCell(footerCol++).value = totals.sisa_organik;
+
+        // Penyaluran totals
+        footerRow.getCell(footerCol++).value = totals.tebus_urea;
+        footerRow.getCell(footerCol++).value = totals.tebus_npk;
+        footerRow.getCell(footerCol++).value = totals.tebus_npk_formula;
+        footerRow.getCell(footerCol++).value = totals.tebus_organik;
+
+        // Monthly totals
+        Object.keys(bulanIndex).forEach(bulan => {
+            const index = bulanIndex[bulan];
+            if (index >= batasAwal && index <= batasAkhir) {
+                footerRow.getCell(footerCol++).value = monthlyTotals[bulan].urea;
+                footerRow.getCell(footerCol++).value = monthlyTotals[bulan].npk;
+                footerRow.getCell(footerCol++).value = monthlyTotals[bulan].npk_formula;
+                footerRow.getCell(footerCol++).value = monthlyTotals[bulan].organik;
+            }
+        });
+
+        // Apply footer style to all footer cells
+        for (let i = 1; i <= footerCol; i++) {
+            const cell = footerRow.getCell(i);
+            Object.assign(cell, totalFooterStyle);
+        }
+
+        // Set column widths
+        worksheet.columns = [
+            { width: 20 }, { width: 15 }, { width: 15 }, { width: 15 }, 
+            { width: 15 }, { width: 20 }, { width: 12 }, { width: 20 },
+            // Alokasi
+            { width: 12 }, { width: 12 }, { width: 15 }, { width: 15 },
+            // Sisa
+            { width: 12 }, { width: 12 }, { width: 15 }, { width: 15 },
+            // Penyaluran
+            { width: 12 }, { width: 12 }, { width: 15 }, { width: 15 },
+            // Monthly columns (akan ditambahkan otomatis)
+            ...Array((Object.keys(bulanIndex).filter(bulan => {
+                const index = bulanIndex[bulan];
+                return index >= batasAwal && index <= batasAkhir;
+            }).length * 4)).fill({ width: 10 })
+        ];
+
+        // Set response headers
+        const filename = `alokasi_vs_tebusan_${new Date().toISOString().split('T')[0]}.xlsx`;
+        
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+
+        // Write to response
+        await workbook.xlsx.write(res);
+        res.end();
+
+    } catch (error) {
+        console.error("Error exporting to Excel:", error);
+        res.status(500).json({ error: "Terjadi kesalahan dalam export data" });
     }
 };
 
@@ -1720,12 +2047,10 @@ exports.wcmVsVerval = async (req, res) => {
         const length = req.query.length || '10';
         const draw = req.query.draw || '1';
 
-        // Validasi parameter wajib
         if (!tahun) {
             return res.status(400).json({ message: 'Parameter tahun wajib diisi' });
         }
 
-        // Generate cache key TANPA draw
         cacheKey = generateCacheKey({ tahun, bulan, produk, kabupaten, status, start, length });
         
         console.log('══════════════════════════════════════════════════');
@@ -1733,7 +2058,6 @@ exports.wcmVsVerval = async (req, res) => {
         console.log('📋 Parameter:', { tahun, bulan, produk, kabupaten, status, start, length, draw });
         console.log('🔑 Cache Key:', cacheKey);
         
-        // Cek cache terlebih dahulu
         const cacheCheckStart = Date.now();
         try {
             const cachedData = await client.get(cacheKey);
@@ -1750,7 +2074,6 @@ exports.wcmVsVerval = async (req, res) => {
                 console.log('⚡ Waktu akses cache:', cacheCheckTime, 'ms');
                 console.log('💾 Total waktu response:', Date.now() - startTime, 'ms');
                 
-                // Response dari cache dengan draw yang baru
                 const response = {
                     draw: parseInt(draw),
                     recordsTotal: parsedData.recordsTotal,
