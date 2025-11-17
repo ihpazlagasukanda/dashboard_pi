@@ -768,14 +768,14 @@ exports.getJumlahPetani = async (req, res) => {
 
 exports.alokasiVsTebusan = async (req, res) => {
     try {
-        const { start, length, draw, kabupaten, tahun, bulan_awal, bulan_akhir } = req.query;
+        const { start, length, draw, kabupaten, tahun, bulan_awal, bulan_akhir, search } = req.query;
 
         const bulanIndex = {
             jan: 1, feb: 2, mar: 3, apr: 4, mei: 5, jun: 6,
             jul: 7, agu: 8, sep: 9, okt: 10, nov: 11, des: 12
         };
 
-        // Parameter untuk stored procedure
+        // Untuk sementara, kita akan filter di application layer dulu
         const params = [
             kabupaten || null,
             tahun ? parseInt(tahun) : null,
@@ -785,12 +785,22 @@ exports.alokasiVsTebusan = async (req, res) => {
             parseInt(length) || 10
         ];
 
-        // Panggil stored procedure
+        // Panggil stored procedure yang lama
         const [data] = await db.query('CALL sp_get_alokasi_vs_tebusan(?, ?, ?, ?, ?, ?)', params);
         
         // Data utama ada di result pertama, total records di result kedua
-        const resultData = data[0];
-        const recordsFiltered = data[1][0].recordsFiltered;
+        let resultData = data[0];
+        let recordsFiltered = data[1][0].recordsFiltered;
+
+        // Filter berdasarkan search jika ada (application layer filtering)
+        if (search && search.value) {
+            const searchTerm = search.value.toLowerCase();
+            resultData = resultData.filter(row => 
+                (row.nik && row.nik.toLowerCase().includes(searchTerm)) ||
+                (row.nama_petani && row.nama_petani.toLowerCase().includes(searchTerm))
+            );
+            recordsFiltered = resultData.length; // Update records filtered
+        }
 
         // Filter kolom bulan berdasarkan rentang
         const batasAwal = bulan_awal ? parseInt(bulan_awal) : 1;
@@ -1381,100 +1391,165 @@ exports.getVervalSummary = async (req, res) => {
     try {
         const { kabupaten, tahun, bulan_awal, bulan_akhir } = req.query;
 
-        // Map index bulan ke nama kolom di tabel
-        const bulanMap = [
-            'jan', 'feb', 'mar', 'apr', 'mei', 'jun',
-            'jul', 'agu', 'sep', 'okt', 'nov', 'des'
-        ];
-
         const start = parseInt(bulan_awal || '1');
         const end = parseInt(bulan_akhir || '12');
+        const bulanMap = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des'];
 
-        // Validasi range bulan
-        const bulanRange = bulanMap.slice(start - 1, end);
-
-        // Generator kolom SUM untuk setiap bulan dalam rentang
-        const bulanSumFields = bulanRange.map(prefix => `
-            SUM(COALESCE(t.${prefix}_urea, 0)) AS ${prefix}_tebus_urea,
-            SUM(COALESCE(t.${prefix}_npk, 0)) AS ${prefix}_tebus_npk,
-            SUM(COALESCE(t.${prefix}_npk_formula, 0)) AS ${prefix}_tebus_npk_formula,
-            SUM(COALESCE(t.${prefix}_organik, 0)) AS ${prefix}_tebus_organik
-        `).join(',\n');
-
-        let query = `
-            SELECT 
-                SUM(combined.urea) AS total_urea,
-                SUM(combined.npk) AS total_npk,
-                SUM(combined.npk_formula) AS total_npk_formula,
-                SUM(combined.organik) AS total_organik,
-
-                SUM(combined.urea - COALESCE(v.tebus_urea, 0)) AS sisa_urea,
-                SUM(combined.npk - COALESCE(v.tebus_npk, 0)) AS sisa_npk,
-                SUM(combined.npk_formula - COALESCE(v.tebus_npk_formula, 0)) AS sisa_npk_formula,
-                SUM(combined.organik - COALESCE(v.tebus_organik, 0)) AS sisa_organik,
-
-                SUM(COALESCE(v.tebus_urea, 0)) AS total_tebus_urea,
-                SUM(COALESCE(v.tebus_npk, 0)) AS total_tebus_npk,
-                SUM(COALESCE(v.tebus_npk_formula, 0)) AS total_tebus_npk_formula,
-                SUM(COALESCE(v.tebus_organik, 0)) AS total_tebus_organik,
-
-                ${bulanSumFields}
-            FROM (
-                -- Data dari ERDKK
-                SELECT 
-                    e.kabupaten, e.kecamatan, e.nik, e.nama_petani, e.kode_kios, e.nama_kios,
-                    e.tahun, e.desa, e.poktan,
-                    e.urea, e.npk, e.npk_formula, e.organik
-                FROM erdkk e
-                
-                UNION ALL
-                
-                -- Data dari VERVAL yang tidak ada di ERDKK
-                SELECT 
-                    v.kabupaten, v.kecamatan, v.nik, v.nama_petani, v.kode_kios, v.nama_kios,
-                    v.tahun, '' AS desa, v.poktan,
-                    0 AS urea, 0 AS npk, 0 AS npk_formula, 0 AS organik
-                FROM verval_summary v
-                LEFT JOIN erdkk e 
-                    ON e.nik = v.nik
-                   AND e.kabupaten = v.kabupaten
-                   AND e.tahun = v.tahun
-                   AND e.kecamatan = v.kecamatan
-                   AND e.kode_kios = v.kode_kios
-                WHERE e.nik IS NULL
-            ) AS combined
-            LEFT JOIN verval_summary v 
-                ON combined.nik = v.nik 
-                AND combined.kabupaten = v.kabupaten
-                AND combined.tahun = v.tahun
-                AND combined.kecamatan = v.kecamatan
-                AND combined.kode_kios = v.kode_kios
-            LEFT JOIN tebusan_per_bulan t
-                ON combined.nik = t.nik
-                AND combined.kabupaten = t.kabupaten
-                AND combined.tahun = t.tahun
-                AND combined.kecamatan = t.kecamatan
-                AND combined.kode_kios = t.kode_kios
-            WHERE 1=1
-        `;
-
+        // Build base conditions
+        let whereConditions = [];
         let params = [];
+
         if (kabupaten) {
-            query += " AND combined.kabupaten = ?";
+            whereConditions.push("kabupaten = ?");
             params.push(kabupaten);
         }
-
         if (tahun) {
-            query += " AND combined.tahun = ?";
+            whereConditions.push("tahun = ?");
             params.push(tahun);
         }
 
-        const [summary] = await db.query(query, params);
+        const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
-        res.json({ sum: summary[0] || {} });
+        // 1. Query untuk total alokasi dari ERDKK
+        const erdkkQuery = `
+            SELECT 
+                SUM(COALESCE(urea, 0)) AS total_urea,
+                SUM(COALESCE(npk, 0)) AS total_npk,
+                SUM(COALESCE(npk_formula, 0)) AS total_npk_formula,
+                SUM(COALESCE(organik, 0)) AS total_organik
+            FROM erdkk 
+            ${whereClause}
+        `;
+
+        // 2. Single query untuk semua data VERVAL (total + detail per bulan)
+        let vervalQuery = `
+            SELECT 
+                -- Total untuk semua bulan
+                SUM(COALESCE(urea, 0)) AS total_tebus_urea,
+                SUM(COALESCE(npk, 0)) AS total_tebus_npk,
+                SUM(COALESCE(npk_formula, 0)) AS total_tebus_npk_formula,
+                SUM(COALESCE(organik, 0)) AS total_tebus_organik,
+        `;
+
+        // Add columns untuk setiap bulan
+        const bulanColumns = [];
+        for (let i = start; i <= end; i++) {
+            const bulanName = bulanMap[i - 1];
+            bulanColumns.push(`
+                SUM(CASE WHEN MONTH(tanggal_tebus) = ${i} THEN COALESCE(urea, 0) ELSE 0 END) AS ${bulanName}_tebus_urea,
+                SUM(CASE WHEN MONTH(tanggal_tebus) = ${i} THEN COALESCE(npk, 0) ELSE 0 END) AS ${bulanName}_tebus_npk,
+                SUM(CASE WHEN MONTH(tanggal_tebus) = ${i} THEN COALESCE(npk_formula, 0) ELSE 0 END) AS ${bulanName}_tebus_npk_formula,
+                SUM(CASE WHEN MONTH(tanggal_tebus) = ${i} THEN COALESCE(organik, 0) ELSE 0 END) AS ${bulanName}_tebus_organik
+            `);
+        }
+
+        vervalQuery += bulanColumns.join(',\n');
+        vervalQuery += `
+            FROM verval 
+            WHERE 1=1
+                ${kabupaten ? ' AND kabupaten = ?' : ''}
+                ${tahun ? ' AND YEAR(tanggal_tebus) = ?' : ''}
+                AND MONTH(tanggal_tebus) BETWEEN ? AND ?
+        `;
+
+        const vervalParams = [
+            ...(kabupaten ? [kabupaten] : []),
+            ...(tahun ? [tahun] : []),
+            start,
+            end
+        ];
+
+        console.log('Executing queries...');
+        
+        // Execute both queries parallel
+        const [erdkkResult, vervalResult] = await Promise.all([
+            db.query(erdkkQuery, params),
+            db.query(vervalQuery, vervalParams)
+        ]);
+
+        const erdkkData = erdkkResult[0][0] || {};
+        const vervalData = vervalResult[0][0] || {};
+
+        console.log('ERDKK Data:', erdkkData);
+        console.log('Verval Data:', vervalData);
+
+        // Extract bulan results
+        const bulanResults = {};
+        for (let i = start; i <= end; i++) {
+            const bulanName = bulanMap[i - 1];
+            bulanResults[`${bulanName}_tebus_urea`] = vervalData[`${bulanName}_tebus_urea`] || 0;
+            bulanResults[`${bulanName}_tebus_npk`] = vervalData[`${bulanName}_tebus_npk`] || 0;
+            bulanResults[`${bulanName}_tebus_npk_formula`] = vervalData[`${bulanName}_tebus_npk_formula`] || 0;
+            bulanResults[`${bulanName}_tebus_organik`] = vervalData[`${bulanName}_tebus_organik`] || 0;
+        }
+
+        // Verifikasi total dari detail bulan (sama seperti sebelumnya)
+        let verifiedTotalUrea = 0;
+        let verifiedTotalNpk = 0;
+        let verifiedTotalNpkFormula = 0;
+        let verifiedTotalOrganik = 0;
+
+        for (let i = start; i <= end; i++) {
+            const bulanName = bulanMap[i - 1];
+            verifiedTotalUrea += bulanResults[`${bulanName}_tebus_urea`] || 0;
+            verifiedTotalNpk += bulanResults[`${bulanName}_tebus_npk`] || 0;
+            verifiedTotalNpkFormula += bulanResults[`${bulanName}_tebus_npk_formula`] || 0;
+            verifiedTotalOrganik += bulanResults[`${bulanName}_tebus_organik`] || 0;
+        }
+
+        console.log('Verification:', {
+            direct: {
+                urea: vervalData.total_tebus_urea,
+                npk: vervalData.total_tebus_npk,
+                npk_formula: vervalData.total_tebus_npk_formula,
+                organik: vervalData.total_tebus_organik
+            },
+            calculated: {
+                urea: verifiedTotalUrea,
+                npk: verifiedTotalNpk,
+                npk_formula: verifiedTotalNpkFormula,
+                organik: verifiedTotalOrganik
+            }
+        });
+
+        // Gunakan verified total jika ada perbedaan (pertahankan logika yang sudah bekerja)
+        const useVerified = 
+            verifiedTotalUrea !== vervalData.total_tebus_urea ||
+            verifiedTotalNpk !== vervalData.total_tebus_npk ||
+            verifiedTotalNpkFormula !== vervalData.total_tebus_npk_formula ||
+            verifiedTotalOrganik !== vervalData.total_tebus_organik;
+
+        const finalTebusanUrea = useVerified ? verifiedTotalUrea : vervalData.total_tebus_urea;
+        const finalTebusanNpk = useVerified ? verifiedTotalNpk : vervalData.total_tebus_npk;
+        const finalTebusanNpkFormula = useVerified ? verifiedTotalNpkFormula : vervalData.total_tebus_npk_formula;
+        const finalTebusanOrganik = useVerified ? verifiedTotalOrganik : vervalData.total_tebus_organik;
+
+        // Build final summary
+        const summary = {
+            total_urea: erdkkData.total_urea || 0,
+            total_npk: erdkkData.total_npk || 0,
+            total_npk_formula: erdkkData.total_npk_formula || 0,
+            total_organik: erdkkData.total_organik || 0,
+
+            total_tebus_urea: finalTebusanUrea || 0,
+            total_tebus_npk: finalTebusanNpk || 0,
+            total_tebus_npk_formula: finalTebusanNpkFormula || 0,
+            total_tebus_organik: finalTebusanOrganik || 0,
+
+            sisa_urea: (erdkkData.total_urea || 0) - (finalTebusanUrea || 0),
+            sisa_npk: (erdkkData.total_npk || 0) - (finalTebusanNpk || 0),
+            sisa_npk_formula: (erdkkData.total_npk_formula || 0) - (finalTebusanNpkFormula || 0),
+            sisa_organik: (erdkkData.total_organik || 0) - (finalTebusanOrganik || 0),
+
+            ...bulanResults
+        };
+
+        console.log('Final Summary:', summary);
+        res.json({ sum: summary });
+
     } catch (error) {
-        console.error("Error fetching summary:", error);
-        res.status(500).json({ error: "Terjadi kesalahan dalam mengambil summary" });
+        console.error("Error fetching verval summary:", error);
+        res.status(500).json({ error: "Terjadi kesalahan dalam mengambil summary verval" });
     }
 };
 

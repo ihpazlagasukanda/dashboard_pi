@@ -326,23 +326,32 @@
 
   $(document).ready(function () {
     const table = $('#summary-verval-table').DataTable({
-      processing: true,
-      serverSide: true,
-      deferLoading: 0,
-      ajax: {
-        url: "/api/alokasivstebus",
-        type: "GET",
-        data: function (d) {
-          d.kabupaten = $('#kabupatenSelect').val();
-          d.tahun = $('#tahunSelect').val();
-          const bulanAwal = $('#periode-bulan-awal').val();
-          const bulanAkhir = $('#periode-bulan-akhir').val();
-          if (bulanAwal && bulanAkhir) {
-            d.bulan_awal = parseInt(bulanAwal);
-            d.bulan_akhir = parseInt(bulanAkhir);
-          }
-        }
-      },
+        processing: true,
+        serverSide: true,
+        deferLoading: 0,
+        ajax: {
+            url: "/api/alokasivstebus",
+            type: "GET",
+            data: function (d) {
+                d.kabupaten = $('#kabupatenSelect').val();
+                d.tahun = $('#tahunSelect').val();
+                const bulanAwal = $('#periode-bulan-awal').val();
+                const bulanAkhir = $('#periode-bulan-akhir').val();
+                if (bulanAwal && bulanAkhir) {
+                    d.bulan_awal = parseInt(bulanAwal);
+                    d.bulan_akhir = parseInt(bulanAkhir);
+                }
+            }
+        },
+        language: {
+            search: "Cari NIK atau Nama:",
+            searchPlaceholder: "Masukkan NIK atau Nama Petani...",
+            lengthMenu: "Tampilkan _MENU_ data",
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+            infoFiltered: "(disaring dari _MAX_ total data)",
+            zeroRecords: "Tidak ada data yang ditemukan",
+        },
       columns: [
          { data: "kabupaten" },
                     { data: "kecamatan" },

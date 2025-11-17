@@ -189,16 +189,12 @@ function convertExcelDate(excelSerial) {
     }
 }
 
-// Fungsi untuk parse berbagai format tanggal
 // FUNGSI FIXED - TANGGAL PASTI BENAR
 function tryMultipleDateFormats(dateStr) {
     if (!dateStr) return null;
-    
-    console.log(`🔍 START PARSING: "${dateStr}"`);
 
     // Bersihkan dan normalisasi
     const cleaned = dateStr.toString().trim().replace(/\s+/g, '');
-    console.log(`🧹 Setelah cleaning: "${cleaned}"`);
 
     // SEMUA FORMAT DIASUMSIKAN SEBAGAI DD/MM/YYYY (Format Indonesia)
     const formats = [
@@ -265,9 +261,6 @@ function tryMultipleDateFormats(dateStr) {
                 const day = parseInt(d);
                 const month = parseInt(m);
                 const year = parseInt(y);
-                
-                console.log(`📅 Format terdeteksi: ${detectedFormat}`);
-                console.log(`   Input: ${dateStr} -> Day: ${day}, Month: ${month}, Year: ${year}`);
 
                 // Validasi bulan
                 if (month < 1 || month > 12) {
@@ -289,7 +282,6 @@ function tryMultipleDateFormats(dateStr) {
                 }
 
                 const result = `${year}/${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
-                console.log(`✅ BERHASIL: ${dateStr} -> ${result}`);
                 return result;
 
             } catch (error) {
@@ -310,7 +302,6 @@ function parseTanggalAcak(tanggal) {
         return null;
     }
     
-    console.log(`🔄 parseTanggalAcak input: ${tanggal} (tipe: ${typeof tanggal})`);
 
     // Jika sudah Date object
     if (tanggal instanceof Date) {
@@ -340,8 +331,6 @@ function parseTanggalAcak(tanggal) {
             return result;
         }
         
-        // Gunakan parser custom untuk format teks
-        console.log(`🔍 Parsing string: "${cleaned}"`);
         return tryMultipleDateFormats(cleaned);
     }
     
@@ -399,8 +388,6 @@ const processRowData = (row, metodePenebusan) => {
         tanggalExcel = row.getCell(15).value; // Gunakan .value bukan .text
     }
 
-    console.log(`🎯 PROSES ROW - Tanggal excel: ${tanggalExcel} (tipe: ${typeof tanggalExcel})`);
-
     // PARSING TANGGAL - VERSI SIMPLE & PASTI BENAR
     if (tanggalExcel instanceof Date) {
         // Jika sudah Date object dari Excel
@@ -416,7 +403,6 @@ const processRowData = (row, metodePenebusan) => {
         const parsed = parseTanggalAcak(tanggalExcel);
         if (parsed) {
             tanggalTebus = parsed;
-            console.log(`✅ Berhasil parsing: ${tanggalExcel} -> ${tanggalTebus}`);
         } else {
             // Fallback ke tanggal hari ini
             console.warn(`⚠️ Gagal parsing: ${tanggalExcel}, gunakan tanggal hari ini`);
@@ -429,8 +415,6 @@ const processRowData = (row, metodePenebusan) => {
         console.warn(`❌ Tanggal akhir tidak valid: ${tanggalTebus}, gunakan tanggal hari ini`);
         tanggalTebus = new Date().toISOString().split('T')[0].replace(/-/g, '/');
     }
-
-    console.log(`🎯 FINAL TANGGAL: ${tanggalTebus}`);
 
     // Process data berdasarkan metode (sisa code tetap sama)
     if (metodePenebusan === 'ipubers') {
