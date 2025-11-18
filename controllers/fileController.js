@@ -42,7 +42,7 @@ const generateKodeTransaksi = () => {
 const validateExcelStructure = (worksheet, metodePenebusan) => {
     const expectedColumnsKartan = ['NO', 'KABUPATEN', 'KECAMATAN', 'KODE KIOS', 'NAMA KIOS', 'NIK', 'NAMA PETANI', 'UREA', 'NPK', 'SP36', 'ZA', 'NPK FORMULA', 'ORGANIK', 'ORGANIK CAIR', 'TGL TEBUS', 'TGL INPUT', 'STATUS'];
     // const expectedColumnsIpubers = ['NO', 'KABUPATEN', 'KECAMATAN', 'NO TRANSAKSI', 'KODE KIOS', 'NAMA KIOS', 'POKTAN', 'NIK', 'NAMA PETANI', 'KOMODITAS', 'UREA', 'NPK', 'SP36', 'ZA', 'NPK FORMULA', 'ORGANIK', 'ORGANIK CAIR', 'TGL TEBUS', 'TGL INPUT', 'STATUS'];
-    const expectedColumnsIpubers = ['No', 'Kabupaten', 'Kecamatan', 'Kode Kios', 'Nama Kios', 'Kode TRX', 'No Transaksi', 'NIK', 'Nama Petani', 'Urea', 'NPK', 'SP36', 'ZA', 'NPK Formula', 'Organik', 'Organik Cair', 'Keterangan', 'Tanggal Tebus', 'Tanggal Entri', 'Tanggal Update', 'Tipe Tebus', 'NIK Perwakilan', 'Url Bukti', 'Status'];
+    const expectedColumnsIpubers = ['NO','KABUPATEN','KECAMATAN','KODE KIOS','NAMA KIOS','KODE TRX','NO TRANSAKSI','NIK','NAMA PETANI','UREA','NPK','SP36','ZA','NPK FORMULA','ORGANIK','ORGANIK CAIR','KETERANGAN','TANGGAL TEBUS','TANGGAL ENTRI','TANGGAL UPDATE','TIPE TEBUS','NIK PERWAKILAN','URL BUKTI','STATUS'];
     const headerRow = 1;
     let rowValues;
     
