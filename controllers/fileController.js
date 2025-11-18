@@ -41,8 +41,8 @@ const generateKodeTransaksi = () => {
 // Fungsi untuk validasi struktur file Excel
 const validateExcelStructure = (worksheet, metodePenebusan) => {
     const expectedColumnsKartan = ['NO', 'KABUPATEN', 'KECAMATAN', 'KODE KIOS', 'NAMA KIOS', 'NIK', 'NAMA PETANI', 'UREA', 'NPK', 'SP36', 'ZA', 'NPK FORMULA', 'ORGANIK', 'ORGANIK CAIR', 'TGL TEBUS', 'TGL INPUT', 'STATUS'];
-    // const expectedColumnsIpubers = ['NO', 'KABUPATEN', 'KECAMATAN', 'NO TRANSAKSI', 'KODE KIOS', 'NAMA KIOS', 'POKTAN', 'NIK', 'NAMA PETANI', 'KOMODITAS', 'UREA', 'NPK', 'SP36', 'ZA', 'NPK FORMULA', 'ORGANIK', 'ORGANIK CAIR', 'TGL TEBUS', 'TGL INPUT', 'STATUS'];
-    const expectedColumnsIpubers = ['NO','KABUPATEN','KECAMATAN','KODE KIOS','NAMA KIOS','KODE TRX','NO TRANSAKSI','NIK','NAMA PETANI','UREA','NPK','SP36','ZA','NPK FORMULA','ORGANIK','ORGANIK CAIR','KETERANGAN','TANGGAL TEBUS','TANGGAL ENTRI','TANGGAL UPDATE','TIPE TEBUS','NIK PERWAKILAN','URL BUKTI','STATUS'];
+    const expectedColumnsIpubers = ['NO', 'KABUPATEN', 'KECAMATAN', 'NO TRANSAKSI', 'KODE KIOS', 'NAMA KIOS', 'POKTAN', 'NIK', 'NAMA PETANI', 'KOMODITAS', 'UREA', 'NPK', 'SP36', 'ZA', 'NPK FORMULA', 'ORGANIK', 'ORGANIK CAIR', 'TGL TEBUS', 'TGL INPUT', 'STATUS'];
+    // const expectedColumnsIpubers = ['NO','KABUPATEN','KECAMATAN','KODE KIOS','NAMA KIOS','KODE TRX','NO TRANSAKSI','NIK','NAMA PETANI','UREA','NPK','SP36','ZA','NPK FORMULA','ORGANIK','ORGANIK CAIR','KETERANGAN','TANGGAL TEBUS','TANGGAL ENTRI','TANGGAL UPDATE','TIPE TEBUS','NIK PERWAKILAN','URL BUKTI','STATUS'];
     const headerRow = 1;
     let rowValues;
     
@@ -379,8 +379,8 @@ function normalisasiNamaWilayah(nama) {
 // Fungsi untuk memproses data row - VERSI FIXED
 const processRowData = (row, metodePenebusan) => {
     let tanggalTebus, tanggalExcel;
-    const kodeTransaksi = metodePenebusan === 'ipubers' ? row.getCell(7).text : generateKodeTransaksi();
-    // const kodeTransaksi = metodePenebusan === 'ipubers' ? (row.getCell(4).text || generateKodeTransaksi()) : generateKodeTransaksi();
+    // const kodeTransaksi = metodePenebusan === 'ipubers' ? row.getCell(7).text : generateKodeTransaksi();
+    const kodeTransaksi = metodePenebusan === 'ipubers' ? (row.getCell(4).text || generateKodeTransaksi()) : generateKodeTransaksi();
 
     // Ambil tanggal dari cell yang benar
     if (metodePenebusan === 'ipubers') {
@@ -419,48 +419,48 @@ const processRowData = (row, metodePenebusan) => {
 
     // Process data berdasarkan metode (sisa code tetap sama)
     if (metodePenebusan === 'ipubers') {
-        return {
-            kabupaten: normalisasiNamaWilayah((row.getCell(2).text || '').replace(/^KAB\.\s*/i, '').trim()),
-            kecamatan: normalisasiNamaWilayah(row.getCell(3).text || ''),
-                kodeTransaksi: kodeTransaksi,
-                poktan: row.getCell(25)?.text || '', // Gunakan optional chaining
-                kodeKios: row.getCell(4).text || '',
-                namaKios: row.getCell(5).text || '',
-                nik: row.getCell(8).text || '',
-                namaPetani: row.getCell(9).text || '',
-                metodePenebusan: 'ipubers',
-                tanggalTebus: tanggalTebus,
-                urea: convertToNumber(row.getCell(10).text || '0'),
-                npk: convertToNumber(row.getCell(11).text || '0'),
-                sp36: convertToNumber(row.getCell(12).text || '0'),
-                za: convertToNumber(row.getCell(13).text || '0'),
-                npkFormula: convertToNumber(row.getCell(14).text || '0'),
-                organik: convertToNumber(row.getCell(15).text || '0'),
-                organikCair: convertToNumber(row.getCell(16).text || '0'),
-                kakao: convertToNumber(row.getCell(26)?.text || '0'), // Gunakan optional chaining
-                status: row.getCell(24).text || 'Tidak Diketahui'
-            };
         // return {
         //     kabupaten: normalisasiNamaWilayah((row.getCell(2).text || '').replace(/^KAB\.\s*/i, '').trim()),
         //     kecamatan: normalisasiNamaWilayah(row.getCell(3).text || ''),
-        //     kodeTransaksi: kodeTransaksi,
-        //     poktan: row.getCell(7)?.text || '',
-        //     kodeKios: row.getCell(5).text || '',
-        //     namaKios: row.getCell(6).text || '',
-        //     nik: row.getCell(8).text || '',
-        //     namaPetani: row.getCell(9).text || '',
-        //     metodePenebusan: 'ipubers',
-        //     tanggalTebus: tanggalTebus,
-        //     urea: convertToNumber(row.getCell(11).text || '0'),
-        //     npk: convertToNumber(row.getCell(12).text || '0'),
-        //     sp36: convertToNumber(row.getCell(13).text || '0'),
-        //     za: convertToNumber(row.getCell(14).text || '0'),
-        //     npkFormula: convertToNumber(row.getCell(15).text || '0'),
-        //     organik: convertToNumber(row.getCell(16).text || '0'),
-        //     organikCair: convertToNumber(row.getCell(17).text || '0'),
-        //     kakao: convertToNumber(row.getCell(26)?.text || '0'),
-        //     status: row.getCell(20).text || 'Tidak Diketahui'
-        // };
+        //         kodeTransaksi: kodeTransaksi,
+        //         poktan: row.getCell(25)?.text || '', // Gunakan optional chaining
+        //         kodeKios: row.getCell(4).text || '',
+        //         namaKios: row.getCell(5).text || '',
+        //         nik: row.getCell(8).text || '',
+        //         namaPetani: row.getCell(9).text || '',
+        //         metodePenebusan: 'ipubers',
+        //         tanggalTebus: tanggalTebus,
+        //         urea: convertToNumber(row.getCell(10).text || '0'),
+        //         npk: convertToNumber(row.getCell(11).text || '0'),
+        //         sp36: convertToNumber(row.getCell(12).text || '0'),
+        //         za: convertToNumber(row.getCell(13).text || '0'),
+        //         npkFormula: convertToNumber(row.getCell(14).text || '0'),
+        //         organik: convertToNumber(row.getCell(15).text || '0'),
+        //         organikCair: convertToNumber(row.getCell(16).text || '0'),
+        //         kakao: convertToNumber(row.getCell(26)?.text || '0'), // Gunakan optional chaining
+        //         status: row.getCell(24).text || 'Tidak Diketahui'
+        //     };
+        return {
+            kabupaten: normalisasiNamaWilayah((row.getCell(2).text || '').replace(/^KAB\.\s*/i, '').trim()),
+            kecamatan: normalisasiNamaWilayah(row.getCell(3).text || ''),
+            kodeTransaksi: kodeTransaksi,
+            poktan: row.getCell(7)?.text || '',
+            kodeKios: row.getCell(5).text || '',
+            namaKios: row.getCell(6).text || '',
+            nik: row.getCell(8).text || '',
+            namaPetani: row.getCell(9).text || '',
+            metodePenebusan: 'ipubers',
+            tanggalTebus: tanggalTebus,
+            urea: convertToNumber(row.getCell(11).text || '0'),
+            npk: convertToNumber(row.getCell(12).text || '0'),
+            sp36: convertToNumber(row.getCell(13).text || '0'),
+            za: convertToNumber(row.getCell(14).text || '0'),
+            npkFormula: convertToNumber(row.getCell(15).text || '0'),
+            organik: convertToNumber(row.getCell(16).text || '0'),
+            organikCair: convertToNumber(row.getCell(17).text || '0'),
+            kakao: convertToNumber(row.getCell(26)?.text || '0'),
+            status: row.getCell(20).text || 'Tidak Diketahui'
+        };
     } else {
         const mid = `'${row.getCell(4).text || ''}`;
         return {
