@@ -346,7 +346,8 @@
             position: relative;
             width: 100%;
             height: 0;
-            padding-bottom: 56.25%;             margin: 1rem 0;
+            padding-bottom: 56.25%;             
+            margin: 1rem 0;
         }
         
         .video-container iframe {
@@ -426,6 +427,129 @@
       padding: 0.65rem 0.9rem;
     }
   }
+
+  /* Popup Form Lokasi */
+.location-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.location-content {
+    background-color: white;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.4s ease-out;
+}
+
+.location-header {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 1.5rem;
+    position: relative;
+    border-radius: 15px 15px 0 0;
+}
+
+.location-header h4 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.location-header h4 i {
+    margin-right: 10px;
+}
+
+.close-location {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.close-location:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.location-body {
+    padding: 1.5rem;
+}
+
+.location-footer {
+    padding: 1rem 1.5rem;
+    background-color: #f8f9fa;
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid #dee2e6;
+    border-radius: 0 0 15px 15px;
+}
+
+.location-footer .btn {
+    min-width: 120px;
+}
+
+.location-form-group {
+    margin-bottom: 1.5rem;
+}
+
+.location-form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.location-form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.location-form-group input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(44, 90, 160, 0.25);
+    outline: none;
+}
+
+.location-optional {
+    font-size: 0.85rem;
+    color: #6c757d;
+    font-style: italic;
+    margin-top: 0.25rem;
+}
+
+.location-suggestion {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+    padding-left: 0.5rem;
+}
     </style>
 </head>
 <body>
@@ -466,6 +590,48 @@
             </div>
         </div>
     </div>
+
+    <!-- Popup Form Lokasi -->
+<div class="location-popup" id="locationPopup">
+    <div class="location-content">
+        <div class="location-header">
+            <h4><i class="fas fa-map-marker-alt me-2"></i> Informasi Lokasi</h4>
+            <button class="close-location" onclick="closeLocationPopup()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="location-body">
+            <p class="mb-3">Silakan isi informasi lokasi Anda untuk pengalaman yang lebih personal. Informasi ini opsional dan dapat dilewati.</p>
+            
+            <div class="location-form-group">
+                <label for="kabupatenInput">Nama Kabupaten</label>
+                <input type="text" id="kabupatenInput" class="form-control" placeholder="Contoh: Bantul, Sleman, dll.">
+                <div class="location-optional">Opsional</div>
+                <div class="location-suggestion">Contoh: Bantul, Gunung Kidul, Kota Yogyakarta, Kulon Progo, Sleman, Boyolali, Karanganyar, Klaten, Kota Surakarta, Sragen, Sukoharjo, Wonogiri</div>
+            </div>
+            
+            <div class="location-form-group">
+                <label for="kecamatanInput">Nama Kecamatan</label>
+                <input type="text" id="kecamatanInput" class="form-control" placeholder="Contoh: Banguntapan, Depok, dll.">
+                <div class="location-optional">Opsional</div>
+            </div>
+            
+            <div class="location-form-group">
+                <label for="desaInput">Nama Desa</label>
+                <input type="text" id="desaInput" class="form-control" placeholder="Contoh: Bantul, Sewon, dll.">
+                <div class="location-optional">Opsional</div>
+            </div>
+        </div>
+        <div class="location-footer">
+            <button type="button" class="btn btn-outline-secondary" onclick="skipLocation()">
+                <i class="fas fa-forward me-1"></i> Lewati
+            </button>
+            <button type="button" class="btn btn-primary" onclick="saveLocation()">
+                <i class="fas fa-save me-1"></i> Simpan
+            </button>
+        </div>
+    </div>
+</div>
 
     <div class="container-fluid py-4">
         <div class="row justify-content-center">
@@ -846,6 +1012,120 @@
             
             videoStarted = false;
         }
+
+        // Variabel untuk data lokasi
+let userLocation = {
+    kabupaten: '',
+    kecamatan: '',
+    desa: ''
+};
+
+// Fungsi untuk menampilkan popup lokasi
+function showLocationPopup() {
+    document.getElementById('locationPopup').style.display = 'flex';
+    
+    // Load data yang sudah disimpan jika ada
+    const savedLocation = localStorage.getItem('userLocation');
+    if (savedLocation) {
+        userLocation = JSON.parse(savedLocation);
+        document.getElementById('kabupatenInput').value = userLocation.kabupaten || '';
+        document.getElementById('kecamatanInput').value = userLocation.kecamatan || '';
+        document.getElementById('desaInput').value = userLocation.desa || '';
+    }
+}
+
+// Fungsi untuk menutup popup lokasi
+function closeLocationPopup() {
+    document.getElementById('locationPopup').style.display = 'none';
+    localStorage.setItem('locationPopupClosed', 'true');
+}
+
+// Fungsi untuk melewatkan form lokasi
+function skipLocation() {
+    closeLocationPopup();
+    showAlert('Anda dapat mengisi informasi lokasi nanti melalui menu pengaturan.', 'info');
+}
+
+// Fungsi untuk menyimpan data lokasi
+function saveLocation() {
+    userLocation.kabupaten = document.getElementById('kabupatenInput').value.trim();
+    userLocation.kecamatan = document.getElementById('kecamatanInput').value.trim();
+    userLocation.desa = document.getElementById('desaInput').value.trim();
+    
+    // Simpan ke localStorage
+    localStorage.setItem('userLocation', JSON.stringify(userLocation));
+    
+    closeLocationPopup();
+    
+    // Tampilkan notifikasi berdasarkan data yang diisi
+    let message = 'Informasi lokasi telah disimpan.';
+    if (userLocation.kabupaten || userLocation.kecamatan || userLocation.desa) {
+        let locationParts = [];
+        if (userLocation.kabupaten) locationParts.push(userLocation.kabupaten);
+        if (userLocation.kecamatan) locationParts.push(userLocation.kecamatan);
+        if (userLocation.desa) locationParts.push(userLocation.desa);
+        
+        message = `Lokasi ${locationParts.join(', ')} telah disimpan.`;
+    }
+    
+    showAlert(message, 'success');
+}
+
+// Fungsi untuk menampilkan data lokasi yang tersimpan (opsional, untuk debugging)
+function displaySavedLocation() {
+    const savedLocation = localStorage.getItem('userLocation');
+    if (savedLocation) {
+        const location = JSON.parse(savedLocation);
+        console.log('Lokasi tersimpan:', location);
+    }
+}
+
+window.addEventListener('load', async () => {
+    try {
+        const response = await fetch('/api/remove/health');
+        if (response.ok) {
+            console.log('✅ Backend API is running');
+        }
+    } catch (error) {
+        console.warn('⚠️ Backend health check failed:', error);
+    }
+    
+    // Load selected conditions
+    loadSelectedConditions();
+    
+    // Show step 1
+    showStep(1);
+    
+    // Check if tutorial was closed and show location popup
+    const tutorialClosed = localStorage.getItem('tutorialClosed');
+    const locationPopupClosed = localStorage.getItem('locationPopupClosed');
+    
+    if (!tutorialClosed) {
+        showTutorialPopup();
+    } else if (!locationPopupClosed) {
+        // Tampilkan popup lokasi setelah tutorial ditutup
+        setTimeout(() => {
+            showLocationPopup();
+        }, 1000);
+    }
+});
+
+function closeTutorial() {
+    // Reset video
+    resetVideo();
+    
+    // Close tutorial popup
+    document.getElementById('tutorialPopup').style.display = 'none';
+    localStorage.setItem('tutorialClosed', 'true');
+    
+    // Show location popup after tutorial
+    const locationPopupClosed = localStorage.getItem('locationPopupClosed');
+    if (!locationPopupClosed) {
+        setTimeout(() => {
+            showLocationPopup();
+        }, 500);
+    }
+}
 
         
         function showStep(stepNumber) {
